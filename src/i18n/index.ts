@@ -6,15 +6,15 @@ import en from './locales/en.json';
 import vi from './locales/vi.json';
 
 void i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-        resources: {
-            en: { translation: en },
-            vi: { translation: vi },
-        },
-        fallbackLng: 'en',
-        interpolation: { escapeValue: false },
-    });
+	.use(LanguageDetector)
+	.use(initReactI18next)
+	.init({
+		resources: {
+			en: { translation: en },
+			vi: { translation: vi },
+		},
+		fallbackLng: 'en',
+		interpolation: { escapeValue: false },
+	});
 
 export default i18n;

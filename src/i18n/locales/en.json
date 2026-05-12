@@ -1,45 +1,49 @@
 {
-    "nav": {
-        "home": "Home",
-        "champions": "Champions",
-        "items": "Items",
-        "summoners": "Summoner Spells",
-        "build": "Build Calculator",
-        "toggleTheme": "Toggle theme",
-        "language": "Language"
-    },
-    "footer": "Fan-made League of Legends simulator. Not affiliated with Riot Games.",
-    "brand": "LOL Simulator",
-    "home": {
-        "patch": "Patch 16.9.1",
-        "titleGold": "Welcome,",
-        "titleRest": "Summoner",
-        "subtitle": "Theorycraft your perfect build. Inspect every champion, weigh every item, and simulate the stats of your loadout before you set foot on the Rift.",
-        "ctaBuild": "Open Build Calculator",
-        "ctaChampions": "Browse Champions",
-        "cards": {
-            "champions": {
-                "title": "Champions",
-                "desc": "Detailed stats, abilities, and lore."
-            },
-            "items": {
-                "title": "Items",
-                "desc": "Browse and filter the full item shop."
-            },
-            "summoners": {
-                "title": "Summoner Spells",
-                "desc": "Cooldowns and effects."
-            },
-            "build": {
-                "title": "Build Calculator",
-                "desc": "Pick a champion, level and items.",
-                "count": "∞"
-            }
-        }
-    },
-    "notFound": {
-        "title": "404",
-        "body": "This summoner has fled the Rift.",
-        "cta": "Return to Base"
-    }
+	"nav": {
+		"home": "Home",
+		"champions": "Champions",
+		"items": "Items",
+		"runes": "Runes",
+		"spells": "Spells",
+		"build": "Build Calculator",
+		"toggleTheme": "Toggle theme",
+		"language": "Language"
+	},
+	"footer": "Copyright © by Nghia Le. All rights reserved.",
+	"brand": "LOL Simulator",
+	"home": {
+		"titleGold": "Welcome,",
+		"titleRest": "Summoner",
+		"subtitle": "Theorycraft your perfect build. Inspect every champion, weigh every item, and simulate the stats of your loadout before you set foot on the Rift.",
+		"ctaBuild": "Build Calculator",
+		"ctaChampions": "Browse Champions",
+		"cards": {
+			"champions": {
+				"title": "Champions",
+				"desc": "Detailed stats, abilities, and lore."
+			},
+			"items": {
+				"title": "Items",
+				"desc": "Browse and filter the full item shop."
+			},
+			"runes": {
+				"title": "Runes",
+				"desc": "Browse and filter the full rune shop."
+			},
+			"spells": {
+				"title": "Summoner Spells",
+				"desc": "Cooldowns and effects."
+			},
+			"build": {
+				"title": "Build Calculator",
+				"desc": "Pick a champion, level and items.",
+				"count": "∞"
+			}
+		}
+	},
+	"notFound": {
+		"title": "404",
+		"body": "This summoner has fled the Rift.",
+		"cta": "Return to Base"
+	}
 }

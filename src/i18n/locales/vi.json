@@ -1,45 +1,49 @@
 {
-    "nav": {
-        "home": "Trang chủ",
-        "champions": "Tướng",
-        "items": "Trang bị",
-        "summoners": "Phép bổ trợ",
-        "build": "Tính build",
-        "toggleTheme": "Đổi giao diện",
-        "language": "Ngôn ngữ"
-    },
-    "footer": "Trình mô phỏng Liên Minh Huyền Thoại do fan làm. Không liên kết với Riot Games.",
-    "brand": "LOL Simulator",
-    "home": {
-        "patch": "Bản cập nhật 16.9.1",
-        "titleGold": "Chào mừng,",
-        "titleRest": "Nhà triệu hồi",
-        "subtitle": "Lên đồ trong đầu trước khi vào trận. Xem tướng, trang bị và mô phỏng chỉ số loadout của bạn.",
-        "ctaBuild": "Mở máy tính build",
-        "ctaChampions": "Xem danh sách tướng",
-        "cards": {
-            "champions": {
-                "title": "Tướng",
-                "desc": "Chỉ số, kỹ năng và cốt truyện."
-            },
-            "items": {
-                "title": "Trang bị",
-                "desc": "Lọc và xem đầy đủ cửa hàng."
-            },
-            "summoners": {
-                "title": "Phép bổ trợ",
-                "desc": "Hồi chiêu và hiệu ứng."
-            },
-            "build": {
-                "title": "Tính build",
-                "desc": "Chọn tướng, cấp độ và đồ.",
-                "count": "∞"
-            }
-        }
-    },
-    "notFound": {
-        "title": "404",
-        "body": "Nhà triệu hồi đã rời khỏi Summoner's Rift.",
-        "cta": "Về nhà"
-    }
+	"nav": {
+		"home": "Trang chủ",
+		"champions": "Tướng",
+		"items": "Trang bị",
+		"runes": "Bảng bổ trợ",
+		"spells": "Phép bổ trợ",
+		"build": "Mô phỏng",
+		"toggleTheme": "Đổi giao diện",
+		"language": "Ngôn ngữ"
+	},
+	"footer": "Bản quyền © bởi Nghia Le. Tất cả quyền được bảo lưu.",
+	"brand": "LOL Simulator",
+	"home": {
+		"titleGold": "Chào mừng,",
+		"titleRest": "Nhà triệu hồi",
+		"subtitle": "Lên đồ trong đầu trước khi vào trận. Xem tướng, trang bị và mô phỏng chỉ số loadout của bạn.",
+		"ctaBuild": "Mở mô phỏng",
+		"ctaChampions": "Xem danh sách tướng",
+		"cards": {
+			"champions": {
+				"title": "Tướng",
+				"desc": "Chỉ số, kỹ năng và cốt truyện."
+			},
+			"items": {
+				"title": "Trang bị",
+				"desc": "Lọc và xem đầy đủ cửa hàng."
+			},
+			"runes": {
+				"title": "Bảng bổ trợ",
+				"desc": "Lọc và xem đầy đủ cửa hàng."
+			},
+			"spells": {
+				"title": "Phép bổ trợ",
+				"desc": "Hồi chiêu và hiệu ứng."
+			},
+			"build": {
+				"title": "Mô phỏng",
+				"desc": "Chọn tướng, cấp độ và đồ.",
+				"count": "∞"
+			}
+		}
+	},
+	"notFound": {
+		"title": "404",
+		"body": "Nhà triệu hồi đã rời khỏi Summoner's Rift.",
+		"cta": "Về nhà"
+	}
 }
