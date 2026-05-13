@@ -9,6 +9,7 @@ import './i18n';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import '@/styles/main.scss';
+import { TooltipProvider } from './components/ui/tooltip';
 
 const queryClient = new QueryClient();
 
@@ -24,7 +25,9 @@ function renderApp() {
 			<AppProvider>
 				<ThemeProvider>
 					<BrowserRouter>
-						<App />
+						<TooltipProvider delayDuration={50}>
+							<App />
+						</TooltipProvider>
 					</BrowserRouter>
 				</ThemeProvider>
 			</AppProvider>

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Beaufort */
+/* Beaufort for LOL */
 @font-face {
 	font-family: 'Beaufort';
 	src: url('/fonts/Beaufort-Regular.woff') format('woff');
@@ -22,6 +22,24 @@
 	src: url('/fonts/Beaufort-Bold.woff') format('woff');
 	font-weight: 700;
 	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Beaufort';
+	src:
+		url('/fonts/Beaufort-Medium.woff') format('woff'),
+		url('/fonts/Beaufort-Medium.ttf') format('truetype');
+	font-weight: 500;
+	font-style: normal;
+	font-display: swap;
+}
+@font-face {
+	font-family: 'Beaufort';
+	src:
+		url('/fonts/Beaufort-BoldItalic.woff') format('woff'),
+		url('/fonts/Beaufort-BoldItalic.ttf') format('truetype');
+	font-weight: 700;
+	font-style: italic;
 	font-display: swap;
 }
 
@@ -80,6 +98,8 @@
 		--gradient-gold: linear-gradient(135deg, var(--hex-gold), var(--hex-gold-dark));
 		--shadow-hex: 0 10px 40px -10px color-mix(in oklab, var(--hex-blue) 50%, transparent);
 		--shadow-gold: 0 0 30px -5px color-mix(in oklab, var(--hex-gold) 60%, transparent);
+
+		--contrast: 0 0% 25%;
 	}
 
 	html.light {
@@ -136,6 +156,8 @@
 		--gradient-gold: linear-gradient(135deg, var(--hex-gold), var(--hex-gold-dark));
 		--shadow-hex: 0 12px 36px -12px color-mix(in oklab, var(--hex-blue) 22%, transparent);
 		--shadow-gold: 0 0 28px -6px color-mix(in oklab, var(--hex-gold) 35%, transparent);
+
+		--contrast: 0 0% 95%;
 	}
 
 	* {
@@ -150,11 +172,7 @@
 	body {
 		background: var(--hex-bg-deep);
 		color: var(--foreground);
-		font-family:
-			'Inter',
-			ui-sans-serif,
-			system-ui,
-			sans-serif;
+		font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 		background-image:
 			radial-gradient(
 				ellipse at top,
@@ -168,8 +186,8 @@
 			);
 		min-height: 100vh;
 		transition:
-			background-color 0.25s ease,
-			color 0.25s ease;
+			background-color 0.15s ease,
+			color 0.15s ease;
 	}
 
 	html.light body {
@@ -247,6 +265,20 @@
 			background-size: 160% 100%;
 		}
 	}
+}
+
+.filter-icon {
+	-webkit-filter: brightness(0) saturate(100%) invert(45%) sepia(86%) saturate(1311%)
+		hue-rotate(198deg) brightness(91%) contrast(100%);
+	filter: brightness(0) saturate(100%) invert(45%) sepia(86%) saturate(1311%) hue-rotate(198deg)
+		brightness(91%) contrast(100%);
+}
+
+.dark .filter-icon {
+	-webkit-filter: brightness(0) saturate(100%) invert(94%) sepia(36%) saturate(4427%)
+		hue-rotate(322deg) brightness(97%) contrast(87%);
+	filter: brightness(0) saturate(100%) invert(94%) sepia(36%) saturate(4427%) hue-rotate(322deg)
+		brightness(97%) contrast(87%);
 }
 
 @keyframes gold-text-flow-shift {

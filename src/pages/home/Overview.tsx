@@ -1,3 +1,4 @@
+import AnimatedNumber from '@/components/AnimatedNumber';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DDRAGON_LIST_STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
@@ -102,33 +103,34 @@ const Overview = () => {
 				return (
 					<Link
 						key={c.to}
-						className="border-2 hex-border group rounded-lg p-6 transition-colors hover:border-hex-gold"
+						className="border-2 hex-border group rounded-lg p-6 hover:border-hex-gold hover:scale-105 transition-transform"
 						to={c.to}
 					>
-						<c.icon className="mb-4 h-8 w-8 shrink-0 text-hex-gold" />
-						<div className="flex items-start justify-between gap-3">
-							<h3 className="display text-xl leading-snug">{t(c.titleKey)}</h3>
-							<div
-								className="flex h-8 min-w-[3.75rem] shrink-0 items-center justify-end"
-								aria-busy={showSkeleton}
-							>
-								{q.isError ? (
-									<span className="text-muted-foreground text-2xl font-bold leading-none">
-										–
-									</span>
-								) : showSkeleton ? (
-									<Skeleton
-										className="h-8 w-14 shrink-0 rounded-md"
-										aria-hidden
-									/>
-								) : (
-									<span className="gold-text text-2xl font-bold tabular-nums leading-none">
-										{count}
-									</span>
-								)}
-							</div>
+						<div className="flex items-center justify-center gap-4 pr-4 mb-6">
+							<c.icon className="h-8 w-8 shrink-0 text-hex-gold" />
+							<h3 className="display text-xl font-semibold leading-snug">
+								{t(c.titleKey)}
+							</h3>
 						</div>
-						<p className="text-muted-foreground mt-2 text-sm">{t(c.descKey)}</p>
+
+						<div
+							className="flex h-8 min-w-[3.75rem] shrink-0 items-center justify-center"
+							aria-busy={showSkeleton}
+						>
+							{q.isError ? (
+								<span className="text-muted-foreground text-4xl font-bold leading-none">
+									–
+								</span>
+							) : showSkeleton ? (
+								<Skeleton className="h-8 w-14 shrink-0 rounded-md" aria-hidden />
+							) : (
+								<span className="gold-text text-4xl font-bold tabular-nums leading-none">
+									{/* {count} */}
+									<AnimatedNumber to={count ?? 0} />
+								</span>
+							)}
+						</div>
+						{/* <p className="text-muted-foreground mt-2 text-sm">{t(c.descKey)}</p> */}
 					</Link>
 				);
 			})}

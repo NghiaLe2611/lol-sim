@@ -39,7 +39,8 @@ export function Header() {
 								className={
 									'rounded-md px-4 py-2 text-sm uppercase tracking-wider transition-colors ' +
 									(active
-										? 'border border-hex-gold/40 bg-secondary text-hex-gold'
+										? // border border-hex-gold/40 bg-secondary
+											'text-hex-gold'
 										: 'text-muted-foreground hover:bg-secondary/50 hover:text-hex-gold')
 								}
 								to={l.to}

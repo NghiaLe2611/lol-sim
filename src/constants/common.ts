@@ -11,7 +11,33 @@ export const apiUrl = 'https://ddragon.leagueoflegends.com';
 
 export const DDRAGON_LIST_STALE_MS = 10 * 60 * 1000;
 
+/** Splash — dùng `id` trong JSON champion (same as `/champions/:championId`). */
+export function ddragonSplashChampionUrl(championId: string) {
+	return `${apiUrl}/cdn/img/champion/splash/${championId}_0.jpg`;
+}
+
+export function ddragonPassiveImgUrl(version: string, imageFull: string) {
+	return `${apiUrl}/cdn/${version}/img/passive/${imageFull}`;
+}
+
+export function ddragonSpellImgUrl(version: string, imageFull: string) {
+	return `${apiUrl}/cdn/${version}/img/spell/${imageFull}`;
+}
+
 // Get square champion img
-export const cdragonChampionSquareUrl = (patchVersion = '16.9.1', championId: string) =>
-	`https://cdn.communitydragon.org/${patchVersion}/champion/${encodeURIComponent(championId)}/square`;
-// https://ddragon.leagueoflegends.com/cdn/16.9.1/img/champion/Aatrox.png
+function replaceSpace(str: string): string {
+	return str.replace(/\s+/g, '_');
+}
+export const getSquareChampImg = (patchVersion = '16.9.1', championName: string) =>
+	`https://leagueofitems.com/images/champions/tiles/256/${Number(championName)}.webp`; // 128/256
+
+// Tile
+// https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/characters/${championName.toLowerCase()}/skins/base/images/${championName.toLowerCase()}_splash_tile_0.jpg
+// https://lolcdn.darkintaqt.com/cdn/champion/${championName}/tile
+// https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/characters/hwei/skins/skin0/images/hwei_splash_tile_0.jpg
+// https://wiki.leagueoflegends.com/en-us/images/${championName.toLowerCase()}_OriginalTile.jpg
+
+// Square
+// https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/champion/${championName}.png
+// https://cdn.communitydragon.org/${patchVersion}/champion/${encodeURIComponent(championName)}/square
+// https://leagueofitems.com/images/champions/tiles/128/238.webp

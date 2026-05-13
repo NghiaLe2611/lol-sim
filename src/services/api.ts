@@ -32,6 +32,22 @@ async function getChampions(version: string) {
 	}
 }
 
+// Champion detail
+async function getChampionDetail(version: string, championId: string) {
+	const idEncoded = encodeURIComponent(championId);
+	const url = `${apiUrl}/cdn/${version}/data/en_US/champion/${idEncoded}.json`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return data;
+	} catch (error) {
+		throw error;
+	}
+}
+
 // Get item list
 async function getItems(version: string) {
 	const url = `${apiUrl}/cdn/${version}/data/en_US/item.json`;
@@ -80,4 +96,4 @@ async function getSummonerSpells(version: string) {
 	}
 }
 
-export { getChampions, getItems, getRunes, getSummonerSpells, getVersions };
+export { getChampionDetail, getChampions, getItems, getRunes, getSummonerSpells, getVersions };

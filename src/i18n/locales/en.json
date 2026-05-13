@@ -1,4 +1,7 @@
 {
+	"common": {
+		"championNote": "Current role is based on champion type, not match history. Please check OP.GG or Mobalytics for more accurate information."
+	},
 	"nav": {
 		"home": "Home",
 		"champions": "Champions",

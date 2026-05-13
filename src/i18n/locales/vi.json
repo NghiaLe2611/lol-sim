@@ -1,4 +1,7 @@
 {
+	"common": {
+		"championNote": "Vai trò hiện tại dựa trên loại tướng, không phải lịch sử đấu. Vui lòng xem trên OP.GG hoặc Mobalytics để có thông tin chính xác hơn."
+	},
 	"nav": {
 		"home": "Trang chủ",
 		"champions": "Tướng",
