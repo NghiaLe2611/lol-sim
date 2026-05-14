@@ -1,6 +1,6 @@
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DDRAGON_LIST_STALE_MS } from '@/constants/common';
+import { STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
 import { getChampions, getItems, getRunes, getSummonerSpells } from '@/services/api';
 import { useQueries } from '@tanstack/react-query';
@@ -55,32 +55,32 @@ const Overview = () => {
 				queryKey: ['champions', version],
 				queryFn: () => getChampions(version!),
 				enabled: Boolean(version),
-				staleTime: DDRAGON_LIST_STALE_MS,
-				gcTime: DDRAGON_LIST_STALE_MS,
+				staleTime: STALE_MS,
+				gcTime: STALE_MS,
 				select: (payload: KeyedDragonPayload) => Object.keys(payload.data).length,
 			},
 			{
 				queryKey: ['items', version],
 				queryFn: () => getItems(version!),
 				enabled: Boolean(version),
-				staleTime: DDRAGON_LIST_STALE_MS,
-				gcTime: DDRAGON_LIST_STALE_MS,
+				staleTime: STALE_MS,
+				gcTime: STALE_MS,
 				select: (payload: KeyedDragonPayload) => Object.keys(payload.data).length,
 			},
 			{
 				queryKey: ['runes', version],
 				queryFn: () => getRunes(version!),
 				enabled: Boolean(version),
-				staleTime: DDRAGON_LIST_STALE_MS,
-				gcTime: DDRAGON_LIST_STALE_MS,
+				staleTime: STALE_MS,
+				gcTime: STALE_MS,
 				select: (payload: unknown[]) => (Array.isArray(payload) ? payload.length : 0),
 			},
 			{
 				queryKey: ['spells', version],
 				queryFn: () => getSummonerSpells(version!),
 				enabled: Boolean(version),
-				staleTime: DDRAGON_LIST_STALE_MS,
-				gcTime: DDRAGON_LIST_STALE_MS,
+				staleTime: STALE_MS,
+				gcTime: STALE_MS,
 				select: (payload: KeyedDragonPayload) => Object.keys(payload.data).length,
 			},
 		],

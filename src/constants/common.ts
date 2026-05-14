@@ -9,18 +9,19 @@ export const links = [
 
 export const apiUrl = 'https://ddragon.leagueoflegends.com';
 
-export const DDRAGON_LIST_STALE_MS = 10 * 60 * 1000;
+export const STALE_MS = 10 * 60 * 1000;
 
 /** Splash — dùng `id` trong JSON champion (same as `/champions/:championId`). */
-export function ddragonSplashChampionUrl(championId: string) {
+export function splashChampionImg(championId: string) {
 	return `${apiUrl}/cdn/img/champion/splash/${championId}_0.jpg`;
 }
 
-export function ddragonPassiveImgUrl(version: string, imageFull: string) {
+export function passiveImgUrl(version: string, imageFull: string) {
 	return `${apiUrl}/cdn/${version}/img/passive/${imageFull}`;
 }
 
-export function ddragonSpellImgUrl(version: string, imageFull: string) {
+// https://cdn.communitydragon.org/latest/champion/Ahri/ability-icon/p
+export function skillImgUrl(version: string, imageFull: string) {
 	return `${apiUrl}/cdn/${version}/img/spell/${imageFull}`;
 }
 

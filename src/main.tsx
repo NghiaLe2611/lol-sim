@@ -25,7 +25,7 @@ function renderApp() {
 			<AppProvider>
 				<ThemeProvider>
 					<BrowserRouter>
-						<TooltipProvider delayDuration={50}>
+						<TooltipProvider delayDuration={0}>
 							<App />
 						</TooltipProvider>
 					</BrowserRouter>
@@ -52,3 +52,7 @@ if (useThemeStore.persist.hasHydrated()) {
 		}
 	});
 }
+
+// https://support-developer.riotgames.com/hc/en-us/articles/22698698001939-League-of-Legends
+// https://ddragon.leagueoflegends.com/cdn/13.22.1/img/sprite/spell0.png
+// https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions/

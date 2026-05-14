@@ -1,7 +1,6 @@
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-
 import './level-slider.scss';
 import { calculateStats, champions, items, type Champion, type Item } from '@/data/lol';
 import { formatNumber } from '@/utils/common';

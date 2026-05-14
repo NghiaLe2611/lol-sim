@@ -1,5 +1,13 @@
 import { apiUrl } from '@/constants/common';
 
+function getBonusApiBase(): string {
+	const base = import.meta.env.VITE_API_URL as string | undefined;
+	if (!base?.trim()) {
+		throw new Error('VITE_API_URL is not set');
+	}
+	return base.replace(/\/$/, '');
+}
+
 // Get version list
 async function getVersions() {
 	const url = `${apiUrl}/api/versions.json`;
@@ -43,6 +51,36 @@ async function getChampionDetail(version: string, championId: string) {
 		}
 		const data = await response.json();
 		return data;
+	} catch (error) {
+		throw error;
+	}
+}
+
+// Bonus data from merakianalytics
+async function getBonusChampions() {
+	const url = `${getBonusApiBase()}/champions`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return Array.isArray(data) ? data : [];
+	} catch (error) {
+		throw error;
+	}
+}
+
+async function getBonusChampionDetail(championKey: string) {
+	const idEncoded = encodeURIComponent(championKey);
+	const url = `${getBonusApiBase()}/champions/${idEncoded}`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return data as Record<string, unknown>;
 	} catch (error) {
 		throw error;
 	}
@@ -96,4 +134,47 @@ async function getSummonerSpells(version: string) {
 	}
 }
 
-export { getChampionDetail, getChampions, getItems, getRunes, getSummonerSpells, getVersions };
+/*
+const MERAKI_ANALYTICS_URL =
+	'https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US';
+
+async function getChampionsMeraki() {
+	const url = `${MERAKI_ANALYTICS_URL}/champions.json`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return data;
+	} catch (error) {
+		throw error;
+	}
+}
+
+async function getChampionDetailMeraki(championId: string) {
+	const idEncoded = encodeURIComponent(championId);
+	const url = `${MERAKI_ANALYTICS_URL}/champions/${idEncoded}.json`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return data as Record<string, unknown>;
+	} catch (error) {
+		throw error;
+	}
+}
+*/
+
+export {
+	getBonusChampionDetail,
+	getBonusChampions,
+	getChampionDetail,
+	getChampions,
+	getItems,
+	getRunes,
+	getSummonerSpells,
+	getVersions,
+};
