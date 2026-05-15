@@ -64,7 +64,7 @@ export type BonusAttributeRatings = {
 
 /** Parsed bonus champion detail — loose `unknown` for forward compat. */
 export type BonusChampionDetail = {
-	id?: number | string;
+	id: number | string;
 	key: string;
 	name: string;
 	title: string;
@@ -72,6 +72,7 @@ export type BonusChampionDetail = {
 	lore?: string;
 	icon?: string;
 	resource?: string;
+	adaptiveType?: string;
 	attackType?: string;
 	stats?: Record<string, BonusNumericStatBlock | unknown>;
 	positions?: string[];
@@ -91,9 +92,9 @@ export function isBonusNumericStat(v: unknown): v is BonusNumericStatBlock {
 export function bonusStatAbbreviation(key: string): { short: string; label: string } {
 	const preset: Record<string, { short: string; label: string }> = {
 		health: { short: 'HP', label: 'Health' },
-		healthRegen: { short: 'HP5', label: 'Health regen per 5 seconds' },
+		healthRegen: { short: 'HP5', label: 'Health regen per 5s' },
 		mana: { short: 'MP', label: 'Mana' },
-		manaRegen: { short: 'MP5', label: 'Mana regen per 5 seconds' },
+		manaRegen: { short: 'MP5', label: 'Mana regen per 5s' },
 		armor: { short: 'AR', label: 'Armor' },
 		magicResistance: { short: 'MR', label: 'Magic Resistance' },
 		attackDamage: { short: 'AD', label: 'Attack Damage' },
@@ -102,7 +103,7 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 		attackSpeedRatio: { short: 'AS ratio', label: 'Attack Speed ratio' },
 		attackCastTime: { short: 'ACast', label: 'Attack windup cast time' },
 		attackTotalTime: { short: 'ATime', label: 'Attack total cycle time' },
-		attackRange: { short: 'RNG', label: 'Attack Range' },
+		attackRange: { short: 'ATT Range', label: 'Attack Range' },
 		criticalStrikeDamage: { short: 'Crit dmg', label: 'Critical Strike Damage' },
 		criticalStrikeDamageModifier: { short: 'Crit mod', label: 'Critical Strike Damage Modifier' },
 		gameplayRadius: { short: 'Gb radius', label: 'Gameplay Collision Radius' },
@@ -195,6 +196,94 @@ export function shouldShowBonusStatKey(key: string): boolean {
 export function roleTokenToBadge(token: string): string {
 	const t = token.toLowerCase().replace(/_/g, ' ');
 	return t.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Render chip: icon from `public/images/icons` + lane label (API `positions`). */
+export type LanePositionTagMeta = {
+	key: string;
+	icon: string;
+	label: string;
+};
+
+const LANE_POSITION_DEFS: readonly {
+	key: string;
+	icon: string;
+	label: string;
+	tokens: readonly string[];
+}[] = [
+	{ key: 'TOP', icon: '/images/icons/top.svg', label: 'Top', tokens: ['TOP', 'TOP_LANE'] },
+	{ key: 'JUNGLE', icon: '/images/icons/jungle.svg', label: 'Jungle', tokens: ['JUNGLE'] },
+	{
+		key: 'MID',
+		icon: '/images/icons/mid.svg',
+		label: 'Mid',
+		tokens: ['MIDDLE', 'MID', 'MID_LANE', 'CENTER'],
+	},
+	{
+		key: 'BOTTOM',
+		icon: '/images/icons/ad.svg',
+		label: 'Bottom',
+		tokens: ['BOTTOM', 'CARRY', 'ADC', 'BOT', 'BOTTOM_LANE', 'MARKSMAN'],
+	},
+	{
+		key: 'SUPPORT',
+		icon: '/images/icons/support.svg',
+		label: 'Support',
+		tokens: ['SUPPORT', 'UTILITY'],
+	},
+];
+
+const LANE_ORDER_RANK: Record<string, number> = Object.fromEntries(
+	LANE_POSITION_DEFS.map((d, i) => [d.key, i])
+);
+
+export function normalizeLanePositionToken(raw: string): string {
+	return raw
+		.trim()
+		.toUpperCase()
+		.replace(/\s+/g, '_')
+		.replace(/-+/g, '_');
+}
+
+/** Một giá trị `positions[]` của API → icon + nhãn hiển thị. */
+export function mapLanePositionToTag(raw: string): LanePositionTagMeta | null {
+	const u = normalizeLanePositionToken(raw);
+	for (const def of LANE_POSITION_DEFS) {
+		if (def.tokens.includes(u)) {
+			return { key: def.key, icon: def.icon, label: def.label };
+		}
+	}
+	return null;
+}
+
+function laneUnknownLabel(raw: string): string {
+	const t = normalizeLanePositionToken(raw).replace(/_/g, ' ').toLowerCase();
+	return t.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function laneTagsFromPositions(positions: readonly string[] | undefined): LanePositionTagMeta[] {
+	const list = positions ?? [];
+	const seen = new Set<string>();
+	const out: LanePositionTagMeta[] = [];
+	for (const raw of list) {
+		const trimmed = typeof raw === 'string' ? raw.trim() : '';
+		if (!trimmed) continue;
+		const mapped = mapLanePositionToTag(trimmed);
+		const tag: LanePositionTagMeta = mapped ?? {
+			key: `other:${normalizeLanePositionToken(trimmed)}`,
+			icon: '/images/icons/all.svg',
+			label: laneUnknownLabel(trimmed),
+		};
+		if (seen.has(tag.key)) continue;
+		seen.add(tag.key);
+		out.push(tag);
+	}
+	out.sort((a, b) => {
+		const ra = LANE_ORDER_RANK[a.key] ?? 50;
+		const rb = LANE_ORDER_RANK[b.key] ?? 50;
+		return ra !== rb ? ra - rb : a.label.localeCompare(b.label);
+	});
+	return out;
 }
 
 export function coerceBonusDetail(raw: unknown): BonusChampionDetail | null {

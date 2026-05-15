@@ -196,7 +196,7 @@ function ChampionDetailContent({
 			</dl> */}
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-8">
 				<div className="hex-border rounded-lg p-6">
-					<h3 className="display mb-4 text-lg font-semibold text-hex-gold 3xl:text-xl">
+					<h3 className="display mb-4 text-lg 3xl:text-xl font-semibold text-hex-gold">
 						Class Profile
 					</h3>
 					<div className="space-y-3">
@@ -207,7 +207,7 @@ function ChampionDetailContent({
 					</div>
 				</div>
 				<div className="hex-border rounded-lg p-6">
-					<h3 className="display mb-4 text-lg font-semibold text-hex-gold 3xl:text-xl">
+					<h3 className="display mb-4 text-lg 3xl:text-xl font-semibold text-hex-gold">
 						Base Stats
 					</h3>
 					<div className="grid grid-cols-2 gap-2 gap-x-8 text-sm">
@@ -249,7 +249,7 @@ function ChampionDetailContent({
 
 				<div className="space-y-6 lg:col-span-full">
 					<div className="hex-border rounded-lg p-6">
-						<h2 className="display mb-4 text-lg font-semibold text-hex-gold 3xl:text-xl">
+						<h2 className="display mb-4 text-lg 3xl:text-xl font-semibold text-hex-gold">
 							Abilities
 						</h2>
 						<div className="space-y-4">
