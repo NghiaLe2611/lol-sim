@@ -7,6 +7,7 @@ import {
 	type BonusAbility,
 	type BonusAttributeRatings,
 	type BonusChampionDetail,
+	type BonusModifierRow,
 	bonusStatAbbreviation,
 	coerceBonusDetail,
 	formatAbilityScalar,
@@ -20,7 +21,7 @@ import {
 } from '@/pages/champion-detail/utils';
 import { getBonusChampionDetail, getChampionDetail } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode, useEffect, useState } from 'react';
+import { memo, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
 	PolarAngleAxis,
@@ -185,15 +186,23 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 					<PolarAngleAxis
 						dataKey="attribute"
 						allowDuplicatedCategory={false}
-						tick={(tickProps: Record<string, unknown>) => (
-							<AttributeAngleIconTick
-								cx={tickProps.cx as number}
-								cy={tickProps.cy as number}
-								payload={tickProps.payload as { value?: string }}
-								x={tickProps.x as number}
-								y={tickProps.y as number}
-							/>
-						)}
+						tick={(tickProps: Record<string, unknown>) => {
+							const payload = tickProps.payload as { value?: string } | undefined;
+							const tickKey =
+								typeof tickProps.index === 'number'
+									? `radar-angle-${tickProps.index}`
+									: String(payload?.value ?? 'angle-tick');
+							return (
+								<AttributeAngleIconTick
+									key={tickKey}
+									cx={tickProps.cx as number}
+									cy={tickProps.cy as number}
+									payload={payload}
+									x={tickProps.x as number}
+									y={tickProps.y as number}
+								/>
+							);
+						}}
 						tickLine={false}
 					/>
 					<PolarRadiusAxis
@@ -220,8 +229,16 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 									: byLabel >= 0
 										? byLabel
 										: 0;
+							const dotKey =
+								typeof dotProps.index === 'number'
+									? `radar-vertex-${dotProps.index}`
+									: String(
+											dotProps.payload?.attribute ??
+												`vertex-${String(vertex)}`
+										);
 							return (
 								<RadarAttributeVertexDot
+									key={dotKey}
 									cx={dotProps.cx}
 									cy={dotProps.cy}
 									hoveredIndex={hoveredVertex}
@@ -388,6 +405,28 @@ function formatLevelingLineColored(line: string): ReactNode {
 	);
 }
 
+const LevelingModifierLines = memo(function LevelingModifierLines({
+	modifiers,
+}: {
+	modifiers: BonusModifierRow[];
+}) {
+	const lines = useMemo(
+		() => formatLevelingModifierLines(modifiers),
+		// Small, stable ability data — stringify avoids recomputing when parent passes a new array ref.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[JSON.stringify(modifiers)]
+	);
+	return (
+		<>
+			{lines.map((line, li) => (
+				<div key={li} className="mb-1 last:mb-0">
+					{formatLevelingLineColored(line)}
+				</div>
+			))}
+		</>
+	);
+});
+
 function buildAbilityDlRows(spell: BonusAbility, championResource?: string) {
 	const cost = formatCostLine(spell.cost, championResource ?? spell.resource ?? undefined);
 	const cdRaw = formatCooldownLine(spell.cooldown);
@@ -404,7 +443,7 @@ function buildAbilityDlRows(spell: BonusAbility, championResource?: string) {
 			node: cdRaw ? (
 				<span>
 					{cdRaw}
-					{spell.cooldown?.affectedByCdr ? ' (CDR)' : ''}
+					{/* {spell.cooldown?.affectedByCdr ? ' (CDR)' : ''} */}
 				</span>
 			) : null,
 		},
@@ -431,7 +470,7 @@ function AbilityStatStrip({
 			{rows.map(({ key, node }) => (
 				<div key={key} className="flex gap-1.5 lowercase">
 					<dt className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
-						{key}
+						{key}:
 					</dt>
 					<dd className="normal-case">{node}</dd>
 				</div>
@@ -476,7 +515,7 @@ function BonusAbilityCard({
 				<div
 					key={`${spell.name}-eff-${ei}`}
 					// border-border/50 border-t
-					className="py-2 grid gap-6 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
+					className="py-2 4xl:py-4 grid gap-6 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
 				>
 					<div className="flex justify-center lg:justify-start">
 						{ei === 0 ? (
@@ -498,19 +537,13 @@ function BonusAbilityCard({
 					</div>
 					{eff.leveling?.length ? (
 						// border border-muted-foreground/20
-						<div className="rounded-md bg-muted/40 p-3 text-xs lg:text-sm leading-snug">
+						<div className="rounded-md bg-muted/40 px-3 text-xs lg:text-sm leading-snug">
 							{eff.leveling.map((block, bi) => (
 								<div key={`${block.attribute}-${bi}`} className="mb-4 last:mb-0">
 									<div className="bg-cyan-500/20 rounded-sm px-3 py-1 mb-1 font-medium text-cyan-600 dark:text-sky-400 uppercase tracking-wide">
 										{block.attribute}
 									</div>
-									{formatLevelingModifierLines(block.modifiers).map(
-										(line, li) => (
-											<div key={li} className="mb-1 last:mb-0">
-												{formatLevelingLineColored(line)}
-											</div>
-										)
-									)}
+									<LevelingModifierLines modifiers={block.modifiers} />
 								</div>
 							))}
 						</div>
@@ -699,7 +732,7 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[60%_1fr]">
+			<div className="grid grid-cols-1 gap-6 4xl:gap-y-12 px-6 py-8 lg:grid-cols-[60%_1fr]">
 				<div className="hex-border rounded-lg p-6">
 					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
 						Attributes
@@ -718,27 +751,27 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 					<BonusStatGrid stats={b.stats} />
 				</div>
 
-				<div className="space-y-8 lg:col-span-full">
-					<div className="hex-border rounded-lg p-4 3xl:p-6">
-						<h2 className="display mb-8 text-xl font-semibold text-hex-gold 3xl:text-2xl">
-							Abilities
-						</h2>
-						<div>
-							{ABILITY_SLOTS.map((slot) => {
-								const list = b.abilities?.[slot];
-								const spell = list?.[0];
-								if (!spell) return null;
-								return (
-									<BonusAbilityCard
-										key={slot}
-										slot={slot}
-										championResource={b.resource ?? undefined}
-										spell={spell}
-									/>
-								);
-							})}
-						</div>
+				<div className="lg:col-span-full">
+					{/* <div className="hex-border rounded-lg p-4 3xl:p-6"> */}
+					<h2 className="display mb-4 text-xl font-semibold text-hex-gold 3xl:text-2xl">
+						Abilities
+					</h2>
+					<div>
+						{ABILITY_SLOTS.map((slot) => {
+							const list = b.abilities?.[slot];
+							const spell = list?.[0];
+							if (!spell) return null;
+							return (
+								<BonusAbilityCard
+									key={slot}
+									slot={slot}
+									championResource={b.resource ?? undefined}
+									spell={spell}
+								/>
+							);
+						})}
 					</div>
+					{/* </div> */}
 				</div>
 			</div>
 		</div>

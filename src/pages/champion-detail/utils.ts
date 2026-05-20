@@ -128,12 +128,27 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 
 function formatNum(v: number | string): string {
 	if (typeof v === 'string') return v;
-	return Number.isInteger(v) ? String(v) : v.toFixed(3).replace(/\.?0+$/, '');
+	return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/\.?0+$/, '');
+}
+
+/** Collapse `90 / 90 / 90` → `90` when every slash segment is identical (cost, cooldown, base leveling). */
+function compressIdenticalSlashValues(s: string): string {
+	const trimmed = s.trim();
+	if (!trimmed) return '';
+	const chunks = trimmed
+		.split(/\s*\/\s*/)
+		.map((t) => t.trim())
+		.filter((c) => c.length > 0);
+	if (chunks.length <= 1) return trimmed;
+	const first = chunks[0];
+	if (chunks.every((c) => c === first)) return first!;
+	return trimmed;
 }
 
 export function formatSlashValues(mod: BonusModifierRow | undefined): string {
 	if (!mod?.values?.length) return '';
-	return mod.values.map((v, i) => `${formatNum(v)}${mod.units[i] ?? ''}`.trim()).join(' / ');
+	const raw = mod.values.map((v, i) => `${formatNum(v)}${mod.units[i] ?? ''}`.trim()).join(' / ');
+	return compressIdenticalSlashValues(raw);
 }
 
 export function formatCostLine(cost: BonusCostCooldown | null, championResource?: string): string | null {
@@ -163,16 +178,89 @@ function formatScalingPart(v: number | string, unit: string): string {
 	return `${val}${unit}`;
 }
 
-/** One string per modifier row inside a leveling attribute (slashes vs scaling parentheses). */
+function partIsScalingToken(p: string): boolean {
+	return p.trim().startsWith('(+');
+}
+
+/** Merge per-level `(+ 40% AP)` groups: identical → one; varying coefficient, same suffix → `(+ 40/45/50% AP)`. */
+function compressScalingParenthesesGroup(parts: string[]): string {
+	if (parts.length === 0) return '';
+	const norm = parts.map((p) => p.replace(/\s+/g, ' ').trim());
+	if (norm.every((p) => p === norm[0])) return norm[0]!;
+
+	const parsed = norm.map((p) => {
+		const m = p.match(/^\(\+\s*([0-9.]+)\s*(.*?)\)$/);
+		if (!m) return null;
+		return { num: m[1], suffix: m[2].trim() };
+	});
+	if (parsed.every((x) => x)) {
+		const suffixes = new Set(parsed.map((x) => x!.suffix));
+		if (suffixes.size === 1) {
+			const suffix = parsed[0]!.suffix;
+			const nums = parsed.map((x) => x!.num).join(' / ');
+			const spacer =
+				suffix.length === 0 ? '' : suffix.startsWith('%') ? '' : ' ';
+			return `(+ ${nums}${spacer}${suffix})`;
+		}
+	}
+	return norm.join(' ');
+}
+
+function modifierRowLooksLikeBase(mod: BonusModifierRow): boolean {
+	if (!mod.values.length) return false;
+	return mod.values.every((_, i) => {
+		const u = (mod.units[i] ?? '').trim();
+		return !u.includes('%') && !/\b(AP|AD|AH)\b/i.test(u);
+	});
+}
+
+function modifierRowLooksLikeScaling(mod: BonusModifierRow): boolean {
+	if (!mod.values.length) return false;
+	return mod.values.every((_, i) => {
+		const u = (mod.units[i] ?? '').trim();
+		return u.includes('%') || /\b(AP|AD|AH)\b/i.test(u);
+	});
+}
+
+function formatOneModifierRowCompact(mod: BonusModifierRow): string | null {
+	if (!mod.values?.length) return null;
+	const parts = mod.values.map((v, i) => formatScalingPart(v, mod.units[i] ?? ''));
+	const allScaling = parts.every((p) => partIsScalingToken(p));
+	const joined = allScaling ? compressScalingParenthesesGroup(parts) : compressIdenticalSlashValues(parts.join(' / '));
+	return joined || null;
+}
+
+/**
+ * Lines for a leveling attribute: base + scaling rows merge into one line when the API splits them.
+ * Repeating identical scaling collapses; varying % with the same unit suffix uses `40/45/50` in one `(+ …)`.
+ */
 export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): string[] {
+	if (!modifiers.length) return [];
+
+	const first = modifiers[0]!;
+	const rest = modifiers.slice(1);
+
+	if (
+		rest.length > 0 &&
+		modifierRowLooksLikeBase(first) &&
+		rest.every((m) => modifierRowLooksLikeScaling(m))
+	) {
+		const baseParts = first.values.map((v, i) => formatScalingPart(v, first.units[i] ?? ''));
+		const baseLine = compressIdenticalSlashValues(baseParts.join(' / '));
+		const scaleParts = rest.flatMap((m) =>
+			m.values.map((v, i) => formatScalingPart(v, m.units[i] ?? ''))
+		);
+		const scaleLine = compressScalingParenthesesGroup(scaleParts);
+		const merged = [baseLine, scaleLine].filter(Boolean).join(' ');
+		return merged ? [merged] : [];
+	}
+
 	const lines: string[] = [];
 	for (const mod of modifiers) {
-		if (!mod.values?.length) continue;
-		const parts = mod.values.map((v, i) => formatScalingPart(v, mod.units[i] ?? ''));
-		const allScaling = parts.every((p) => p.startsWith('(+'));
-		lines.push(allScaling ? parts.join(' ') : parts.join(' / '));
+		const line = formatOneModifierRowCompact(mod);
+		if (line) lines.push(line);
 	}
-	return lines.filter(Boolean);
+	return lines;
 }
 
 export function formatAbilityScalar(v: string | number | null | undefined): string | null {

@@ -1,47 +1,48 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>LOL Builder — League of Legends Build Simulator</title>
-        <meta
-            name="description"
-            content="Explore champions, items, summoner spells and simulate builds for League of Legends."
-        />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <!-- Playfair Display was used for display headings; Beaufort is loaded locally from /fonts/. -->
-        <!--
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>LOL Builder — League of Legends Build Simulator</title>
+		<meta
+			name="description"
+			content="Explore champions, items, summoner spells and simulate builds for League of Legends."
+		/>
+		<link rel="shortcut icon" href="/images/favicon.ico" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!-- Playfair Display was used for display headings; Beaufort is loaded locally from /fonts/. -->
+		<!--
         <link
             href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
             rel="stylesheet"
         />
         -->
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-    </head>
-    <body>
-        <div id="root"></div>
-        <!-- Fix flash theme -->
-        <script>
-            (function () {
-                try {
-                    var raw = localStorage.getItem('theme');
-                    var mode = 'dark';
-                    if (raw) {
-                        var p = JSON.parse(raw);
-                        var t = p && p.state && p.state.theme;
-                        if (t === 'light' || t === 'dark') mode = t;
-                    }
-                    var root = document.documentElement;
-                    root.classList.remove('light', 'dark');
-                    root.classList.add(mode);
-                    root.style.colorScheme = mode === 'dark' ? 'dark' : 'light';
-                } catch (e) {}
-            })();
-        </script>
-        <script type="module" src="/src/main.tsx"></script>
-    </body>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<div id="root"></div>
+		<!-- Fix flash theme -->
+		<script>
+			(function () {
+				try {
+					var raw = localStorage.getItem('theme');
+					var mode = 'dark';
+					if (raw) {
+						var p = JSON.parse(raw);
+						var t = p && p.state && p.state.theme;
+						if (t === 'light' || t === 'dark') mode = t;
+					}
+					var root = document.documentElement;
+					root.classList.remove('light', 'dark');
+					root.classList.add(mode);
+					root.style.colorScheme = mode === 'dark' ? 'dark' : 'light';
+				} catch (e) {}
+			})();
+		</script>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>
