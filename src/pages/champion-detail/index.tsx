@@ -494,8 +494,7 @@ function BonusAbilityCard({
 	return (
 		<article className="border-border from-background mb-10 rounded-xl border bg-gradient-to-b to-muted/40 p-5 last:mb-0">
 			<div className="flex flex-col gap-1">
-				<div className="flex flex-wrap items-baseline gap-2 justify-between">
-					{/* text-violet-200 */}
+				<div className="flex flex-wrap items-baseline gap-2 justify-between mb-4">
 					<h3 className="font-semibold text-lg 3xl:text-xl capitalize">{nameLine}</h3>
 					<AbilityStatStrip championResource={championResource} spell={spell} />
 				</div>
@@ -511,45 +510,59 @@ function BonusAbilityCard({
 				) : null} */}
 			</div>
 
-			{spell.effects?.map((eff, ei) => (
-				<div
-					key={`${spell.name}-eff-${ei}`}
-					// border-border/50 border-t
-					className="py-2 4xl:py-4 grid gap-6 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
-				>
-					<div className="flex justify-center lg:justify-start">
-						{ei === 0 ? (
-							<img
-								alt=""
-								className="size-[56px] rounded-md border border-hex-blue/40 object-cover"
-								src={spell.icon}
-							/>
-						) : // <div className="size-[56px]" aria-hidden />
-						null}
-					</div>
-					<div className="min-w-0 text-xs lg:text-sm leading-relaxed">
-						<p className="text-foreground">
-							{/* <strong className="tracking-wide">
-								{ei === 0 ? `${activeLabel}: ` : null}
-							</strong> */}
-							<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
-						</p>
-					</div>
-					{eff.leveling?.length ? (
-						// border border-muted-foreground/20
-						<div className="rounded-md bg-muted/40 px-3 text-xs lg:text-sm leading-snug">
-							{eff.leveling.map((block, bi) => (
-								<div key={`${block.attribute}-${bi}`} className="mb-4 last:mb-0">
-									<div className="bg-cyan-500/20 rounded-sm px-3 py-1 mb-1 font-medium text-cyan-600 dark:text-sky-400 uppercase tracking-wide">
-										{block.attribute}
-									</div>
-									<LevelingModifierLines modifiers={block.modifiers} />
-								</div>
-							))}
+			{spell.effects?.map((eff, ei) => {
+				const effectIconSrc =
+					typeof eff.icon === 'string' && eff.icon.trim().length > 0
+						? eff.icon.trim()
+						: null;
+				const spellIconSrc =
+					typeof spell.icon === 'string' && spell.icon.trim().length > 0
+						? spell.icon.trim()
+						: null;
+				const thumbSrc = effectIconSrc ?? (ei === 0 ? spellIconSrc : null);
+
+				return (
+					<div
+						key={`${spell.name}-eff-${ei}`}
+						// border-border/50 border-t
+						className="py-2 4xl:py-4 grid gap-6 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
+					>
+						<div className="flex justify-center lg:justify-start">
+							{thumbSrc ? (
+								<img
+									alt=""
+									className="hover:cursor-pointer hover:scale-105 transition-all size-[56px] rounded-md border border-hex-blue/40 object-cover"
+									src={thumbSrc}
+								/>
+							) : null}
 						</div>
-					) : null}
-				</div>
-			))}
+						<div className="min-w-0 text-xs xl:text-sm leading-relaxed">
+							<p className="text-foreground">
+								{/* <strong className="tracking-wide">
+									{ei === 0 ? `${activeLabel}: ` : null}
+								</strong> */}
+								<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
+							</p>
+						</div>
+						{eff.leveling?.length ? (
+							// border border-muted-foreground/20
+							<div className="rounded-md bg-muted/40 px-3 text-xs xl:text-sm leading-snug">
+								{eff.leveling.map((block, bi) => (
+									<div
+										key={`${block.attribute}-${bi}`}
+										className="mb-4 last:mb-0"
+									>
+										<div className="bg-cyan-500/20 rounded-sm px-3 py-1 mb-1 font-medium text-cyan-600 dark:text-sky-400 uppercase tracking-wide">
+											{block.attribute}
+										</div>
+										<LevelingModifierLines modifiers={block.modifiers} />
+									</div>
+								))}
+							</div>
+						) : null}
+					</div>
+				);
+			})}
 			{/* Notes */}
 			{/* {spell.notes && spell.notes !== 'No additional details.' ? (
 				<p className="text-muted-foreground mt-6 border-border/60 border-t pt-4 text-xs italic">
@@ -611,7 +624,7 @@ function BonusStatGridCell({
 		extras.push(`${perLevelPct >= 0 ? '+' : ''}${perLevelPct}%/lvl`);
 
 	return (
-		<div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 py-2 border-border/40 border-b">
+		<div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 py-2 border-border/40 border-b text-xs xl:text-sm">
 			<Tooltip delayDuration={0}>
 				<TooltipTrigger asChild>
 					<span className="text-muted-foreground hover:cursor-help">{short}</span>
@@ -645,14 +658,19 @@ function ChampionLanePositionTags({ positions }: { positions?: string[] }) {
 						src={t.icon}
 						width={20}
 					/>
-					<span className="font-medium text-foreground text-xs tracking-wide">
-						{t.label}
-					</span>
+					<span className="font-medium text-foreground tracking-wide">{t.label}</span>
 				</span>
 			))}
 		</div>
 	);
 }
+
+const formatStatValue = (str: string): string => {
+	return str
+		.replace(/_/g, ' ')
+		.toLowerCase()
+		.replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 	const roleBadges = (b.roles ?? []).map(roleTokenToBadge);
@@ -688,19 +706,19 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 			<div className={rowClass}>
 				<span className="font-medium">Range type</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
-					{b.attackType ?? ''}
+					{formatStatValue(b.attackType ?? '')}
 				</span>
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Resource</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
-					{b.resource ?? ''}
+					{formatStatValue(b.resource ?? '')}
 				</span>
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Adaptive type</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
-					{b.adaptiveType ?? ''}
+					{formatStatValue(b.adaptiveType ?? '')}
 				</span>
 			</div>
 		</div>

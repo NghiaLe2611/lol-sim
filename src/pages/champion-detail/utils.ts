@@ -25,11 +25,13 @@ export type BonusLevelingBlock = {
 export type BonusEffect = {
 	description: string;
 	leveling: BonusLevelingBlock[];
+	/** Optional per-effect art (e.g. Q casts), full URL — same row as description + leveling. */
+	icon?: string | null;
 };
 
 export type BonusAbility = {
 	name: string;
-	icon: string;
+	icon?: string | null;
 	effects: BonusEffect[];
 	cost: BonusCostCooldown | null;
 	cooldown: BonusCostCooldown | null;
@@ -105,7 +107,10 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 		attackTotalTime: { short: 'ATime', label: 'Attack total cycle time' },
 		attackRange: { short: 'ATT Range', label: 'Attack Range' },
 		criticalStrikeDamage: { short: 'Crit dmg', label: 'Critical Strike Damage' },
-		criticalStrikeDamageModifier: { short: 'Crit mod', label: 'Critical Strike Damage Modifier' },
+		criticalStrikeDamageModifier: {
+			short: 'Crit mod',
+			label: 'Critical Strike Damage Modifier',
+		},
 		gameplayRadius: { short: 'Gb radius', label: 'Gameplay Collision Radius' },
 		pathingRadius: { short: 'Path radius', label: 'Pathfinding Collision Radius' },
 		selectionRadius: { short: 'Sel radius', label: 'Selection Radius' },
@@ -115,9 +120,7 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 
 	if (preset[key]) return preset[key];
 
-	const label = key
-		.replace(/([a-z])([A-Z])/g, '$1 $2')
-		.replace(/^\w/, (c) => c.toUpperCase());
+	const label = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^\w/, (c) => c.toUpperCase());
 	const initials = label
 		.split(/\s+/)
 		.map((w) => w[0]!.toUpperCase())
@@ -151,13 +154,15 @@ export function formatSlashValues(mod: BonusModifierRow | undefined): string {
 	return compressIdenticalSlashValues(raw);
 }
 
-export function formatCostLine(cost: BonusCostCooldown | null, championResource?: string): string | null {
+export function formatCostLine(
+	cost: BonusCostCooldown | null,
+	championResource?: string
+): string | null {
 	if (!cost?.modifiers?.length) return null;
 	const first = cost.modifiers[0];
 	const body = formatSlashValues(first);
 	if (!body) return null;
-	const suff =
-		championResource && /\d/.test(body) ? ` ${String(championResource)}` : '';
+	const suff = championResource && /\d/.test(body) ? ` ${String(championResource)}` : '';
 	return `${body}${suff}`;
 }
 
@@ -166,11 +171,27 @@ export function formatCooldownLine(cd: BonusCostCooldown | null): string | null 
 	return formatSlashValues(cd.modifiers[0]);
 }
 
+/** Unit is literally "%" → values are per-rank percentages, not `(+ scaling)` parentheses. */
+function isBarePercentLevelUnit(unit: string): boolean {
+	return unit.trim() === '%';
+}
+
+// Single trailing
+function formatBarePercentPerLevelRow(mod: BonusModifierRow): string | null {
+	if (!mod.values.length) return null;
+	if (!mod.values.every((_, i) => isBarePercentLevelUnit(mod.units[i] ?? ''))) {
+		return null;
+	}
+	const numsJoined = mod.values.map((v) => formatNum(v)).join(' / ');
+	return `${compressIdenticalSlashValues(numsJoined)}%`;
+}
+
 function formatScalingPart(v: number | string, unit: string): string {
 	const val = formatNum(v);
 	const u = unit.trim();
 	if (!u) return val;
-	const isPctScaling = u.includes('%') || /\b(AP|AD|AH)\b/i.test(u);
+	const isPctScaling =
+		!isBarePercentLevelUnit(u) && (u.includes('%') || /\b(AP|AD|AH)\b/i.test(u));
 	if (isPctScaling) {
 		const spacer = /^%/.test(u) ? '' : ' ';
 		return `(+ ${val}${spacer}${u})`.replace(/\s+/g, ' ').trim();
@@ -182,9 +203,27 @@ function partIsScalingToken(p: string): boolean {
 	return p.trim().startsWith('(+');
 }
 
-/** Merge per-level `(+ 40% AP)` groups: identical → one; varying coefficient, same suffix → `(+ 40/45/50% AP)`. */
-function compressScalingParenthesesGroup(parts: string[]): string {
+type CompressScalingParenthesesOpts = {
+	/**
+	 * Merged line: base damage + second modifier row is stat scaling.
+	 * Keep `(+ …)` around the scaling chunk even when coeffs differ by rank
+	 * (`10 / … / 70 (+ 60 / … / 90% AD)`). Single-modifier rows omit this wrapper.
+	 */
+	trailingBonusScaling?: boolean;
+};
+
+/**
+ * Merge per-level `(+ 40% AP)` fragments.
+ * Same coefficient everywhere → `(+ 80% AD)`.
+ * Coefficients differ by rank → `20 / 30 / 40% AD` unless {@link CompressScalingParenthesesOpts.trailingBonusScaling}
+ * (then `(+ 60 / … / 90% AD)` after a separate base row).
+ */
+function compressScalingParenthesesGroup(
+	parts: string[],
+	opts?: CompressScalingParenthesesOpts
+): string {
 	if (parts.length === 0) return '';
+	const trailingBonusScaling = opts?.trailingBonusScaling === true;
 	const norm = parts.map((p) => p.replace(/\s+/g, ' ').trim());
 	if (norm.every((p) => p === norm[0])) return norm[0]!;
 
@@ -197,10 +236,17 @@ function compressScalingParenthesesGroup(parts: string[]): string {
 		const suffixes = new Set(parsed.map((x) => x!.suffix));
 		if (suffixes.size === 1) {
 			const suffix = parsed[0]!.suffix;
-			const nums = parsed.map((x) => x!.num).join(' / ');
 			const spacer =
 				suffix.length === 0 ? '' : suffix.startsWith('%') ? '' : ' ';
-			return `(+ ${nums}${spacer}${suffix})`;
+			const numsJoined = compressIdenticalSlashValues(
+				parsed.map((x) => x!.num).join(' / ')
+			);
+			const flatBody = `${numsJoined}${spacer}${suffix}`;
+			const allSameCoeff = parsed.every((x) => x!.num === parsed[0]!.num);
+			if (allSameCoeff || trailingBonusScaling) {
+				return `(+ ${numsJoined}${spacer}${suffix})`;
+			}
+			return flatBody;
 		}
 	}
 	return norm.join(' ');
@@ -210,6 +256,7 @@ function modifierRowLooksLikeBase(mod: BonusModifierRow): boolean {
 	if (!mod.values.length) return false;
 	return mod.values.every((_, i) => {
 		const u = (mod.units[i] ?? '').trim();
+		if (isBarePercentLevelUnit(u)) return true;
 		return !u.includes('%') && !/\b(AP|AD|AH)\b/i.test(u);
 	});
 }
@@ -218,21 +265,29 @@ function modifierRowLooksLikeScaling(mod: BonusModifierRow): boolean {
 	if (!mod.values.length) return false;
 	return mod.values.every((_, i) => {
 		const u = (mod.units[i] ?? '').trim();
+		if (isBarePercentLevelUnit(u)) return false;
 		return u.includes('%') || /\b(AP|AD|AH)\b/i.test(u);
 	});
 }
 
 function formatOneModifierRowCompact(mod: BonusModifierRow): string | null {
 	if (!mod.values?.length) return null;
+
+	const barePct = formatBarePercentPerLevelRow(mod);
+	if (barePct != null && barePct.length > 0) return barePct;
+
 	const parts = mod.values.map((v, i) => formatScalingPart(v, mod.units[i] ?? ''));
 	const allScaling = parts.every((p) => partIsScalingToken(p));
-	const joined = allScaling ? compressScalingParenthesesGroup(parts) : compressIdenticalSlashValues(parts.join(' / '));
+	const joined = allScaling
+		? compressScalingParenthesesGroup(parts)
+		: compressIdenticalSlashValues(parts.join(' / '));
 	return joined || null;
 }
 
 /**
  * Lines for a leveling attribute: base + scaling rows merge into one line when the API splits them.
- * Repeating identical scaling collapses; varying % with the same unit suffix uses `40/45/50` in one `(+ …)`.
+ * Single modifier: varying `% AD`/AP by rank → `20 / 30 / 40% AD` (no bonus parens).
+ * Base + scaling row merged → `base (+ 60 / … / 90% AD)` even when scaling varies by rank.
  */
 export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): string[] {
 	if (!modifiers.length) return [];
@@ -245,12 +300,13 @@ export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): stri
 		modifierRowLooksLikeBase(first) &&
 		rest.every((m) => modifierRowLooksLikeScaling(m))
 	) {
-		const baseParts = first.values.map((v, i) => formatScalingPart(v, first.units[i] ?? ''));
-		const baseLine = compressIdenticalSlashValues(baseParts.join(' / '));
+		const baseLine = formatOneModifierRowCompact(first);
 		const scaleParts = rest.flatMap((m) =>
 			m.values.map((v, i) => formatScalingPart(v, m.units[i] ?? ''))
 		);
-		const scaleLine = compressScalingParenthesesGroup(scaleParts);
+		const scaleLine = compressScalingParenthesesGroup(scaleParts, {
+			trailingBonusScaling: true,
+		});
 		const merged = [baseLine, scaleLine].filter(Boolean).join(' ');
 		return merged ? [merged] : [];
 	}
@@ -266,7 +322,7 @@ export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): stri
 export function formatAbilityScalar(v: string | number | null | undefined): string | null {
 	if (v == null || v === '') return null;
 	const s = String(v).trim();
-	return s.length ? s.toUpperCase() === 'NONE' ? 'NONE' : s : null;
+	return s.length ? (s.toUpperCase() === 'NONE' ? 'NONE' : s) : null;
 }
 
 const REJECT_STATS = /^(__proto__|prototype)$/;
@@ -326,11 +382,7 @@ const LANE_ORDER_RANK: Record<string, number> = Object.fromEntries(
 );
 
 export function normalizeLanePositionToken(raw: string): string {
-	return raw
-		.trim()
-		.toUpperCase()
-		.replace(/\s+/g, '_')
-		.replace(/-+/g, '_');
+	return raw.trim().toUpperCase().replace(/\s+/g, '_').replace(/-+/g, '_');
 }
 
 /** Một giá trị `positions[]` của API → icon + nhãn hiển thị. */
@@ -349,7 +401,9 @@ function laneUnknownLabel(raw: string): string {
 	return t.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function laneTagsFromPositions(positions: readonly string[] | undefined): LanePositionTagMeta[] {
+export function laneTagsFromPositions(
+	positions: readonly string[] | undefined
+): LanePositionTagMeta[] {
 	const list = positions ?? [];
 	const seen = new Set<string>();
 	const out: LanePositionTagMeta[] = [];

@@ -357,13 +357,13 @@ export default function ChampionsPage() {
 							className="hex-border animate-pulse overflow-hidden rounded-md border-border/60 bg-card/40"
 						>
 							<Skeleton className="aspect-square w-full rounded-none" />
-							<div className="space-y-2 p-3">
+							<div className="p-2 lg:py-2 space-y-2">
 								<Skeleton className="h-5 w-3/4" />
-								<Skeleton className="h-3 w-full" />
-								<div className="flex gap-1 pt-1">
+								<Skeleton className="h-4 w-full" />
+								{/* <div className="flex gap-1 pt-1">
 									<Skeleton className="h-5 w-14" />
 									<Skeleton className="h-5 w-14" />
-								</div>
+								</div> */}
 							</div>
 						</div>
 					))}
@@ -385,9 +385,9 @@ export default function ChampionsPage() {
 								<div className="aspect-square overflow-hidden bg-secondary relative">
 									<img
 										alt={c.name}
+										loading="lazy"
 										// lg:group-hover:opacity-40 backface-hidden
 										className="h-full w-full object-cover transition-transform group-hover:scale-[1.1]"
-										loading="lazy"
 										src={getSquareChampImg(version, (c as any).key)}
 										// src={getSquareChampImg(version, (c as any).key.toString())}
 										// c.id, c.name c.key
