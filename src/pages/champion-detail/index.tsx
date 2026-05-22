@@ -19,6 +19,10 @@ import {
 	roleTokenToBadge,
 	shouldShowBonusStatKey,
 } from '@/pages/champion-detail/utils';
+import AbilityVideoDialog, {
+	type AbilitySlotToken,
+	riotAbilityVideoUrl,
+} from '@/pages/champion-detail/AbilityVideoDialog';
 import { getBonusChampionDetail, getChampionDetail } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { memo, type ReactNode, useEffect, useMemo, useState } from 'react';
@@ -150,12 +154,12 @@ function RadarAttributeVertexDot({
 					onPointerEnter={() => onPointerEnter(index)}
 					onPointerLeave={onPointerLeave}
 				>
-					<circle className="pointer-events-auto" fill="transparent" r={14} />
+					<circle className="pointer-events-auto" fill="transparent" r={12} />
 					<circle
 						className="pointer-events-none"
 						fill="var(--hex-gold)"
 						fillOpacity={fillOp}
-						r={4.5}
+						r={3}
 						stroke="var(--hex-gold)"
 						strokeOpacity={isDim ? 0.35 : isHover ? 0.65 : 1}
 						strokeWidth={2}
@@ -313,24 +317,24 @@ function getOptionalReleaseDate(champion: ChampionDetailApi): string | null {
 	return typeof v === 'string' && v.length > 0 ? v : null;
 }
 
-// function AttributeBarRow({ label, value, max }: { label: string; value: number; max?: number }) {
-// 	const mx = max ?? 10;
-// 	const pct = mx > 0 ? Math.min(100, (Math.max(0, value) / mx) * 100) : 0;
-// 	return (
-// 		<div>
-// 			<div className="mb-1 flex justify-between text-xs lg:text-sm">
-// 				<span className="text-muted-foreground uppercase tracking-wider">{label}</span>
-// 				<span className="text-hex-gold">{value}</span>
-// 			</div>
-// 			<div className="h-2 overflow-hidden rounded-full bg-secondary">
-// 				<div
-// 					className="from-yellow-200 to-hex-gold dark:from-yellow-50 dark:to-yellow-500 h-full bg-gradient-to-r"
-// 					style={{ width: `${pct}%` }}
-// 				/>
-// 			</div>
-// 		</div>
-// 	);
-// }
+function AttributeBarRow({ label, value, max }: { label: string; value: number; max?: number }) {
+	const mx = max ?? 10;
+	const pct = mx > 0 ? Math.min(100, (Math.max(0, value) / mx) * 100) : 0;
+	return (
+		<div>
+			<div className="mb-1 flex justify-between text-xs lg:text-sm">
+				<span className="text-muted-foreground uppercase tracking-wider">{label}</span>
+				<span className="text-hex-gold">{value}</span>
+			</div>
+			<div className="h-2 overflow-hidden rounded-full bg-secondary">
+				<div
+					className="from-yellow-200 to-hex-gold dark:from-yellow-50 dark:to-yellow-500 h-full bg-gradient-to-r"
+					style={{ width: `${pct}%` }}
+				/>
+			</div>
+		</div>
+	);
+}
 
 const STAT_GRID_PRIORITY: readonly string[] = [
 	'health',
@@ -419,7 +423,7 @@ const LevelingModifierLines = memo(function LevelingModifierLines({
 	return (
 		<>
 			{lines.map((line, li) => (
-				<div key={li} className="mb-1 last:mb-0">
+				<div key={li} className="mb-1 pl-3 last:mb-0">
 					{formatLevelingLineColored(line)}
 				</div>
 			))}
@@ -483,13 +487,20 @@ function BonusAbilityCard({
 	slot,
 	spell,
 	championResource,
+	championNumericId,
 }: {
 	slot: (typeof ABILITY_SLOTS)[number];
 	spell: BonusAbility;
 	championResource?: string;
+	championNumericId?: number | string;
 }) {
-	const activeLabel = slot === 'P' ? 'Passive' : 'Active';
 	const nameLine = `${spell.name} (${slot === 'P' ? 'Passive' : slot})`;
+	const [videoOpen, setVideoOpen] = useState(false);
+
+	const abilityVideoUrl =
+		championNumericId != null && String(championNumericId).trim() !== ''
+			? riotAbilityVideoUrl(championNumericId, slot)
+			: '';
 
 	return (
 		<article className="border-border from-background mb-10 rounded-xl border bg-gradient-to-b to-muted/40 p-5 last:mb-0">
@@ -529,18 +540,23 @@ function BonusAbilityCard({
 					>
 						<div className="flex justify-center lg:justify-start">
 							{thumbSrc ? (
-								<img
-									alt=""
-									className="hover:cursor-pointer hover:scale-105 transition-all size-[56px] rounded-md border border-hex-blue/40 object-cover"
-									src={thumbSrc}
-								/>
+								<button
+									type="button"
+									className="rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+									onClick={() => setVideoOpen(true)}
+									aria-label={`Play ${slot === 'P' ? 'passive' : `${slot} ability`} video`}
+								>
+									<img
+										alt=""
+										className="pointer-events-none size-[56px] rounded-md border border-hex-blue/40 object-cover"
+										src={thumbSrc}
+									/>
+								</button>
 							) : null}
 						</div>
 						<div className="min-w-0 text-xs xl:text-sm leading-relaxed">
 							<p className="text-foreground">
-								{/* <strong className="tracking-wide">
-									{ei === 0 ? `${activeLabel}: ` : null}
-								</strong> */}
+								{/* <strong className="tracking-wide">{ei === 0 ? 'Intro: ' : null}</strong> */}
 								<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
 							</p>
 						</div>
@@ -563,6 +579,12 @@ function BonusAbilityCard({
 					</div>
 				);
 			})}
+			<AbilityVideoDialog
+				open={videoOpen}
+				onOpenChange={setVideoOpen}
+				title={nameLine}
+				videoUrl={abilityVideoUrl}
+			/>
 			{/* Notes */}
 			{/* {spell.notes && spell.notes !== 'No additional details.' ? (
 				<p className="text-muted-foreground mt-6 border-border/60 border-t pt-4 text-xs italic">
@@ -782,6 +804,7 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 							return (
 								<BonusAbilityCard
 									key={slot}
+									championNumericId={b.id}
 									slot={slot}
 									championResource={b.resource ?? undefined}
 									spell={spell}
@@ -805,6 +828,17 @@ function ChampionDetailLegacyContent({
 }) {
 	const rangeLabel = detectAttackRangeType(c.stats.attackrange ?? 0);
 	const release = getOptionalReleaseDate(c);
+
+	const [abilityVideoOpen, setAbilityVideoOpen] = useState(false);
+	const [abilityVideoSlot, setAbilityVideoSlot] = useState<AbilitySlotToken>('P');
+	const [abilityVideoTitle, setAbilityVideoTitle] = useState('');
+
+	const openLegacyAbilityVideo = (slot: AbilitySlotToken, title: string) => {
+		setAbilityVideoSlot(slot);
+		setAbilityVideoTitle(title);
+		setAbilityVideoOpen(true);
+	};
+	const legacyVideoUrl = riotAbilityVideoUrl(Number(c.key), abilityVideoSlot);
 
 	return (
 		<div className="mx-auto max-w-container">
@@ -843,7 +877,7 @@ function ChampionDetailLegacyContent({
 			</div>
 
 			<div className="grid grid-cols-1 gap-6 py-8 px-6 lg:grid-cols-2">
-				{/* <div className="hex-border rounded-lg p-6">
+				<div className="hex-border rounded-lg p-6">
 					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
 						Class Profile
 					</h3>
@@ -853,7 +887,7 @@ function ChampionDetailLegacyContent({
 						<AttributeBarRow label="Magic" max={10} value={c.info.magic} />
 						<AttributeBarRow label="Difficulty" max={10} value={c.info.difficulty} />
 					</div>
-				</div> */}
+				</div>
 				<div className="hex-border rounded-lg p-6">
 					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
 						Base Stats
@@ -901,11 +935,20 @@ function ChampionDetailLegacyContent({
 						</h2>
 						<div className="space-y-4">
 							<div className="flex gap-4">
-								<img
-									alt=""
-									className="h-12 w-12 shrink-0 rounded-md border border-hex-gold/30 object-cover"
-									src={passiveImgUrl(patchVersion, c.passive.image.full)}
-								/>
+								<button
+									type="button"
+									className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+									onClick={() =>
+										openLegacyAbilityVideo('P', `${c.passive.name} (Passive)`)
+									}
+									aria-label="Play passive ability video"
+								>
+									<img
+										alt=""
+										className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-gold/30 object-cover"
+										src={passiveImgUrl(patchVersion, c.passive.image.full)}
+									/>
+								</button>
 								<div className="min-w-0">
 									<div className="font-semibold">
 										{c.passive.name}
@@ -924,11 +967,23 @@ function ChampionDetailLegacyContent({
 								if (!s) return null;
 								return (
 									<div key={s.id} className="flex gap-4">
-										<img
-											alt=""
-											className="h-12 w-12 shrink-0 rounded-md border border-hex-blue/40 object-cover"
-											src={skillImgUrl(patchVersion, s.image.full)}
-										/>
+										<button
+											type="button"
+											className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-blue/60"
+											onClick={() =>
+												openLegacyAbilityVideo(
+													slot as AbilitySlotToken,
+													`${s.name} (${slot})`
+												)
+											}
+											aria-label={`Play ${slot} ability video`}
+										>
+											<img
+												alt=""
+												className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-blue/40 object-cover"
+												src={skillImgUrl(patchVersion, s.image.full)}
+											/>
+										</button>
 										<div className="min-w-0 flex-1">
 											<div className="flex flex-wrap items-center justify-between gap-2">
 												<div className="flex flex-wrap items-center font-semibold">
@@ -937,26 +992,24 @@ function ChampionDetailLegacyContent({
 														({slot})
 													</span>
 												</div>
-												<div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs 3xl:text-sm">
+												<div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-xs xl:text-sm">
 													<span>
-														<span className="font-medium">Cost:</span>{' '}
-														<span className="text-hex-blue-glow">
-															{s.costBurn}
-														</span>
+														<span className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
+															Cost:
+														</span>{' '}
+														<span>{s.costBurn}</span>
 													</span>
 													<span>
-														<span className="font-medium">
+														<span className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
 															Cooldown:
 														</span>{' '}
-														<span className="text-hex-gold">
-															{s.cooldownBurn}
-														</span>
+														<span>{s.cooldownBurn}</span>
 													</span>
 													<span>
-														<span className="font-medium">Range:</span>{' '}
-														<span className="text-foreground">
-															{s.rangeBurn}
-														</span>
+														<span className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
+															Range:
+														</span>{' '}
+														<span>{s.rangeBurn}</span>
 													</span>
 												</div>
 											</div>
@@ -971,6 +1024,13 @@ function ChampionDetailLegacyContent({
 					</div>
 				</div>
 			</div>
+
+			<AbilityVideoDialog
+				open={abilityVideoOpen}
+				title={abilityVideoTitle}
+				videoUrl={legacyVideoUrl}
+				onOpenChange={setAbilityVideoOpen}
+			/>
 		</div>
 	);
 }
