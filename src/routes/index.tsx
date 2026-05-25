@@ -16,7 +16,7 @@ export const appRoutes: RouteObject[] = [
         children: [
             { index: true, element: <HomePage /> },
             { path: 'champions', element: <ChampionsPage /> },
-            { path: 'champions/:championId', element: <ChampionDetailPage /> },
+            { path: 'champions/:id', element: <ChampionDetailPage /> },
             { path: 'items', element: <ItemsPage /> },
             { path: 'runes', element: <RunesPage /> },
             { path: 'spells', element: <SpellsPage /> },

@@ -1,8 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { STALE_MS, passiveImgUrl, splashChampionImg, skillImgUrl } from '@/constants/common';
+import { STALE_MS, passiveImgUrl, skillImgUrl, splashChampionImg } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
+import {
+	type AbilitySlotToken,
+	riotAbilityVideoUrl,
+} from '@/pages/champion-detail/AbilityVideoDialog';
 import {
 	type BonusAbility,
 	type BonusAttributeRatings,
@@ -19,13 +23,13 @@ import {
 	roleTokenToBadge,
 	shouldShowBonusStatKey,
 } from '@/pages/champion-detail/utils';
-import AbilityVideoDialog, {
-	type AbilitySlotToken,
-	riotAbilityVideoUrl,
-} from '@/pages/champion-detail/AbilityVideoDialog';
+// import AbilityVideoDialog from '@/pages/champion-detail/AbilityVideoDialog';
+import HoverPopover from '@/components/HoverPopover';
+import DifficultyRating from '@/pages/champion-detail/DifficultyRating';
 import { getBonusChampionDetail, getChampionDetail } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import { memo, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { AudioLines } from 'lucide-react';
+import { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
 	PolarAngleAxis,
@@ -35,10 +39,11 @@ import {
 	RadarChart,
 	ResponsiveContainer,
 } from 'recharts';
+import AbilityPopover from './AbilityPopover';
+import ChampionSkinList from './ChampionSkinList';
 
 const ABILITY_SLOTS = ['P', 'Q', 'W', 'E', 'R'] as const;
-
-const ATTRIBUTE_RADAR_MAX = 5;
+const ATTRIBUTE_RADAR_MAX = 3;
 
 /** First five API attribute ratings → pentagon radar (icons in `public/images/icons/attrs`). */
 const ATTRIBUTE_RADAR_DEF = [
@@ -368,7 +373,7 @@ function HighlightedAbilityText({ children: text }: { children: string }): React
 	const parts = text.split(pattern);
 	const cls = (s: string) => {
 		const low = s.toLowerCase();
-		if (low === 'magic damage') return 'font-medium text-sky-300';
+		if (low === 'magic damage') return 'font-medium dark:text-sky-300 text-sky-500';
 		if (low === 'true damage') return 'font-medium text-neutral-50';
 		if (low === 'physical damage') return 'font-medium text-amber-500';
 		if (low === 'movement speed' || low === 'bonus movement speed')
@@ -470,7 +475,7 @@ function AbilityStatStrip({
 	const rows = buildAbilityDlRows(spell, championResource);
 	if (rows.length === 0) return null;
 	return (
-		<dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs xl:text-sm">
+		<dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs 2xl:text-sm">
 			{rows.map(({ key, node }) => (
 				<div key={key} className="flex gap-1.5 lowercase">
 					<dt className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
@@ -483,114 +488,189 @@ function AbilityStatStrip({
 	);
 }
 
-function BonusAbilityCard({
+function abilityHeading(spell: BonusAbility, slot: (typeof ABILITY_SLOTS)[number]): string {
+	return `${spell.name} (${slot === 'P' ? 'Passive' : slot})`;
+}
+
+/** Skill label for hover video popover */
+function titleForAbilityVideo(spell: BonusAbility, slot: (typeof ABILITY_SLOTS)[number]): string {
+	const trimmed = spell.name.trim();
+	if (slot === 'P') return trimmed ? abilityHeading(spell, slot) : 'Passive';
+	return trimmed || slot;
+}
+
+function BonusAbilityEffectsBody({
 	slot,
 	spell,
+	spellSegmentKey,
+	videoCaption,
+	videoUrl,
+}: {
+	slot: (typeof ABILITY_SLOTS)[number];
+	spell: BonusAbility;
+	spellSegmentKey: string;
+	videoCaption: string;
+	videoUrl: string;
+}) {
+	return spell.effects?.map((eff, ei) => {
+		const effectIconSrc =
+			typeof eff.icon === 'string' && eff.icon.trim().length > 0 ? eff.icon.trim() : null;
+		const spellIconSrc =
+			typeof spell.icon === 'string' && spell.icon.trim().length > 0
+				? spell.icon.trim()
+				: null;
+		const thumbSrc = effectIconSrc ?? (ei === 0 ? spellIconSrc : null);
+		const caption = titleForAbilityVideo(spell, slot);
+		const canPreview = Boolean(videoUrl.trim());
+
+		const thumbImg = (
+			<img
+				alt=""
+				className="pointer-events-none size-[56px] rounded-md border border-hex-blue/40 object-cover"
+				src={thumbSrc ?? ''}
+			/>
+		);
+
+		return (
+			<div
+				key={`${spellSegmentKey}-eff-${ei}`}
+				className="grid gap-6 py-2 4xl:py-4 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
+			>
+				<div className="flex items-start justify-center lg:justify-start">
+					{/* <button
+						type="button"
+						className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+						onClick={() => openLegacyAbilityVideo('P', `${c.passive.name} (Passive)`)}
+						aria-label="Play passive ability video"
+					>
+						<img
+							alt=""
+							className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-gold/30 object-cover"
+							src={passiveImgUrl(patchVersion, c.passive.image.full)}
+						/>
+					</button> */}
+					{thumbSrc && canPreview ? (
+						<HoverPopover
+							content={({ open }) => (
+								<AbilityPopover
+									caption={videoCaption}
+									isOpen={open}
+									src={videoUrl}
+								/>
+							)}
+							contentClassName="rounded-md border-0 bg-transparent p-0 shadow-xl"
+						>
+							<button
+								className="rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+								type="button"
+								aria-label={`Video preview on hover — ${caption}`}
+							>
+								{thumbImg}
+							</button>
+						</HoverPopover>
+					) : thumbSrc ? (
+						<span aria-hidden>{thumbImg}</span>
+					) : null}
+				</div>
+				<div className="min-w-0 text-xs leading-relaxed 2xl:text-sm">
+					<p className="text-foreground">
+						<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
+					</p>
+				</div>
+				{eff.leveling?.length ? (
+					<div className="rounded-md bg-muted/40 px-3 text-xs leading-snug 2xl:text-sm">
+						{eff.leveling.map((block, bi) => (
+							<div key={`${block.attribute}-${bi}`} className="mb-4 last:mb-0">
+								<div className="mb-1 rounded-sm bg-cyan-500/20 px-3 py-1 font-medium uppercase tracking-wide text-cyan-600 dark:text-sky-400">
+									{block.attribute}
+								</div>
+								<LevelingModifierLines modifiers={block.modifiers} />
+							</div>
+						))}
+					</div>
+				) : null}
+			</div>
+		);
+	});
+}
+
+function BonusAbilityCard({
+	slot,
+	spells,
 	championResource,
 	championNumericId,
 }: {
 	slot: (typeof ABILITY_SLOTS)[number];
-	spell: BonusAbility;
+	spells: BonusAbility[];
 	championResource?: string;
 	championNumericId?: number | string;
 }) {
-	const nameLine = `${spell.name} (${slot === 'P' ? 'Passive' : slot})`;
-	const [videoOpen, setVideoOpen] = useState(false);
-
 	const abilityVideoUrl =
 		championNumericId != null && String(championNumericId).trim() !== ''
 			? riotAbilityVideoUrl(championNumericId, slot)
 			: '';
 
+	const primary = spells[0];
+
+	if (!spells.length) return null;
+
 	return (
 		<article className="border-border from-background mb-10 rounded-xl border bg-gradient-to-b to-muted/40 p-5 last:mb-0">
-			<div className="flex flex-col gap-1">
-				<div className="flex flex-wrap items-baseline gap-2 justify-between mb-4">
-					<h3 className="font-semibold text-lg 3xl:text-xl capitalize">{nameLine}</h3>
-					<AbilityStatStrip championResource={championResource} spell={spell} />
-				</div>
-				{/* {(spell.blurb ?? spell.resource) ? (
-					<p className="text-muted-foreground mt-2 text-xs 3xl:text-sm leading-relaxed">
-						{spell.blurb}
-						{spell.resource ? (
-							<span className="ml-2 whitespace-nowrap text-[11px] text-sky-500/90">
-								[{spell.resource}]
-							</span>
-						) : null}
-					</p>
-				) : null} */}
-			</div>
-
-			{spell.effects?.map((eff, ei) => {
-				const effectIconSrc =
-					typeof eff.icon === 'string' && eff.icon.trim().length > 0
-						? eff.icon.trim()
-						: null;
-				const spellIconSrc =
-					typeof spell.icon === 'string' && spell.icon.trim().length > 0
-						? spell.icon.trim()
-						: null;
-				const thumbSrc = effectIconSrc ?? (ei === 0 ? spellIconSrc : null);
-
-				return (
-					<div
-						key={`${spell.name}-eff-${ei}`}
-						// border-border/50 border-t
-						className="py-2 4xl:py-4 grid gap-6 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
-					>
-						<div className="flex justify-center lg:justify-start">
-							{thumbSrc ? (
-								<button
-									type="button"
-									className="rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
-									onClick={() => setVideoOpen(true)}
-									aria-label={`Play ${slot === 'P' ? 'passive' : `${slot} ability`} video`}
-								>
-									<img
-										alt=""
-										className="pointer-events-none size-[56px] rounded-md border border-hex-blue/40 object-cover"
-										src={thumbSrc}
-									/>
-								</button>
-							) : null}
-						</div>
-						<div className="min-w-0 text-xs xl:text-sm leading-relaxed">
-							<p className="text-foreground">
-								{/* <strong className="tracking-wide">{ei === 0 ? 'Intro: ' : null}</strong> */}
-								<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
-							</p>
-						</div>
-						{eff.leveling?.length ? (
-							// border border-muted-foreground/20
-							<div className="rounded-md bg-muted/40 px-3 text-xs xl:text-sm leading-snug">
-								{eff.leveling.map((block, bi) => (
-									<div
-										key={`${block.attribute}-${bi}`}
-										className="mb-4 last:mb-0"
-									>
-										<div className="bg-cyan-500/20 rounded-sm px-3 py-1 mb-1 font-medium text-cyan-600 dark:text-sky-400 uppercase tracking-wide">
-											{block.attribute}
-										</div>
-										<LevelingModifierLines modifiers={block.modifiers} />
-									</div>
-								))}
-							</div>
-						) : null}
+			{spells.length === 1 && primary != null ? (
+				<>
+					<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+						<h3 className="font-semibold text-lg capitalize 3xl:text-xl">
+							{abilityHeading(primary, slot)}
+						</h3>
+						<AbilityStatStrip championResource={championResource} spell={primary} />
 					</div>
-				);
-			})}
+					{BonusAbilityEffectsBody({
+						slot,
+						spell: primary,
+						spellSegmentKey: primary.name,
+						videoCaption: titleForAbilityVideo(primary, slot),
+						videoUrl: abilityVideoUrl,
+					})}
+				</>
+			) : (
+				<>
+					{spells.map((spell, si) => (
+						<section
+							key={`${spell.name}-${si}`}
+							className={si === 0 ? '' : 'border-border/50 mt-8 border-t pt-8'}
+						>
+							<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+								<h3 className="font-semibold text-lg capitalize 3xl:text-xl">
+									{si === 0 ? abilityHeading(spell, slot) : spell.name}
+								</h3>
+								<AbilityStatStrip
+									championResource={championResource}
+									spell={spell}
+								/>
+							</div>
+							{BonusAbilityEffectsBody({
+								slot,
+								spell,
+								spellSegmentKey: `${spell.name}-${si}`,
+								videoCaption: titleForAbilityVideo(spell, slot),
+								videoUrl: abilityVideoUrl,
+							})}
+						</section>
+					))}
+				</>
+			)}
+
+			{/*
 			<AbilityVideoDialog
 				open={videoOpen}
-				onOpenChange={setVideoOpen}
-				title={nameLine}
+				onOpenChange={(open) => {
+					setVideoOpen(open);
+					if (!open) setVideoTitleOverride(null);
+				}}
+				title={videoDialogTitle}
 				videoUrl={abilityVideoUrl}
 			/>
-			{/* Notes */}
-			{/* {spell.notes && spell.notes !== 'No additional details.' ? (
-				<p className="text-muted-foreground mt-6 border-border/60 border-t pt-4 text-xs italic">
-					{spell.notes}
-				</p>
-			) : null} */}
+			*/}
 		</article>
 	);
 }
@@ -646,7 +726,7 @@ function BonusStatGridCell({
 		extras.push(`${perLevelPct >= 0 ? '+' : ''}${perLevelPct}%/lvl`);
 
 	return (
-		<div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 py-2 border-border/40 border-b text-xs xl:text-sm">
+		<div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 py-2 border-border/40 border-b text-xs 2xl:text-sm">
 			<Tooltip delayDuration={0}>
 				<TooltipTrigger asChild>
 					<span className="text-muted-foreground hover:cursor-help">{short}</span>
@@ -660,7 +740,7 @@ function BonusStatGridCell({
 					{Number.isInteger(flat) ? flat : Number(flat).toFixed(3)}
 				</span>
 				{extras.length ? (
-					<span className="text-muted-foreground text-sm"> ({extras.join(', ')})</span>
+					<span className="text-muted-foreground"> ({extras.join(', ')})</span>
 				) : null}
 			</div>
 		</div>
@@ -700,9 +780,9 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 		'grid grid-cols-[6rem_minmax(0,1fr)] items-start gap-x-4 py-2.5 max-sm:grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)]';
 
 	return (
-		<div className="divide-border/50 text-muted-foreground divide-y text-xs xl:text-sm">
+		<div className="divide-border/50 text-muted-foreground divide-y text-xs 2xl:text-sm">
 			<div className={rowClass}>
-				<span className="font-medium">Release date</span>
+				<span className="font-medium">Released Date</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
 					{b.releaseDate ?? ''}
 				</span>
@@ -717,7 +797,7 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 					{roleBadges.map((tg) => (
 						<Badge
 							key={tg}
-							className="border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
+							className="2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
 							variant="outline"
 						>
 							{tg}
@@ -726,7 +806,7 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 				</div>
 			</div>
 			<div className={rowClass}>
-				<span className="font-medium">Range type</span>
+				<span className="font-medium">Range Type</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
 					{formatStatValue(b.attackType ?? '')}
 				</span>
@@ -738,34 +818,84 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 				</span>
 			</div>
 			<div className={rowClass}>
-				<span className="font-medium">Adaptive type</span>
+				<span className="font-medium">Adaptive Type</span>
 				<span className="text-foreground min-h-[1.25em] text-right">
 					{formatStatValue(b.adaptiveType ?? '')}
 				</span>
+			</div>
+			<div className={rowClass}>
+				<span className="font-medium">Store Price</span>
+				<div className="ml-auto flex items-center gap-4 text-foreground">
+					{b?.price?.blueEssence && (
+						<p className="flex items-center gap-1">
+							<img
+								src="/images/icon-blue.png"
+								alt="Blue Essence"
+								className="w-4 h-4"
+							/>
+							{b?.price?.blueEssence}
+						</p>
+					)}
+					{b?.price?.rp && (
+						<p className="flex items-center gap-1">
+							<img src="/images/icon-rp.png" alt="RP" className="w-4 h-4" />
+							{b?.price?.rp}
+						</p>
+					)}
+				</div>
+			</div>
+			<div className={`${rowClass} items-center`}>
+				<span className="font-medium">Difficulty</span>
+				<DifficultyRating rating={b.attributeRatings?.difficulty || 0} />
 			</div>
 		</div>
 	);
 }
 
-function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
+function ChampionDetailBonusInner({ champion }: { champion: BonusChampionDetail }) {
+	const audioRef = useRef<HTMLAudioElement | null>(null);
+
+	const handlePlayVoice = () => {
+		if (audioRef.current) {
+			audioRef.current.pause();
+			audioRef.current.currentTime = 0;
+		}
+		const audio = new Audio(
+			`https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/champion-choose-vo/${champion.id}.ogg`
+		);
+		audio.volume = 0.5;
+		audio.play().catch(console.error);
+		audioRef.current = audio;
+	};
+
 	return (
 		<div className="mx-auto max-w-container">
 			<div className="relative h-96 overflow-hidden 3xl:h-[50vh]">
 				<img
-					alt={b.name}
+					alt={champion.name}
 					className="h-full w-full object-cover object-top"
-					src={splashChampionImg(b.key)}
+					src={splashChampionImg(champion.key)}
 				/>
 				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/25" />
 				<div className="absolute inset-x-0 bottom-0 mx-auto px-6 pb-6">
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<h1 className="display gold-text text-5xl font-medium">{b.name}</h1>
-							<p className="text-muted-foreground capitalize italic">{b.title}</p>
+							<h1 className="display gold-text text-5xl font-medium">
+								{champion.name}
+							</h1>
+							<div className="flex items-center gap-4">
+								<p className="text-muted-foreground capitalize italic">
+									{champion.title}
+								</p>
+								<span title="Play voice" onClick={handlePlayVoice}>
+									<AudioLines className="text-muted-foreground hover:text-foreground hover:cursor-pointer" />
+								</span>
+								{/* https://wiki.leagueoflegends.com/en-us/Zed/Audio */}
+							</div>
 						</div>
-						{b.lore ? (
+						{champion.lore ? (
 							<p className="text-muted-foreground whitespace-pre-line leading-relaxed text-xs lg:text-sm 4xl:text-base">
-								{b.lore}
+								{champion.lore}
 							</p>
 						) : null}
 					</div>
@@ -778,9 +908,9 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 						Attributes
 					</h3>
 					<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start lg:gap-6">
-						<ChampionBonusInfoRows b={b} />
+						<ChampionBonusInfoRows b={champion} />
 						<div className="grid">
-							<AttributesRadarChart ratings={b.attributeRatings} />
+							<AttributesRadarChart ratings={champion.attributeRatings} />
 						</div>
 					</div>
 				</div>
@@ -788,7 +918,7 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
 						Base Stats
 					</h3>
-					<BonusStatGrid stats={b.stats} />
+					<BonusStatGrid stats={champion.stats} />
 				</div>
 
 				<div className="lg:col-span-full">
@@ -798,21 +928,28 @@ function ChampionDetailBonusInner({ b }: { b: BonusChampionDetail }) {
 					</h2>
 					<div>
 						{ABILITY_SLOTS.map((slot) => {
-							const list = b.abilities?.[slot];
-							const spell = list?.[0];
-							if (!spell) return null;
+							const list = champion.abilities?.[slot];
+							if (!list?.length) return null;
+
 							return (
 								<BonusAbilityCard
 									key={slot}
-									championNumericId={b.id}
+									championNumericId={champion.id}
+									championResource={champion.resource ?? undefined}
 									slot={slot}
-									championResource={b.resource ?? undefined}
-									spell={spell}
+									spells={list}
 								/>
 							);
 						})}
 					</div>
 					{/* </div> */}
+				</div>
+
+				<div className="lg:col-span-full">
+					<h2 className="display mb-4 text-xl font-semibold text-hex-gold 3xl:text-2xl">
+						Champion Skins
+					</h2>
+					<ChampionSkinList skins={champion.skins} />
 				</div>
 			</div>
 		</div>
@@ -829,16 +966,10 @@ function ChampionDetailLegacyContent({
 	const rangeLabel = detectAttackRangeType(c.stats.attackrange ?? 0);
 	const release = getOptionalReleaseDate(c);
 
-	const [abilityVideoOpen, setAbilityVideoOpen] = useState(false);
-	const [abilityVideoSlot, setAbilityVideoSlot] = useState<AbilitySlotToken>('P');
-	const [abilityVideoTitle, setAbilityVideoTitle] = useState('');
+	/** Numeric champion id string for CDN video paths (DDRagon uses `key` slug — prefer `id`). */
+	const legacyChampionMediaId = c.id;
 
-	const openLegacyAbilityVideo = (slot: AbilitySlotToken, title: string) => {
-		setAbilityVideoSlot(slot);
-		setAbilityVideoTitle(title);
-		setAbilityVideoOpen(true);
-	};
-	const legacyVideoUrl = riotAbilityVideoUrl(Number(c.key), abilityVideoSlot);
+	const passiveVideoUrl = riotAbilityVideoUrl(legacyChampionMediaId, 'P');
 
 	return (
 		<div className="mx-auto max-w-container">
@@ -935,20 +1066,29 @@ function ChampionDetailLegacyContent({
 						</h2>
 						<div className="space-y-4">
 							<div className="flex gap-4">
-								<button
-									type="button"
-									className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
-									onClick={() =>
-										openLegacyAbilityVideo('P', `${c.passive.name} (Passive)`)
-									}
-									aria-label="Play passive ability video"
+								<HoverPopover
+									align="end"
+									content={({ open }) => (
+										<AbilityPopover
+											caption={`${c.passive.name} (Passive)`}
+											isOpen={open}
+											src={passiveVideoUrl}
+										/>
+									)}
+									contentClassName="rounded-md border-0 bg-transparent p-0 shadow-xl"
 								>
-									<img
-										alt=""
-										className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-gold/30 object-cover"
-										src={passiveImgUrl(patchVersion, c.passive.image.full)}
-									/>
-								</button>
+									<button
+										className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+										type="button"
+										aria-label={`Video preview on hover — ${c.passive.name} (Passive)`}
+									>
+										<img
+											alt=""
+											className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-gold/30 object-cover"
+											src={passiveImgUrl(patchVersion, c.passive.image.full)}
+										/>
+									</button>
+								</HoverPopover>
 								<div className="min-w-0">
 									<div className="font-semibold">
 										{c.passive.name}
@@ -965,25 +1105,36 @@ function ChampionDetailLegacyContent({
 							{['Q', 'W', 'E', 'R'].map((slot, idx) => {
 								const s = c.spells[idx];
 								if (!s) return null;
+								const slotToken = slot as AbilitySlotToken;
+								const spellVideoUrl = riotAbilityVideoUrl(
+									legacyChampionMediaId,
+									slotToken
+								);
+
 								return (
 									<div key={s.id} className="flex gap-4">
-										<button
-											type="button"
-											className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-blue/60"
-											onClick={() =>
-												openLegacyAbilityVideo(
-													slot as AbilitySlotToken,
-													`${s.name} (${slot})`
-												)
-											}
-											aria-label={`Play ${slot} ability video`}
+										<HoverPopover
+											content={({ open }) => (
+												<AbilityPopover
+													caption={`${s.name} (${slot})`}
+													isOpen={open}
+													src={spellVideoUrl}
+												/>
+											)}
+											contentClassName="rounded-md border-0 bg-transparent p-0 shadow-xl"
 										>
-											<img
-												alt=""
-												className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-blue/40 object-cover"
-												src={skillImgUrl(patchVersion, s.image.full)}
-											/>
-										</button>
+											<button
+												className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-blue/60"
+												type="button"
+												aria-label={`Video preview on hover — ${s.name} (${slot})`}
+											>
+												<img
+													alt=""
+													className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-blue/40 object-cover"
+													src={skillImgUrl(patchVersion, s.image.full)}
+												/>
+											</button>
+										</HoverPopover>
 										<div className="min-w-0 flex-1">
 											<div className="flex flex-wrap items-center justify-between gap-2">
 												<div className="flex flex-wrap items-center font-semibold">
@@ -992,7 +1143,7 @@ function ChampionDetailLegacyContent({
 														({slot})
 													</span>
 												</div>
-												<div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-xs xl:text-sm">
+												<div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-xs 2xl:text-sm">
 													<span>
 														<span className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
 															Cost:
@@ -1025,18 +1176,21 @@ function ChampionDetailLegacyContent({
 				</div>
 			</div>
 
+			{/*
 			<AbilityVideoDialog
 				open={abilityVideoOpen}
 				title={abilityVideoTitle}
 				videoUrl={legacyVideoUrl}
 				onOpenChange={setAbilityVideoOpen}
 			/>
+			*/}
 		</div>
 	);
 }
 
 export default function ChampionDetailPage() {
-	const { championId = '' } = useParams<{ championId: string }>();
+	const { id = '' } = useParams<{ id: string }>();
+	const championId = id.charAt(0).toUpperCase() + id.slice(1);
 	const { patchVersion: version } = useAppContext();
 
 	const bonusQuery = useQuery({
@@ -1067,13 +1221,13 @@ export default function ChampionDetailPage() {
 	});
 
 	const championDdr = ddrQuery.data ?? null;
-	const bonusOk = bonusQuery.data;
+	const bonusData = bonusQuery.data;
 
 	useEffect(() => {
-		const name = bonusOk?.name ?? championDdr?.name;
-		const title = bonusOk?.title ?? championDdr?.title;
+		const name = bonusData?.name ?? championDdr?.name;
+		const title = bonusData?.title ?? championDdr?.title;
 		document.title = name ? (title ? `${name}, ${title}` : name) : 'Champion';
-	}, [bonusOk, championDdr]);
+	}, [bonusData, championDdr]);
 
 	if (!championId) {
 		return (
@@ -1104,8 +1258,8 @@ export default function ChampionDetailPage() {
 		);
 	}
 
-	if (bonusOk) {
-		return <ChampionDetailBonusInner b={bonusOk} />;
+	if (bonusData) {
+		return <ChampionDetailBonusInner champion={bonusData} />;
 	}
 
 	if (!version) {

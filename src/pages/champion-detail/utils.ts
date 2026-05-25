@@ -83,7 +83,20 @@ export type BonusChampionDetail = {
 	abilities?: BonusAbilities;
 	releaseDate?: string;
 	faction?: string;
+	[key: string]: any;
 };
+
+/**
+ * Bonus API `attributeRatings.difficulty` uses the same **1–3** scale as the client
+ * (diamonds), not Riot Data Dragon’s 1–10 `info.difficulty`.
+ * Coerces numeric strings (some serializers return `"2"` instead of `2`).
+ */
+export function attributeRatingsDifficultyTier(raw: unknown): 1 | 2 | 3 {
+	const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw.trim()) : NaN;
+	if (typeof n !== 'number' || Number.isNaN(n)) return 2;
+	const t = Math.round(n);
+	return Math.min(3, Math.max(1, t)) as 1 | 2 | 3;
+}
 
 export function isBonusNumericStat(v: unknown): v is BonusNumericStatBlock {
 	if (!v || typeof v !== 'object') return false;
@@ -106,15 +119,15 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 		attackCastTime: { short: 'ACast', label: 'Attack windup cast time' },
 		attackTotalTime: { short: 'ATime', label: 'Attack total cycle time' },
 		attackRange: { short: 'ATT Range', label: 'Attack Range' },
-		criticalStrikeDamage: { short: 'Crit dmg', label: 'Critical Strike Damage' },
+		criticalStrikeDamage: { short: 'Crit Dmg', label: 'Critical Strike Damage' },
 		criticalStrikeDamageModifier: {
-			short: 'Crit mod',
+			short: 'Crit Mod',
 			label: 'Critical Strike Damage Modifier',
 		},
-		gameplayRadius: { short: 'Gb radius', label: 'Gameplay Collision Radius' },
-		pathingRadius: { short: 'Path radius', label: 'Pathfinding Collision Radius' },
-		selectionRadius: { short: 'Sel radius', label: 'Selection Radius' },
-		acquisitionRadius: { short: 'Acq radius', label: 'Acquisition Radius' },
+		gameplayRadius: { short: 'Gb Radius', label: 'Gameplay Collision Radius' },
+		pathingRadius: { short: 'Path Radius', label: 'Pathfinding Collision Radius' },
+		selectionRadius: { short: 'Sel Radius', label: 'Selection Radius' },
+		acquisitionRadius: { short: 'Acq Radius', label: 'Acquisition Radius' },
 		attackDelayOffset: { short: 'ADelay', label: 'Attack delay offset' },
 	};
 
@@ -236,11 +249,8 @@ function compressScalingParenthesesGroup(
 		const suffixes = new Set(parsed.map((x) => x!.suffix));
 		if (suffixes.size === 1) {
 			const suffix = parsed[0]!.suffix;
-			const spacer =
-				suffix.length === 0 ? '' : suffix.startsWith('%') ? '' : ' ';
-			const numsJoined = compressIdenticalSlashValues(
-				parsed.map((x) => x!.num).join(' / ')
-			);
+			const spacer = suffix.length === 0 ? '' : suffix.startsWith('%') ? '' : ' ';
+			const numsJoined = compressIdenticalSlashValues(parsed.map((x) => x!.num).join(' / '));
 			const flatBody = `${numsJoined}${spacer}${suffix}`;
 			const allSameCoeff = parsed.every((x) => x!.num === parsed[0]!.num);
 			if (allSameCoeff || trailingBonusScaling) {
@@ -287,7 +297,8 @@ function formatOneModifierRowCompact(mod: BonusModifierRow): string | null {
 /**
  * Lines for a leveling attribute: base + scaling rows merge into one line when the API splits them.
  * Single modifier: varying `% AD`/AP by rank → `20 / 30 / 40% AD` (no bonus parens).
- * Base + scaling row merged → `base (+ 60 / … / 90% AD)` even when scaling varies by rank.
+ * Base + one or more scaling rows: each scaling suffix compresses separately, e.g.
+ * `50 / … / 170 (+ 70% AP) (+ 3 / … / 7% of target's maximum health)`.
  */
 export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): string[] {
 	if (!modifiers.length) return [];
@@ -301,13 +312,16 @@ export function formatLevelingModifierLines(modifiers: BonusModifierRow[]): stri
 		rest.every((m) => modifierRowLooksLikeScaling(m))
 	) {
 		const baseLine = formatOneModifierRowCompact(first);
-		const scaleParts = rest.flatMap((m) =>
-			m.values.map((v, i) => formatScalingPart(v, m.units[i] ?? ''))
-		);
-		const scaleLine = compressScalingParenthesesGroup(scaleParts, {
-			trailingBonusScaling: true,
-		});
-		const merged = [baseLine, scaleLine].filter(Boolean).join(' ');
+		/** Each scaling row (e.g. % AP, % max HP) compresses on its own — do not mix suffixes in one group. */
+		const scaleLines = rest
+			.map((m) =>
+				compressScalingParenthesesGroup(
+					m.values.map((v, i) => formatScalingPart(v, m.units[i] ?? '')),
+					{ trailingBonusScaling: true }
+				)
+			)
+			.filter((s) => s.length > 0);
+		const merged = [baseLine, ...scaleLines].filter(Boolean).join(' ');
 		return merged ? [merged] : [];
 	}
 

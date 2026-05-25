@@ -81,6 +81,25 @@ export default {
 				'10xl': '160rem',
 				container: '1440px',
 			},
+			keyframes: {
+				// 'accordion-down': {
+				//     from: { height: '0' },
+				//     to: { height: 'var(--radix-accordion-content-height)' },
+				// },
+				// 'accordion-up': {
+				//     from: { height: 'var(--radix-accordion-content-height)' },
+				//     to: { height: '0' },
+				// },
+				'loading-bars': {
+					'0%, 40%, 100%': { transform: 'scaleY(0.4)' },
+					'20%': { transform: 'scaleY(1)' },
+				},
+			},
+			animation: {
+				// 'accordion-down': 'accordion-down 0.2s ease-out',
+				// 'accordion-up': 'accordion-up 0.2s ease-out',
+				'loading-bars': 'loading-bars 1.2s infinite ease-in-out',
+			},
 		},
 	},
 	plugins: [
