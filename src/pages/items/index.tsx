@@ -1,110 +1,112 @@
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
-import { Badge } from '@/components/ui/badge';
-import { items } from '@/data/lol';
-import { Coins } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+import { itemImgUrl, STALE_MS } from '@/constants/common';
+import { useAppContext } from '@/contexts/AppContext';
+import { ItemGridCell } from '@/pages/items/ItemGridCell';
+import {
+	parseDdragonItemMap,
+	parseDdragonItems,
+	type DdragonItemsPayload,
+} from '@/pages/items/utils';
+import { getItems } from '@/services/api';
+import { rankDisplayNameSearch } from '@/utils/common';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
 export default function ItemsPage() {
 	const [search, setSearch] = useState('');
-	const [tag, setTag] = useState('All');
-	const tags = useMemo(() => ['All', ...Array.from(new Set(items.flatMap((i) => i.tags)))], []);
+	const { patchVersion, isPatchReady } = useAppContext();
+
+	const itemsQuery = useQuery({
+		queryKey: ['items', patchVersion],
+		queryFn: () => getItems(patchVersion!),
+		enabled: isPatchReady,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+		select: (raw: DdragonItemsPayload) => ({
+			items: parseDdragonItems(raw),
+			byId: parseDdragonItemMap(raw),
+		}),
+	});
+
+	const srItems = itemsQuery.data?.items ?? [];
+	const itemsById = itemsQuery.data?.byId ?? {};
+
 	const filtered = useMemo(() => {
-		const q = search.toLowerCase();
-		return items.filter((i) => {
-			const ms =
-				!q ||
-				i.name.toLowerCase().includes(q) ||
-				i.tags.join(' ').toLowerCase().includes(q) ||
-				i.description.toLowerCase().includes(q);
-			const mt = tag === 'All' || i.tags.includes(tag);
-			return ms && mt;
-		});
-	}, [search, tag]);
+		const q = search.trim().toLowerCase();
+		if (!q) return srItems;
+		return srItems
+			.map((item) => ({ item, rank: rankDisplayNameSearch(q, item.name) }))
+			.filter((row) => row.rank != null)
+			.sort((a, b) => {
+				if (a.rank! !== b.rank!) return a.rank! - b.rank!;
+				return a.item.name.localeCompare(b.item.name);
+			})
+			.map((row) => row.item);
+	}, [srItems, search]);
+
+	const isLoading = !isPatchReady || itemsQuery.isPending;
 
 	return (
-		<div className="mx-auto max-w-container px-6 py-12">
+		<div className="mx-auto w-full max-w-container px-6 py-12">
 			<header className="mb-8">
-				<h1 className="display gold-text text-4xl">Item Shop</h1>
+				<h1 className="display gold-text text-4xl">List of items</h1>
 				<p className="text-muted-foreground mt-2">
-					Inspect items, stats and unique effects.
+					All in-game items for League of Legends (Summoner's Rift).
 				</p>
 			</header>
 
 			<div className="mb-8 flex flex-col gap-4 md:flex-row">
 				<div className="md:w-96">
 					<SearchAutocomplete
-						getLabel={(i) => i.name}
-						items={items}
+						getImgUrl={(item) => itemImgUrl(patchVersion!, item.id) as string}
+						getLabel={(item) => item.name}
+						items={srItems}
+						matchIncludes
 						onChange={setSearch}
 						placeholder="Search items..."
 						value={search}
 					/>
 				</div>
-				<div className="flex flex-wrap gap-2">
-					{tags.map((t) => (
-						<button
-							key={t}
-							className={
-								'rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider transition-colors ' +
-								(tag === t
-									? 'border-hex-gold bg-hex-gold/10 text-hex-gold'
-									: 'border-border text-muted-foreground hover:text-foreground')
-							}
-							onClick={() => setTag(t)}
-							type="button"
-						>
-							{t}
-						</button>
-					))}
-				</div>
 			</div>
 
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{filtered.map((i) => (
-					<div
-						key={i.id}
-						className="hex-border hover:border-hex-gold rounded-lg p-5 transition-colors"
-					>
-						<div className="flex items-start justify-between gap-3">
-							<div>
-								<div className="display text-lg text-hex-gold">{i.name}</div>
-								<div className="text-hex-gold-dark mt-0.5 flex items-center gap-1 text-sm">
-									<Coins className="h-3.5 w-3.5" />
-									<span>{i.cost}</span>
-								</div>
-							</div>
-							<div className="flex flex-wrap justify-end gap-1">
-								{i.tags.map((t) => (
-									<Badge
-										key={t}
-										className="border-hex-blue/40 text-[10px] text-hex-blue-glow"
-										variant="outline"
-									>
-										{t}
-									</Badge>
-								))}
-							</div>
-						</div>
-						<p className="text-muted-foreground mt-3 text-sm italic">{i.description}</p>
-						<div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-							{Object.entries(i.stats).map(([k, v]) => (
-								<div
-									key={k}
-									className="border-border/50 flex justify-between border-b py-0.5"
-								>
-									<span className="text-muted-foreground uppercase">{k}</span>
-									<span className="text-foreground">+{v}</span>
-								</div>
-							))}
-						</div>
-					</div>
-				))}
-				{filtered.length === 0 && (
-					<div className="text-muted-foreground col-span-full py-12 text-center">
-						No items match your search.
-					</div>
-				)}
-			</div>
+			{isLoading ? (
+				<div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+					<Spinner type="default" className="size-10 text-hex-gold" />
+					<Skeleton className="h-4 w-48" />
+				</div>
+			) : itemsQuery.isError ? (
+				<p className="text-muted-foreground py-12 text-center">Failed to load items.</p>
+			) : (
+				<div className="grid grid-cols-6 sm:grid-cols-12 md:grid-cols-[repeat(18,minmax(0,1fr))] 2xl:grid-cols-[repeat(24,minmax(0,1fr))] gap-0.5">
+					{filtered.map((item) => (
+						<ItemGridCell
+							key={item.id}
+							item={item}
+							itemsById={itemsById}
+							patchVersion={patchVersion!}
+						/>
+					))}
+					{filtered.length === 0 ? (
+						<p className="text-muted-foreground col-span-full py-12 text-center">
+							No items match your search.
+						</p>
+					) : null}
+				</div>
+			)}
 		</div>
 	);
 }
+
+/*
+"HealthRegen",
+"ManaRegen",
+"OnHit"
+"Consumable",
+"Lane",
+"Jungle"
+"Active",
+"Trinket",
+"Vision"
+*/

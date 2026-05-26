@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { matchesDisplayNamePrefix } from '@/utils/common';
+import {
+	matchesDisplayNamePrefix,
+	rankDisplayNameSearch,
+} from '@/utils/common';
 import { Search } from 'lucide-react';
 
 type Props<T> = {
@@ -12,6 +15,9 @@ type Props<T> = {
 	value: string;
 	/** Merged into the input; use e.g. `h-8 md:h-10` to align with an adjacent control. */
 	inputClassName?: string;
+	/** When true, match query anywhere in the label (case-insensitive). Default: prefix match. */
+	matchIncludes?: boolean;
+	getImgUrl?: (item: T) => string;
 };
 
 export function SearchAutocomplete<T>({
@@ -21,6 +27,8 @@ export function SearchAutocomplete<T>({
 	onChange,
 	value,
 	inputClassName,
+	getImgUrl,
+	matchIncludes = false,
 }: Props<T>) {
 	const [focused, setFocused] = useState(false);
 
@@ -29,9 +37,18 @@ export function SearchAutocomplete<T>({
 		if (!q) return [];
 
 		return items
-			.filter((it) => matchesDisplayNamePrefix(q, getLabel(it)))
-			.slice(0, 6);
-	}, [items, value, getLabel]);
+			.map((it) => ({ it, label: getLabel(it), rank: rankDisplayNameSearch(q, getLabel(it)) }))
+			.filter((row) =>
+				row.rank != null &&
+				(matchIncludes ? true : matchesDisplayNamePrefix(q, row.label)),
+			)
+			.sort((a, b) => {
+				if (a.rank! !== b.rank!) return a.rank! - b.rank!;
+				return a.label.localeCompare(b.label);
+			})
+			.slice(0, 6)
+			.map((row) => row.it);
+	}, [items, value, getLabel, matchIncludes]);
 
 	return (
 		<div className="relative w-full min-w-0">
@@ -56,8 +73,15 @@ export function SearchAutocomplete<T>({
 							key={i}
 							type="button"
 							onMouseDown={() => onChange(getLabel(s))}
-							className="w-full text-left px-3 py-2 text-sm hover:bg-secondary text-foreground"
+							className="flex items-center w-full text-left px-3 py-2 text-sm hover:bg-secondary text-foreground"
 						>
+							{getImgUrl && (
+								<img
+									src={getImgUrl(s)}
+									alt={getLabel(s)}
+									className="w-4 h-4 mr-1"
+								/>
+							)}
 							{getLabel(s)}
 						</button>
 					))}

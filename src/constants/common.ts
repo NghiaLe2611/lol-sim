@@ -25,6 +25,11 @@ export function skillImgUrl(version: string, imageFull: string) {
 	return `${apiUrl}/cdn/${version}/img/spell/${imageFull}`;
 }
 
+export function itemImgUrl(version: string, itemId: string) {
+	// return `https://leagueofitems.com/images/items/128/${itemId}.webp`;
+	return `${apiUrl}/cdn/${version}/img/item/${itemId}.png`;
+}
+
 // Get square champion img
 function replaceSpace(str: string): string {
 	return str.replace(/\s+/g, '_');

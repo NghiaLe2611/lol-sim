@@ -13,6 +13,8 @@ export type HoverPopoverProps = {
 	align?: Popover.PopoverContentProps['align'];
 	side?: Popover.PopoverContentProps['side'];
 	sideOffset?: number;
+	/** Delay before closing when pointer leaves (ms). Default 140. */
+	closeDelayMs?: number;
 };
 
 /**
@@ -26,6 +28,7 @@ function HoverPopover({
 	align = 'center',
 	side = 'right',
 	sideOffset = 10,
+	closeDelayMs = CLOSE_DELAY_MS,
 }: HoverPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,8 +50,8 @@ function HoverPopover({
 		closeTimerRef.current = setTimeout(() => {
 			setOpen(false);
 			closeTimerRef.current = null;
-		}, CLOSE_DELAY_MS);
-	}, [cancelCloseTimer]);
+		}, closeDelayMs);
+	}, [cancelCloseTimer, closeDelayMs]);
 
 	const renderedContent =
 		typeof content === 'function'

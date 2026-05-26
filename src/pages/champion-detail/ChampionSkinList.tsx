@@ -184,7 +184,7 @@ function LightboxSplashImage({ src, alt }: { src: string; alt: string }) {
 			<div
 				className={cn(
 					'absolute inset-0 flex items-center justify-center transition-opacity duration-200',
-					loaded ? 'pointer-events-none opacity-0' : 'opacity-100',
+					loaded ? 'pointer-events-none opacity-0' : 'opacity-100'
 				)}
 				aria-hidden={loaded}
 			>
@@ -196,7 +196,7 @@ function LightboxSplashImage({ src, alt }: { src: string; alt: string }) {
 				alt={alt}
 				className={cn(
 					'h-full w-full object-contain transition-opacity duration-300',
-					loaded ? 'animate-in fade-in opacity-100' : 'opacity-0',
+					loaded ? 'animate-in fade-in opacity-100' : 'opacity-0'
 				)}
 				onLoad={() => setLoaded(true)}
 				onError={() => setLoaded(true)}
@@ -270,32 +270,30 @@ function SkinLightbox({
 				<div className="relative w-full">
 					{canNavigate ? (
 						<>
-							<Button
+							<button
 								type="button"
-								variant="ghost"
-								size="icon"
 								aria-label="Previous skin"
 								className={cn(
-									'absolute left-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full bg-black/40 !text-white',
+									'flex items-center justify-center',
+									'absolute left-2 top-1/2 z-20 h-10 w-10 4xl:h-12 4xl:w-12 -translate-y-1/2 rounded-full bg-black/40 !text-white',
 									'opacity-0 transition-opacity hover:bg-black/60 group-hover/lightbox:opacity-100'
 								)}
 								onClick={goPrev}
 							>
-								<ChevronLeft className="h-6 w-6" />
-							</Button>
-							<Button
+								<ChevronLeft className="h-4 w-4 4xl:h-6 4xl:w-6 -ml-1" />
+							</button>
+							<button
 								type="button"
-								variant="ghost"
-								size="icon"
 								aria-label="Next skin"
 								className={cn(
-									'absolute right-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full bg-black/40 !text-white',
+									'flex items-center justify-center',
+									'absolute right-2 top-1/2 z-20 h-10 w-10 4xl:h-12 4xl:w-12 -translate-y-1/2 rounded-full bg-black/40 !text-white',
 									'opacity-0 transition-opacity hover:bg-black/60 group-hover/lightbox:opacity-100'
 								)}
 								onClick={goNext}
 							>
-								<ChevronRight className="h-6 w-6" />
-							</Button>
+								<ChevronRight className="h-4 w-4 4xl:h-6 4xl:w-6 ml-1" />
+							</button>
 						</>
 					) : null}
 

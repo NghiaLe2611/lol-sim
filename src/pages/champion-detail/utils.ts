@@ -119,6 +119,7 @@ export function bonusStatAbbreviation(key: string): { short: string; label: stri
 		attackCastTime: { short: 'ACast', label: 'Attack windup cast time' },
 		attackTotalTime: { short: 'ATime', label: 'Attack total cycle time' },
 		attackRange: { short: 'ATT Range', label: 'Attack Range' },
+		crit: { short: 'Crit', label: 'Crit' },
 		criticalStrikeDamage: { short: 'Crit Dmg', label: 'Critical Strike Damage' },
 		criticalStrikeDamageModifier: {
 			short: 'Crit Mod',
@@ -448,4 +449,21 @@ export function coerceBonusDetail(raw: unknown): BonusChampionDetail | null {
 	if (typeof r.name !== 'string') return null;
 	const key = typeof r.key === 'string' ? r.key : r.name;
 	return { ...(raw as Record<string, unknown>), key } as BonusChampionDetail;
+}
+
+export function stripLolMarkupToText(html: string): string {
+	return html
+		.replace(/<br\s*\/?>/gi, '\n')
+		.replace(/<[^>]+>/g, '')
+		.trim();
+}
+
+/** Optional release hint from DDRagon quirks. */
+export function getOptionalReleaseDate(champion: {
+	releaseDate?: string;
+	releasedate?: string;
+	released?: string;
+}): string | null {
+	const v = champion.releaseDate ?? champion.releasedate ?? champion.released ?? null;
+	return typeof v === 'string' && v.length > 0 ? v : null;
 }
