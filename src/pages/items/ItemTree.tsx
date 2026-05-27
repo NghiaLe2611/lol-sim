@@ -105,7 +105,7 @@ function ItemTreeHorizontal({ item, itemsById, patchVersion }: ItemTreeProps) {
 
 				{children.map((child, index) => (
 					<div
-						key={child.id}
+						key={`${child.id}-${index}`}
 						className={cn(
 							'relative flex w-[4.5rem] flex-col items-center',
 							index > 0 && 'ml-3'
@@ -135,7 +135,7 @@ function ItemTreeVertical({ item, itemsById, patchVersion }: ItemTreeProps) {
 					{children.map((child, index) => {
 						const isLast = index === children.length - 1;
 						return (
-							<li key={child.id} className="relative pl-[56px]">
+							<li key={`${child.id}-${index}`} className="relative pl-[56px]">
 								{/* Vertical line segment */}
 								<div
 									className={cn('absolute left-[23.5px] w-px', V_LINE_COLOR)}
@@ -144,7 +144,7 @@ function ItemTreeVertical({ item, itemsById, patchVersion }: ItemTreeProps) {
 										bottom: isLast ? '50%' : '0',
 									}}
 								/>
-								
+
 								{/* Horizontal line segment */}
 								<div
 									className={cn(

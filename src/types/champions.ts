@@ -39,3 +39,15 @@ export type ChampionDetailApi = {
 export type ChampionDetailPayload = {
 	data: Record<string, ChampionDetailApi>;
 };
+
+export type ChampionListRow = {
+	id: string;
+	name: string;
+	title: string;
+	tags: string[];
+	positions: string[];
+};
+
+export type ChampionsApiPayload = {
+	data: Record<string, ChampionListRow>;
+};

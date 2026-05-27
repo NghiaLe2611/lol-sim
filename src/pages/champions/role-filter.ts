@@ -24,6 +24,31 @@ export function selectBonusPositionsOnly(raw: unknown): Record<string, string[]>
 	return out;
 }
 
+export function selectBonusReleaseDatesOnly(raw: unknown): Record<string, string> {
+	if (!Array.isArray(raw)) return {};
+	const out: Record<string, string> = {};
+	for (const row of raw) {
+		if (!row || typeof row !== 'object') continue;
+		const championId = (row as { key?: unknown }).key;
+		const releaseDate = (row as { releaseDate?: unknown }).releaseDate;
+		if (typeof championId !== 'string' || !championId) continue;
+		if (typeof releaseDate === 'string' && releaseDate) {
+			out[championId] = releaseDate;
+		}
+	}
+	return out;
+}
+
+export function selectBonusChampionMeta(raw: unknown): {
+	positions: Record<string, string[]>;
+	releaseDates: Record<string, string>;
+} {
+	return {
+		positions: selectBonusPositionsOnly(raw),
+		releaseDates: selectBonusReleaseDatesOnly(raw),
+	};
+}
+
 export function fallbackLanePositionsFromTags(tags: string[]): string[] {
 	const tagSet = new Set(tags);
 	const out = new Set<string>();

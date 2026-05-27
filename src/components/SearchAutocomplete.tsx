@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import {
-	matchesDisplayNamePrefix,
-	rankDisplayNameSearch,
-} from '@/utils/common';
+import { matchesDisplayNamePrefix, rankDisplayNameSearch } from '@/utils/common';
 import { Search } from 'lucide-react';
 
 type Props<T> = {
@@ -18,6 +15,8 @@ type Props<T> = {
 	/** When true, match query anywhere in the label (case-insensitive). Default: prefix match. */
 	matchIncludes?: boolean;
 	getImgUrl?: (item: T) => string;
+	handleClick?: (item?: any) => void;
+	onEnter?: (item?: any) => void;
 };
 
 export function SearchAutocomplete<T>({
@@ -28,6 +27,8 @@ export function SearchAutocomplete<T>({
 	value,
 	inputClassName,
 	getImgUrl,
+	handleClick,
+	onEnter,
 	matchIncludes = false,
 }: Props<T>) {
 	const [focused, setFocused] = useState(false);
@@ -37,10 +38,15 @@ export function SearchAutocomplete<T>({
 		if (!q) return [];
 
 		return items
-			.map((it) => ({ it, label: getLabel(it), rank: rankDisplayNameSearch(q, getLabel(it)) }))
-			.filter((row) =>
-				row.rank != null &&
-				(matchIncludes ? true : matchesDisplayNamePrefix(q, row.label)),
+			.map((it) => ({
+				it,
+				label: getLabel(it),
+				rank: rankDisplayNameSearch(q, getLabel(it)),
+			}))
+			.filter(
+				(row) =>
+					row.rank != null &&
+					(matchIncludes ? true : matchesDisplayNamePrefix(q, row.label))
 			)
 			.sort((a, b) => {
 				if (a.rank! !== b.rank!) return a.rank! - b.rank!;
@@ -59,6 +65,13 @@ export function SearchAutocomplete<T>({
 					onChange={(e) => onChange(e.target.value)}
 					onFocus={() => setFocused(true)}
 					onBlur={() => setTimeout(() => setFocused(false), 150)}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter') {
+							if (suggestions.length === 1) {
+								onEnter?.(suggestions[0]);
+							}
+						}
+					}}
 					placeholder={placeholder}
 					className={cn(
 						'bg-input/60 border-border/60 focus:border-hex-gold pl-9',
@@ -72,7 +85,11 @@ export function SearchAutocomplete<T>({
 						<button
 							key={i}
 							type="button"
-							onMouseDown={() => onChange(getLabel(s))}
+							onMouseDown={(e) => {
+								e.preventDefault();
+								onChange(getLabel(s));
+								handleClick?.(s);
+							}}
 							className="flex items-center w-full text-left px-3 py-2 text-sm hover:bg-secondary text-foreground"
 						>
 							{getImgUrl && (

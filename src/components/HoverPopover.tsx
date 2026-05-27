@@ -15,6 +15,8 @@ export type HoverPopoverProps = {
 	sideOffset?: number;
 	/** Delay before closing when pointer leaves (ms). Default 140. */
 	closeDelayMs?: number;
+	/** Wrapper around the trigger anchor. Default `inline-flex`. Use `block w-full` for grid cells. */
+	triggerClassName?: string;
 };
 
 /**
@@ -29,6 +31,7 @@ function HoverPopover({
 	side = 'right',
 	sideOffset = 10,
 	closeDelayMs = CLOSE_DELAY_MS,
+	triggerClassName = 'inline-flex',
 }: HoverPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,7 +65,7 @@ function HoverPopover({
 		<Popover.Root modal={false} open={open} onOpenChange={setOpen}>
 			<Popover.Trigger asChild>
 				<div
-					className="inline-flex"
+					className={cn(triggerClassName)}
 					onPointerEnter={handleOpenPointerEnter}
 					onPointerLeave={scheduleClose}
 				>

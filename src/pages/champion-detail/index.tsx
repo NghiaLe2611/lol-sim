@@ -2,12 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { STALE_MS, passiveImgUrl, skillImgUrl, splashChampionImg } from '@/constants/common';
+import { STALE_MS, splashChampionImg } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
-import {
-	type AbilitySlotToken,
-	riotAbilityVideoUrl,
-} from '@/pages/champion-detail/AbilityVideoDialog';
+import { riotAbilityVideoUrl } from '@/pages/champion-detail/AbilityVideoDialog';
 import {
 	type BonusAbility,
 	type BonusAttributeRatings,
@@ -25,12 +22,22 @@ import {
 } from '@/pages/champion-detail/utils';
 // import AbilityVideoDialog from '@/pages/champion-detail/AbilityVideoDialog';
 import HoverPopover from '@/components/HoverPopover';
+import { SearchAutocomplete } from '@/components/SearchAutocomplete';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import DifficultyRating from '@/pages/champion-detail/DifficultyRating';
-import { getBonusChampionDetail, getChampionDetail } from '@/services/api';
+import { getBonusChampionDetail, getChampionDetail, getChampions } from '@/services/api';
+import type {
+	ChampionDetailApi,
+	ChampionDetailPayload,
+	ChampionListRow,
+	ChampionsApiPayload,
+} from '@/types/champions';
 import { useQuery } from '@tanstack/react-query';
-import { AudioLines } from 'lucide-react';
+import clsx from 'clsx';
+import { AudioLines, Search } from 'lucide-react';
 import { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
 	PolarAngleAxis,
 	PolarGrid,
@@ -43,9 +50,8 @@ import AbilityPopover from './AbilityPopover';
 import BonusStatGridCell from './BonusStatGridCell';
 import ChampionDetailFallback from './ChampionDetailFallback';
 import ChampionSkinList from './ChampionSkinList';
-import type { ChampionDetailApi, ChampionDetailPayload } from './types';
 
-export type { ChampionDetailApi } from './types';
+export type { ChampionDetailApi } from '@/types/champions';
 
 const ABILITY_SLOTS = ['P', 'Q', 'W', 'E', 'R'] as const;
 const ATTRIBUTE_RADAR_MAX = 3;
@@ -640,12 +646,12 @@ function BonusStatGrid({ stats }: { stats: BonusChampionDetail['stats'] }) {
 	);
 }
 
-function ChampionLanePositionTags({ positions }: { positions?: string[] }) {
+export function ChampionLanePositionTags({ positions }: { positions?: string[] }) {
 	const tags = laneTagsFromPositions(positions);
 	return (
-		<div className="flex min-h-[1.25em] flex-wrap justify-end gap-3">
+		<div className="flex min-h-[1.25em] flex-wrap justify-end gap-2">
 			{tags.map((t) => (
-				<span key={t.key} className="bg-muted/25 inline-flex items-center gap-2">
+				<span key={t.key} className="bg-muted/25 inline-flex items-center gap-1">
 					<img
 						alt=""
 						className="filter-icon size-5 shrink-0 object-contain"
@@ -660,6 +666,19 @@ function ChampionLanePositionTags({ positions }: { positions?: string[] }) {
 	);
 }
 
+export function ChampionClassTags({ tags }: { tags: string[] }) {
+	const tagBades = (tags ?? []).map(roleTokenToBadge);
+	return tagBades.map((tg) => (
+		<Badge
+			key={tg}
+			className="2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
+			variant="outline"
+		>
+			{tg}
+		</Badge>
+	));
+}
+
 const formatStatValue = (str: string): string => {
 	return str
 		.replace(/_/g, ' ')
@@ -667,11 +686,18 @@ const formatStatValue = (str: string): string => {
 		.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const rowClass =
+	'grid grid-cols-[6rem_minmax(0,1fr)] items-start gap-x-4 py-2.5 max-sm:grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)]';
+const mapRegionImg = {
+	ionia: 'iona',
+	'mount-targon': 'mt_targon',
+	'shadow-isles': 'shadow_isles',
+};
 function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
-	const roleBadges = (b.roles ?? []).map(roleTokenToBadge);
-	const rowClass =
-		'grid grid-cols-[6rem_minmax(0,1fr)] items-start gap-x-4 py-2.5 max-sm:grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)]';
-
+	const regionIconSrc =
+		b?.faction !== 'unaffiliated'
+			? `https://universe.leagueoflegends.com/images/${mapRegionImg[b?.faction?.toLowerCase() as keyof typeof mapRegionImg] ?? b?.faction?.toLowerCase()}_emblem.png`
+			: null;
 	return (
 		<div className="divide-border/50 text-muted-foreground divide-y text-xs 2xl:text-sm">
 			<div className={rowClass}>
@@ -687,15 +713,7 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 			<div className={rowClass}>
 				<span className="font-medium">Classes</span>
 				<div className="flex min-h-[1.25em] flex-wrap justify-end gap-1">
-					{roleBadges.map((tg) => (
-						<Badge
-							key={tg}
-							className="2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
-							variant="outline"
-						>
-							{tg}
-						</Badge>
-					))}
+					<ChampionClassTags tags={b.roles || []} />
 				</div>
 			</div>
 			<div className={rowClass}>
@@ -737,6 +755,23 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 					)}
 				</div>
 			</div>
+			{b?.faction && (
+				<div className={rowClass}>
+					<span className="font-medium">Region</span>
+					<div className="ml-auto">
+						<Link
+							className="flex items-center gap-2 text-foreground uppercase hover:opacity-80"
+							target="_blank"
+							to={`https://universe.leagueoflegends.com/en_US/region/${b.faction.toLowerCase()}`}
+						>
+							{b.faction !== 'unaffiliated' ? (
+								<img src={regionIconSrc ?? ''} alt={b.faction} className="size-6" />
+							) : null}
+							{b.faction !== 'unaffiliated' ? b.faction.replace('-', ' ') : ''}
+						</Link>
+					</div>
+				</div>
+			)}
 			<div className={`${rowClass} items-center`}>
 				<span className="font-medium">Difficulty</span>
 				<DifficultyRating rating={b.attributeRatings?.difficulty || 0} />
@@ -745,8 +780,35 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 	);
 }
 
+function championsFromPayload(payload: ChampionsApiPayload): ChampionListRow[] {
+	return Object.values(payload.data);
+}
+
 function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
+	const navigate = useNavigate();
+	const [isOpenSearch, setIsOpenSearch] = useState<boolean>(false);
+	const [search, setSearch] = useState('');
 	const audioRef = useRef<HTMLAudioElement | null>(null);
+
+	const { patchVersion: version } = useAppContext();
+
+	useEffect(() => {
+		setIsOpenSearch(false);
+	}, [champion]);
+
+	const { data, isPending, isError } = useQuery({
+		queryKey: ['champions'],
+		queryFn: () => getChampions(version!),
+		enabled: Boolean(version),
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
+	const championList = useMemo(() => {
+		if (!data || typeof data !== 'object' || !('data' in data)) return [];
+		const rows = championsFromPayload(data as ChampionsApiPayload);
+		return rows;
+	}, [data]);
 
 	const handlePlayVoice = () => {
 		if (audioRef.current) {
@@ -773,9 +835,46 @@ function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
 				<div className="absolute inset-x-0 bottom-0 mx-auto px-6 pb-6">
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<h1 className="display gold-text text-5xl font-medium">
-								{champion.name}
-							</h1>
+							<div className="inline-flex items-center gap-4 group">
+								<h1 className="display gold-text text-5xl font-medium">
+									{champion.name}
+								</h1>
+								<Popover open={isOpenSearch} onOpenChange={setIsOpenSearch}>
+									<PopoverTrigger asChild>
+										<Search
+											size={24}
+											className={clsx(
+												'cursor-pointer text-hex-gold',
+												isOpenSearch
+													? 'opacity-100'
+													: 'opacity-0 group-hover:opacity-100'
+											)}
+										/>
+									</PopoverTrigger>
+									<PopoverContent
+										align="start"
+										className="w-80 border-none shadow-none"
+									>
+										<SearchAutocomplete
+											getLabel={(c) => c.name}
+											getImgUrl={(item) =>
+												`https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${item.id}.png`
+											}
+											inputClassName="h-8 w-full shrink-0 py-0 text-sm md:h-10 leading-normal"
+											items={championList}
+											onChange={setSearch}
+											placeholder="Search champions..."
+											value={search}
+											handleClick={(c) => {
+												if (c) navigate(`/champions/${c.id}`);
+											}}
+											onEnter={(c) => {
+												if (c) navigate(`/champions/${c.id}`);
+											}}
+										/>
+									</PopoverContent>
+								</Popover>
+							</div>
 							<div className="flex items-center gap-4">
 								<p className="text-muted-foreground capitalize italic">
 									{champion.title}
@@ -883,27 +982,20 @@ export default function ChampionDetailPage() {
 
 	const championDdr = ddrQuery.data ?? null;
 	const bonusData = bonusQuery.data;
-
-	/** Bonus là nguồn chính — giữ spinner tới khi bonus query settle, kể cả khi DDR đã về trước. */
 	const isPageLoading = bonusQuery.isPending || (!bonusData && ddrEnabled && ddrQuery.isPending);
 
-	useEffect(() => {
+	const pageTitle = useMemo(() => {
 		const name = bonusData?.name ?? championDdr?.name;
 		const title = bonusData?.title ?? championDdr?.title;
-		document.title = name ? (title ? `${name}, ${title}` : name) : 'Champion';
+		return name ? (title ? `${name}, ${title}` : name) : 'Champion';
 	}, [bonusData, championDdr]);
 
-	if (!version) {
-		return (
-			<div className="mx-auto max-w-container px-6 py-12 text-center">
-				<Skeleton className="mx-auto h-8 max-w-xs" />
-				<p className="text-muted-foreground mt-6 text-sm">Loading patch…</p>
-			</div>
-		);
-	}
+	let content: ReactNode;
 
-	if (!championId) {
-		return (
+	if (!version) {
+		content = null;
+	} else if (!championId) {
+		content = (
 			<div className="p-12 text-center">
 				<p className="text-muted-foreground">Champion not specified.</p>
 				<Link className="text-hex-gold underline" to="/champions">
@@ -911,30 +1003,33 @@ export default function ChampionDetailPage() {
 				</Link>
 			</div>
 		);
-	}
-
-	if (isPageLoading) {
-		return (
+	} else if (isPageLoading) {
+		content = (
 			<div className="flex min-h-[50vh] items-center justify-center px-6 py-12">
 				<Spinner type="default" className="size-10 text-hex-gold" />
 			</div>
 		);
-	}
-
-	if (bonusData) {
-		return <ChampionDetail champion={bonusData} />;
-	}
-
-	if (championDdr) {
-		return <ChampionDetailFallback champion={championDdr} patchVersion={version} />;
+	} else if (bonusData) {
+		content = <ChampionDetail champion={bonusData} />;
+	} else if (championDdr) {
+		content = <ChampionDetailFallback champion={championDdr} patchVersion={version} />;
+	} else {
+		content = (
+			<div className="p-12 text-center">
+				<p className="text-muted-foreground">Champion not found.</p>
+				<Link className="text-hex-gold underline" to="/champions">
+					Back to champions
+				</Link>
+			</div>
+		);
 	}
 
 	return (
-		<div className="p-12 text-center">
-			<p className="text-muted-foreground">Champion not found.</p>
-			<Link className="text-hex-gold underline" to="/champions">
-				Back to champions
-			</Link>
-		</div>
+		<>
+			<Helmet>
+				<title>{pageTitle}</title>
+			</Helmet>
+			{content}
+		</>
 	);
 }
