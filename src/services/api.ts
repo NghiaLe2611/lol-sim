@@ -102,6 +102,20 @@ async function getItems(version: string) {
 	}
 }
 
+async function getBonusItems() {
+	const url = `${getBonusApiBase()}/items`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return Array.isArray(data) ? data : [];
+	} catch (error) {
+		throw error;
+	}
+}
+
 // Get rune list
 async function getRunes(version: string) {
 	const url = `${apiUrl}/cdn/${version}/data/en_US/runesReforged.json`;
@@ -174,6 +188,7 @@ export {
 	getChampionDetail,
 	getChampions,
 	getItems,
+	getBonusItems,
 	getRunes,
 	getSummonerSpells,
 	getVersions,

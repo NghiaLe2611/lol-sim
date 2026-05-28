@@ -1,10 +1,12 @@
 import HoverPopover from '@/components/HoverPopover';
 import { itemImgUrl } from '@/constants/common';
-import { ItemDescriptionParts } from '@/pages/items/ItemDescriptionParts';
-import { ItemTreeHorizontal, ItemTreeVertical } from '@/pages/items/ItemTree';
-import { parseItemDescription, type SrItem } from '@/pages/items/utils';
 import { cn } from '@/lib/utils';
+import { ItemDescriptionParts } from '@/pages/items/ItemDescriptionParts';
+import { ItemTreeHorizontal } from '@/pages/items/ItemTree';
+import { parseItemDescription } from '@/pages/items/utils';
 import { Coins } from 'lucide-react';
+import React from 'react';
+import { SrItem } from '../utils';
 
 const POPOVER_CONTENT_CLASS =
 	'rounded-none border-hex-gold bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
@@ -43,7 +45,7 @@ function ItemHoverContent({
 							{line}
 						</p>
 					))}
-					<p className="text-hex-gold-dark mt-1 flex items-center gap-1 text-sm">
+					<p className="text-hex-gold/80 mt-1 flex items-center gap-1 text-sm">
 						<Coins className="size-3.5 shrink-0" />
 						<span className="font-semibold">{item.goldTotal.toLocaleString()}</span>
 					</p>
@@ -83,15 +85,13 @@ function ItemHoverContent({
 	);
 }
 
-export function ItemGridCell({
-	item,
-	itemsById,
-	patchVersion,
-}: {
+interface ItemPopoverProps {
+	children: React.ReactNode;
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
 	patchVersion: string;
-}) {
+}
+const ItemPopover = ({ children, item, itemsById, patchVersion }: ItemPopoverProps) => {
 	return (
 		<HoverPopover
 			align="center"
@@ -103,18 +103,9 @@ export function ItemGridCell({
 			}
 			contentClassName={POPOVER_CONTENT_CLASS}
 		>
-			<button
-				type="button"
-				className="rounded-sm aspect-square w-full overflow-hidden bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
-				aria-label={item.name}
-			>
-				<img
-					alt={item.name}
-					className="h-full w-full object-cover"
-					loading="lazy"
-					src={itemImgUrl(patchVersion, item.id)}
-				/>
-			</button>
+			{children}
 		</HoverPopover>
 	);
-}
+};
+
+export default ItemPopover;

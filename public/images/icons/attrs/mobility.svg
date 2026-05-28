@@ -1,40 +1,9 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   width="42.646854mm"
-   height="44.483879mm"
-   viewBox="0 0 42.646855 44.483879"
-   version="1.1"
-   id="svg1"
-   xml:space="preserve"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"><defs
-     id="defs1" /><g
-     id="layer1"
-     transform="translate(-70.643751,-82.272189)"><g
-       id="g1"
-       transform="matrix(0.18649957,0,0,0.18649957,20.288867,54.306578)"><g
-         id="g2"><g
-           id="Folder 3"><path
-             id="Color Fill 1"
-             class="s0"
-             d="m 417.94,149.95 -143.89,161.06 90.47,77.32 108.76,0.14 -92.58,-74.56 96.22,-111.15 z" /><path
-             id="Shape 1"
-             fill-rule="evenodd"
-             class="s0"
-             d="M 351,210.59 336.09,227.02 271.04,226.88 271,210.7 Z" /><path
-             id="Shape 1 copy 2"
-             fill-rule="evenodd"
-             class="s0"
-             d="M 300.41,271.52 285.3,287.55 270.01,287.88 270,271.7 Z" /><path
-             id="Shape 1 copy"
-             fill-rule="evenodd"
-             class="s0"
-             d="m 410.28,150.59 -17.91,16.89 h -121 L 271,150.7 Z" /><path
-             id="Color Fill 2"
-             class="s0"
-             d="M 498.67,322.91 472.26,387.73 389.57,323.5 Z" /></g></g></g></g><style
-     id="style1">
-		.s0 { fill: #000000 } 
-	</style></svg>
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 165 165" width="165" height="165">
+	<defs>
+		<image  width="165" height="165" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKUAAAClAQMAAAAH5a+ZAAAAAXNSR0IB2cksfwAAAANQTFRF////p8QbyAAAACNJREFUeJztyDEBAAAMAqDZv/QK2EA4yTWx1lprrbXWWju9D6dUAKY9CBAJAAAAAElFTkSuQmCC"/>
+		<image width="186" height="178" id="img2" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgdmVyc2lvbj0iMS4wIgogICB3aWR0aD0iMjMuMjQiCiAgIGhlaWdodD0iMjIuMzM3Mjg0IgogICB2aWV3Qm94PSIwIDAgMjMuMjQgMjIuMzM3Mjg0IgogICBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCIKICAgaWQ9InN2ZzUiCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnMKICAgICBpZD0iZGVmczUiIC8+CiAgPGcKICAgICBmaWxsPSIjMDAwMDAwIgogICAgIGlkPSJnNSIKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNC45MzAwMDAyLC00Ljc4OTA5OCkiPgogICAgPHBhdGgKICAgICAgIGQ9Ik0gMTUuOTUsMjcuMDkgQyAxNS41LDI3LjAyIDE1LjA3LDI2LjgxIDE0LjcxLDI2LjQ3IDE0LjU3LDI2LjM0IDE0LjIsMjUuOTQgMTMuODksMjUuNTggMTMuMzYsMjQuOTYgMTIuNjIsMjQuMTMgMTAuODgsMjIuMTcgMTAuNDgsMjEuNzIgOS44NSwyMS4wMSA5LjQ3LDIwLjU4IDkuMDksMjAuMTUgOC40NiwxOS40MyA4LjA2LDE4Ljk5IEwgNy4zNCwxOC4xOCA5Ljc3LDE1Ljc2IGMgMy45MSwtMy44OSA3LjQ0LC03LjM4IDEwLjM1LC0xMC4yIGwgMC43MywtMC43MSAwLjEsMC4xIGMgMC4wNSwwLjA2IDAuMzcsMC4zOCAwLjY5LDAuNzEgMC4zMiwwLjMzIDEuMiwxLjI0IDEuOTUsMi4wMiAwLjc0LDAuNzcgMS43NCwxLjggMi4yLDIuMjggMC40NywwLjQ4IDAuOTYsMC45OSAxLjEsMS4xMyBsIDAuMjUsMC4yNiAtMC4wOSwwLjA4IGMgLTAuMjEsMC4xOSAtMS45NywxLjg5IC0zLjc5LDMuNjggLTIuNjgsMi42MiAtMi43MiwyLjY2IC0yLjg1LDIuNyAtMC4xOSwwLjA2IC0wLjUzLDAuMzEgLTEuMiwwLjg1IC0wLjczLDAuNiAtMS4wNSwwLjg3IC0xLjA1LDAuOTEgMCwwLjAzIDAuMTcsMC4yMiAxLjE0LDEuMzEgMC43LDAuNzcgMS40NCwxLjYyIDIuMjcsMi41NCBsIDAuNTUsMC42MiBoIDEuNDEgYyAxLjUyLDAgMS43MywwLjAyIDIuMTgsMC4xNyAwLjY0LDAuMjIgMS4yMywwLjc3IDEuNDksMS4zOSAwLjA4LDAuMjEgMC4yOSwwLjUzIDAuNjgsMS4wNyAwLjE2LDAuMjIgMC4yOSwwLjQxIDAuMjksMC40MyAwLDAuMDQgLTExLjkzLDAuMDMgLTEyLjIsMCB6IgogICAgICAgaWQ9InBhdGgyIiAvPgogICAgPHBhdGgKICAgICAgIGQ9Im0gNC45NCwxNC44NCB2IC0xLjI1IGggMi4wMiBjIDEuMTMsMCAyLjAxLDAuMDEgMi4wMSwwLjAzIDAsMC4wMSAtMC4yMiwwLjIzIC0wLjQ4LDAuNDcgLTAuMjYsMC4yNSAtMC44MywwLjggLTEuMjcsMS4yMyBsIC0wLjgsMC43NyBIIDUuNjggNC45NSB2IC0xLjI1IHoiCiAgICAgICBpZD0icGF0aDMiIC8+CiAgICA8cGF0aAogICAgICAgZD0iTSA0Ljk0LDEwLjQ3IFYgOS4xOSBoIDQuMjMgNC4yMyBsIC0wLjM4LDAuMzcgYyAtMC4yMSwwLjIgLTAuOCwwLjc4IC0xLjMyLDEuMjggbCAtMC45NCwwLjkyIEggNy44NSA0LjkzIHYgLTEuMjggeiIKICAgICAgIGlkPSJwYXRoNCIgLz4KICAgIDxwYXRoCiAgICAgICBkPSJNIDQuOTQsNi4xIEMgNC45NCw0LjkxIDQuOTQsNC44MiA1LDQuOCA1LjA4LDQuNzggMTguMDEsNC43OSAxOCw0LjgxIDE3Ljk5LDQuODMgMTYuNTEsNi4yNyAxNS42Nyw3LjA3IGwgLTAuMzIsMC4zIEggMTAuMTQgNC45MyBWIDYuMDkgWiIKICAgICAgIGlkPSJwYXRoNSIgLz4KICA8L2c+Cjwvc3ZnPgo="/>
+	</defs>
+	<style>
+	</style>
+	<use id="g5" href="#img2" transform="matrix(.887,0,0,.887,5,6)"/>
+</svg>

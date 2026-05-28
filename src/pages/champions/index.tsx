@@ -312,6 +312,7 @@ export default function ChampionsPage() {
 					<HoverPopover
 						side="bottom"
 						triggerClassName="block w-full"
+						contentClassName="!transition-none"
 						content={({ open }) => (
 							<div className="min-w-48 rounded-md border border-border bg-background from-background p-2 4xl:p-3 shadow-lg">
 								<h3 className="text-sm lg:text-base font-medium">{c.name}</h3>
@@ -364,7 +365,7 @@ export default function ChampionsPage() {
 					</p>
 				</header>
 
-				<div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center justify-between">
+				<div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center justify-between">
 					<div className="flex flex-1">
 						{/* Search */}
 						<div className="flex w-full min-w-0 items-center lg:max-w-md lg:flex-1">

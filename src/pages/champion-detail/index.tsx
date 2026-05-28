@@ -173,10 +173,10 @@ function RadarAttributeVertexDot({
 					<circle className="pointer-events-auto" fill="transparent" r={12} />
 					<circle
 						className="pointer-events-none"
-						fill="var(--hex-gold)"
+						fill="hsl(var(--hex-gold))"
 						fillOpacity={fillOp}
 						r={3}
-						stroke="var(--hex-gold)"
+						stroke="hsl(var(--hex-gold))"
 						strokeOpacity={isDim ? 0.35 : isHover ? 0.65 : 1}
 						strokeWidth={2}
 					/>
@@ -202,7 +202,7 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 		<div className="mx-auto aspect-square w-full min-h-[190px] max-w-[250px] sm:min-h-[210px] sm:max-w-[270px] lg:min-h-[initial] lg:max-w-[initial]">
 			<ResponsiveContainer width="100%" height="100%">
 				<RadarChart cx="50%" cy="50%" data={data} outerRadius="58%">
-					<PolarGrid gridType="polygon" stroke="var(--hex-gold)" strokeOpacity={0.45} />
+					<PolarGrid gridType="polygon" stroke="hsl(var(--hex-gold))" strokeOpacity={0.45} />
 					<PolarAngleAxis
 						dataKey="attribute"
 						allowDuplicatedCategory={false}
@@ -269,11 +269,11 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 								/>
 							);
 						}}
-						fill="var(--hex-gold)"
+						fill="hsl(var(--hex-gold))"
 						fillOpacity={hoveredVertex !== null ? 0.22 : 0.42}
 						isAnimationActive={false}
 						name="Attributes Ratings"
-						stroke="var(--hex-gold)"
+						stroke="hsl(var(--hex-gold))"
 						strokeOpacity={hoveredVertex !== null ? 0.55 : 1}
 						strokeWidth={2}
 					/>
@@ -671,9 +671,10 @@ export function ChampionClassTags({ tags }: { tags: string[] }) {
 	return tagBades.map((tg) => (
 		<Badge
 			key={tg}
-			className="2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
+			className="gap-2 2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
 			variant="outline"
 		>
+			{/* <img src={`/images/icons/role_icon_${tg.toLowerCase()}.png`} alt={tg} className="size-5" /> */}
 			{tg}
 		</Badge>
 	));
@@ -693,6 +694,7 @@ const mapRegionImg = {
 	'mount-targon': 'mt_targon',
 	'shadow-isles': 'shadow_isles',
 };
+
 function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 	const regionIconSrc =
 		b?.faction !== 'unaffiliated'

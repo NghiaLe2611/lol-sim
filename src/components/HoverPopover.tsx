@@ -3,7 +3,7 @@ import * as Popover from '@radix-ui/react-popover';
 
 import { cn } from '@/lib/utils';
 
-const CLOSE_DELAY_MS = 140;
+const CLOSE_DELAY_MS = 10;
 
 export type HoverPopoverProps = {
 	children: React.ReactNode;

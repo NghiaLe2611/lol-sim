@@ -1,5 +1,3 @@
-/** Shapes aligned with `/champions/:key` bonus API (Meraki-like). */
-
 export type BonusNumericStatBlock = {
 	flat?: number;
 	percent?: number;
@@ -64,7 +62,7 @@ export type BonusAttributeRatings = {
 	difficulty?: number;
 };
 
-/** Parsed bonus champion detail — loose `unknown` for forward compat. */
+// Parsed bonus champion detail
 export type BonusChampionDetail = {
 	id: number | string;
 	key: string;
@@ -86,11 +84,7 @@ export type BonusChampionDetail = {
 	[key: string]: any;
 };
 
-/**
- * Bonus API `attributeRatings.difficulty` uses the same **1–3** scale as the client
- * (diamonds), not Riot Data Dragon’s 1–10 `info.difficulty`.
- * Coerces numeric strings (some serializers return `"2"` instead of `2`).
- */
+// Difficulty tier
 export function attributeRatingsDifficultyTier(raw: unknown): 1 | 2 | 3 {
 	const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw.trim()) : NaN;
 	if (typeof n !== 'number' || Number.isNaN(n)) return 2;
@@ -185,7 +179,7 @@ export function formatCooldownLine(cd: BonusCostCooldown | null): string | null 
 	return formatSlashValues(cd.modifiers[0]);
 }
 
-/** Unit is literally "%" → values are per-rank percentages, not `(+ scaling)` parentheses. */
+// Unit is literally "%" → values are per-rank percentages, not `(+ scaling)` parentheses.
 function isBarePercentLevelUnit(unit: string): boolean {
 	return unit.trim() === '%';
 }
@@ -341,8 +335,6 @@ export function formatAbilityScalar(v: string | number | null | undefined): stri
 }
 
 const REJECT_STATS = /^(__proto__|prototype)$/;
-
-/** League ARAM / URF tweaks — omit from summary grid. */
 const MODE_STAT_PREFIXES = ['aram', 'urf'];
 
 export function shouldShowBonusStatKey(key: string): boolean {
@@ -400,7 +392,6 @@ export function normalizeLanePositionToken(raw: string): string {
 	return raw.trim().toUpperCase().replace(/\s+/g, '_').replace(/-+/g, '_');
 }
 
-/** Một giá trị `positions[]` của API → icon + nhãn hiển thị. */
 export function mapLanePositionToTag(raw: string): LanePositionTagMeta | null {
 	const u = normalizeLanePositionToken(raw);
 	for (const def of LANE_POSITION_DEFS) {
@@ -458,7 +449,6 @@ export function stripLolMarkupToText(html: string): string {
 		.trim();
 }
 
-/** Optional release hint from DDRagon quirks. */
 export function getOptionalReleaseDate(champion: {
 	releaseDate?: string;
 	releasedate?: string;

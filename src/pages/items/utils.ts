@@ -15,6 +15,15 @@ export type DdragonItemsPayload = {
 	data: Record<string, DdragonItemApi>;
 };
 
+/** Bonus item fields merged from Meraki `/items` API (matched by id). */
+export type ItemBonusMeta = {
+	tier?: number;
+	rank: string[];
+	/** From `shop.tags` only — champion role tags (FIGHTER, MARKSMAN, …). */
+	roles: string[];
+	iconOverlay?: boolean;
+};
+
 export type SrItem = {
 	id: string;
 	name: string; // search name
@@ -24,7 +33,113 @@ export type SrItem = {
 	goldTotal: number;
 	from: string[];
 	into: string[];
+	/** DDragon shop category tags (Damage, Boots, …). */
+	tags: string[];
+	tier?: number;
+	rank?: string[];
+	roles: string[];
+	iconOverlay?: boolean;
 };
+
+function normalizeSrItemId(id: number | string): string {
+	return String(id).padStart(4, '0');
+}
+
+/** Build lookup `id` → bonus fields from bonus items array. */
+export function selectBonusItemsById(raw: unknown): Record<string, ItemBonusMeta> {
+	if (!Array.isArray(raw)) return {};
+
+	const out: Record<string, ItemBonusMeta> = {};
+	for (const row of raw) {
+		if (!row || typeof row !== 'object') continue;
+
+		const id = normalizeSrItemId((row as { id?: number | string }).id ?? '');
+		if (!isSrItemId(id)) continue;
+
+		const shop = (row as { shop?: { tags?: unknown } }).shop;
+		const rankRaw = (row as { rank?: unknown }).rank;
+		const tierRaw = (row as { tier?: unknown }).tier;
+		const iconOverlay = (row as { iconOverlay?: unknown }).iconOverlay;
+
+		const roles = Array.isArray(shop?.tags) ? shop.tags.map((t) => String(t)) : [];
+
+		out[id] = {
+			tier: typeof tierRaw === 'number' ? tierRaw : undefined,
+			rank: Array.isArray(rankRaw) ? rankRaw.map(String) : [],
+			roles,
+			iconOverlay: iconOverlay === true,
+		};
+	}
+	return out;
+}
+
+export function applyBonusToSrItem(item: SrItem, bonus?: ItemBonusMeta): SrItem {
+	if (!bonus) {
+		return { ...item, roles: item.roles ?? [] };
+	}
+
+	return {
+		...item,
+		// tier: bonus.tier,
+		// rank: bonus.rank.length > 0 ? bonus.rank : undefined,
+		roles: bonus.roles,
+	};
+}
+
+export function applyBonusToSrItems(
+	items: SrItem[],
+	bonusById: Record<string, ItemBonusMeta>,
+): SrItem[] {
+	return items.map((item) => applyBonusToSrItem(item, bonusById[item.id]));
+}
+
+export function applyBonusToSrItemMap(
+	byId: Record<string, SrItem>,
+	bonusById: Record<string, ItemBonusMeta>,
+): Record<string, SrItem> {
+	const out: Record<string, SrItem> = {};
+	for (const [id, item] of Object.entries(byId)) {
+		out[id] = applyBonusToSrItem(item, bonusById[id]);
+	}
+	return out;
+}
+
+export type ItemCategoryFilter = 'all' | 'attack' | 'magic' | 'defense' | 'boots';
+
+const ITEM_CATEGORY_TAGS: Record<Exclude<ItemCategoryFilter, 'all'>, readonly string[]> = {
+	attack: ['Damage'],
+	magic: ['SpellDamage'],
+	defense: ['SpellBlock', 'Armor', 'Health'],
+	boots: ['Boots'],
+};
+
+export function matchesItemCategoryFilter(category: ItemCategoryFilter, tags: string[]): boolean {
+	if (category === 'all') return true;
+
+	const tagSet = new Set(tags);
+
+	// Simple categories
+	if (category !== 'defense') {
+		return ITEM_CATEGORY_TAGS[category].some(t => tagSet.has(t));
+	}
+
+	// Defense logic
+	const hasDamage = tagSet.has('Damage');
+	const hasSpellDamage = tagSet.has('SpellDamage');
+	const hasAttackSpeed = tagSet.has('AttackSpeed');
+
+	// SpellBlock & Armor: must be pure defense (no damage/AS)
+	if ((tagSet.has('SpellBlock') || tagSet.has('Armor')) && !hasDamage && !hasSpellDamage && !hasAttackSpeed) {
+		return true;
+	}
+
+	// Health: can have AttackSpeed, but no main damage
+	if (tagSet.has('Health') && !hasDamage && !hasSpellDamage) {
+		return true;
+	}
+
+	return false;
+}
 
 const SR_ITEM_ID = /^\d{4}$/;
 
@@ -115,12 +230,14 @@ function mapSrItemFromEntry(id: string, item: DdragonItemApi): SrItem | null {
 		goldTotal: item.gold?.total ?? 0,
 		from: item.from ?? [],
 		into: item.into ?? [],
+		tags: item.tags ?? [],
+		roles: [],
 	};
 }
 
-/** All SR items by id (includes duplicates-by-name used as recipe components). */
+// All SR items by id
 export function parseDdragonItemMap(
-	payload: DdragonItemsPayload | undefined,
+	payload: DdragonItemsPayload | undefined
 ): Record<string, SrItem> {
 	if (!payload?.data) return {};
 

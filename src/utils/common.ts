@@ -5,6 +5,13 @@ export function formatNumber(value: number) {
 	});
 }
 
+export function capitalizeText(text: string) {
+	return text
+		.split(' ')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+}
+
 export function formatPercentage(value: number) {
 	return `${value.toFixed(0)}%`;
 }
