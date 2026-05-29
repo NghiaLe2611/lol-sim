@@ -141,6 +141,53 @@ export function matchesItemCategoryFilter(category: ItemCategoryFilter, tags: st
 	return false;
 }
 
+export const ITEM_TAG_FILTERS = [
+	'attack damage',
+	'attack speed',
+	'critical strike',
+	'on hit',
+	'life steal',
+	'magic damage',
+	'mana',
+	'armor',
+	'magic resistance',
+	'lethality',
+	'magic pen',
+	'HP',
+	'ability haste',
+	'movement speed',
+] as const;
+
+export type ItemTagFilter = (typeof ITEM_TAG_FILTERS)[number];
+
+/** UI tag label → DDragon `tags` values (OR within each entry). */
+const ITEM_TAG_TO_DDRAGON: Record<ItemTagFilter, readonly string[]> = {
+	'attack damage': ['Damage'],
+	'attack speed': ['AttackSpeed'],
+	'critical strike': ['CriticalStrike'],
+	'on hit': ['OnHit'],
+	'life steal': ['LifeSteal', 'SpellVamp'],
+	'magic damage': ['SpellDamage'],
+	mana: ['Mana'],
+	armor: ['Armor'],
+	'magic resistance': ['MagicResist', 'SpellBlock'],
+	lethality: ['ArmorPenetration'],
+	'magic pen': ['MagicPenetration'],
+	HP: ['Health'],
+	'ability haste': ['AbilityHaste'],
+	'movement speed': ['Boots', 'NonbootsMovement'],
+};
+
+export function matchesItemTagFilter(tagFilter: string | null, tags: string[]): boolean {
+	if (!tagFilter) return true;
+
+	const ddragonTags = ITEM_TAG_TO_DDRAGON[tagFilter as ItemTagFilter];
+	if (!ddragonTags) return true;
+
+	const tagSet = new Set(tags);
+	return ddragonTags.some((t) => tagSet.has(t));
+}
+
 const SR_ITEM_ID = /^\d{4}$/;
 
 export const ITEM_COLORED_TAGS = ['physicalDamage', 'scaleHealth', 'magicDamage', 'speed'] as const;

@@ -6,7 +6,9 @@ import { useAppContext } from '@/contexts/AppContext';
 import {
 	applyBonusToSrItemMap,
 	applyBonusToSrItems,
+	ITEM_TAG_FILTERS,
 	matchesItemCategoryFilter,
+	matchesItemTagFilter,
 	parseDdragonItemMap,
 	parseDdragonItems,
 	selectBonusItemsById,
@@ -21,18 +23,7 @@ import ItemPopover from './components/ItemPopover';
 import clsx from 'clsx';
 
 const FILTER_CATEGORIES: ItemCategoryFilter[] = ['all', 'attack', 'magic', 'defense', 'boots'];
-const FILTER_TAGS = [
-	'attack speed',
-	'critical',
-	'life steel',
-	'HP',
-	'mana',
-	'armor',
-	'magic resistance',
-	'ability haste',
-	'lethality',
-	'movement speed',
-];
+const FILTER_TAGS = ITEM_TAG_FILTERS;
 
 export default function ItemsPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
@@ -75,13 +66,12 @@ export default function ItemsPage() {
 
 	const filtered = useMemo(() => {
 		const q = search.trim().toLowerCase();
-		const byCategory = srItems.filter((item) =>
-			matchesItemCategoryFilter(category, item.tags)
-		);
+		const byCategory = srItems.filter((item) => matchesItemCategoryFilter(category, item.tags));
+		const byTag = byCategory.filter((item) => matchesItemTagFilter(tag, item.tags));
 
-		if (!q) return byCategory;
+		if (!q) return byTag;
 
-		return byCategory
+		return byTag
 			.map((item) => ({ item, rank: rankDisplayNameSearch(q, item.name) }))
 			.filter((row) => row.rank != null)
 			.sort((a, b) => {
@@ -89,7 +79,7 @@ export default function ItemsPage() {
 				return a.item.name.localeCompare(b.item.name);
 			})
 			.map((row) => row.item);
-	}, [srItems, search, category]);
+	}, [srItems, search, category, tag]);
 
 	const isLoading = !isPatchReady || itemsQuery.isPending;
 	return (
@@ -140,7 +130,7 @@ export default function ItemsPage() {
 					{FILTER_TAGS.map((t) => (
 						<button
 							key={t}
-							onClick={() => setTag(t)}
+							onClick={() => setTag(t === tag ? null : t)}
 							type="button"
 							className={clsx(
 								'bg-background text-muted-foreground text-xs 5xl:text-sm hover:opacity-80 py-1 px-3 border border-neutral-400/50 dark:border-hex-gold/50 rounded-sm',
@@ -162,16 +152,20 @@ export default function ItemsPage() {
 					<Skeleton className="h-4 w-48" />
 				</div>
 			) : itemsQuery.isError ? (
-				<p className="text-muted-foreground py-12 text-center">Failed to load items.</p>
+				<div className="flex items-center justify-center py-1">
+					<div className="flex flex-col">
+						<img
+							src="/images/bee.webp"
+							alt="No results"
+							className="size-20 2xl:size-28 mx-auto mb-2"
+						/>
+						<p className="text-muted-foreground text-center">Failed to load items.</p>
+					</div>
+				</div>
 			) : (
 				<div className="grid grid-cols-6 sm:grid-cols-12 md:grid-cols-[repeat(18,minmax(0,1fr))] 2xl:grid-cols-[repeat(24,minmax(0,1fr))] gap-2">
 					{filtered.map((item) => (
-						<ItemPopover
-							key={item.id}
-							item={item}
-							itemsById={itemsById}
-							patchVersion={patchVersion!}
-						>
+						<ItemPopover key={item.id} item={item} itemsById={itemsById}>
 							<button
 								type="button"
 								className="hover:scale-105 w-full overflow-hidden bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"

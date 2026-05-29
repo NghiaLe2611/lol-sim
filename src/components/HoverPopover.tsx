@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 
 import { cn } from '@/lib/utils';
@@ -34,7 +34,13 @@ function HoverPopover({
 	triggerClassName = 'inline-flex',
 }: HoverPopoverProps) {
 	const [open, setOpen] = useState(false);
+	const triggerRef = useRef<HTMLDivElement>(null);
+	const [computedSide, setComputedSide] = useState<Popover.PopoverContentProps['side']>(side);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		setComputedSide(side);
+	}, [side]);
 
 	const cancelCloseTimer = useCallback(() => {
 		if (closeTimerRef.current != null) {
@@ -45,8 +51,25 @@ function HoverPopover({
 
 	const handleOpenPointerEnter = useCallback(() => {
 		cancelCloseTimer();
+		if (triggerRef.current && (side === 'top' || side === 'bottom')) {
+			const rect = triggerRef.current.getBoundingClientRect();
+			const viewportHeight = window.innerHeight;
+			// If the trigger is in the upper 50% of the viewport, put the popover at 'right'
+			if (rect.top < viewportHeight * 0.5) {
+				setComputedSide('right');
+			} else {
+				setComputedSide('top');
+			}
+		} else {
+			setComputedSide(side);
+		}
 		setOpen(true);
-	}, [cancelCloseTimer]);
+	}, [cancelCloseTimer, side]);
+
+	// const handleOpenPointerEnter = useCallback(() => {
+	// 	cancelCloseTimer();
+	// 	setOpen(true);
+	// }, [cancelCloseTimer]);
 
 	const scheduleClose = useCallback(() => {
 		cancelCloseTimer();
@@ -65,6 +88,7 @@ function HoverPopover({
 		<Popover.Root modal={false} open={open} onOpenChange={setOpen}>
 			<Popover.Trigger asChild>
 				<div
+					ref={triggerRef}
 					className={cn(triggerClassName)}
 					onPointerEnter={handleOpenPointerEnter}
 					onPointerLeave={scheduleClose}
@@ -75,11 +99,14 @@ function HoverPopover({
 			<Popover.Portal>
 				<Popover.Content
 					align={align}
-					side={side}
+					side={computedSide}
 					sideOffset={sideOffset}
 					collisionPadding={12}
 					className={cn(
-						'z-[100] origin-[--radix-popover-content-transform-origin] rounded-md border border-border bg-popover text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+						// '!max-h-[min(70vh,calc(100dvh-2rem))] overflow-y-auto',
+						// 'origin-[--radix-popover-content-transform-origin]',
+						'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+						'z-[100] rounded-md border border-border bg-popover text-popover-foreground shadow-md outline-none',
 						contentClassName
 					)}
 					onPointerEnter={handleOpenPointerEnter}

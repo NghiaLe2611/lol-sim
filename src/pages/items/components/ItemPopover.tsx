@@ -7,6 +7,7 @@ import { parseItemDescription } from '@/pages/items/utils';
 import { Coins } from 'lucide-react';
 import React from 'react';
 import { SrItem } from '../utils';
+import { useAppContext } from '@/contexts/AppContext';
 
 const POPOVER_CONTENT_CLASS =
 	'rounded-none border-hex-gold bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
@@ -14,12 +15,12 @@ const POPOVER_CONTENT_CLASS =
 function ItemHoverContent({
 	item,
 	itemsById,
-	patchVersion,
 }: {
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
-	patchVersion: string;
 }) {
+	const { patchVersion } = useAppContext();
+
 	const { statLines, passives } = parseItemDescription(item.description);
 	const hasRecipe = item.from.length > 0;
 
@@ -29,7 +30,7 @@ function ItemHoverContent({
 				<img
 					alt=""
 					className="size-12 shrink-0 object-cover"
-					src={itemImgUrl(patchVersion, item.id)}
+					src={itemImgUrl(patchVersion as string, item.id)}
 				/>
 				<div className="min-w-0 flex-1">
 					{item.nameLines.map((line, i) => (
@@ -60,9 +61,9 @@ function ItemHoverContent({
 						{line}
 					</p>
 				))}
-				{passives.map((block) => (
+				{passives.map((block, index) => (
 					<p
-						key={block.title}
+						key={`${block.title}-${index}`}
 						className="text-foreground !mt-2 leading-snug text-xs lg:text-sm"
 					>
 						<span className="font-semibold">{block.title}:</span>{' '}
@@ -78,7 +79,11 @@ function ItemHoverContent({
 			{hasRecipe ? (
 				<div className="border-t dark:border-[#5a4617]/60 border-[#bb994c]/60 p-3">
 					{/* <ItemTreeVertical item={item} itemsById={itemsById} patchVersion={patchVersion} /> */}
-					<ItemTreeHorizontal item={item} itemsById={itemsById} patchVersion={patchVersion} />
+					<ItemTreeHorizontal
+						item={item}
+						itemsById={itemsById}
+						patchVersion={patchVersion as string}
+					/>
 				</div>
 			) : null}
 		</div>
@@ -89,18 +94,16 @@ interface ItemPopoverProps {
 	children: React.ReactNode;
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
-	patchVersion: string;
+	// patchVersion: string;
 }
-const ItemPopover = ({ children, item, itemsById, patchVersion }: ItemPopoverProps) => {
+const ItemPopover = ({ children, item, itemsById }: ItemPopoverProps) => {
 	return (
 		<HoverPopover
 			align="center"
 			side="top"
-			sideOffset={8}
+			sideOffset={0}
 			closeDelayMs={0}
-			content={
-				<ItemHoverContent item={item} itemsById={itemsById} patchVersion={patchVersion} />
-			}
+			content={<ItemHoverContent item={item} itemsById={itemsById} />}
 			contentClassName={POPOVER_CONTENT_CLASS}
 		>
 			{children}
