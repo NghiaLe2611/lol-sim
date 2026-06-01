@@ -202,7 +202,11 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 		<div className="mx-auto aspect-square w-full min-h-[190px] max-w-[250px] sm:min-h-[210px] sm:max-w-[270px] lg:min-h-[initial] lg:max-w-[initial]">
 			<ResponsiveContainer width="100%" height="100%">
 				<RadarChart cx="50%" cy="50%" data={data} outerRadius="58%">
-					<PolarGrid gridType="polygon" stroke="hsl(var(--hex-gold))" strokeOpacity={0.45} />
+					<PolarGrid
+						gridType="polygon"
+						stroke="hsl(var(--hex-gold))"
+						strokeOpacity={0.45}
+					/>
 					<PolarAngleAxis
 						dataKey="attribute"
 						allowDuplicatedCategory={false}
@@ -648,22 +652,18 @@ function BonusStatGrid({ stats }: { stats: BonusChampionDetail['stats'] }) {
 
 export function ChampionLanePositionTags({ positions }: { positions?: string[] }) {
 	const tags = laneTagsFromPositions(positions);
-	return (
-		<div className="flex min-h-[1.25em] flex-wrap justify-end gap-2">
-			{tags.map((t) => (
-				<span key={t.key} className="bg-muted/25 inline-flex items-center gap-1">
-					<img
-						alt=""
-						className="filter-icon size-5 shrink-0 object-contain"
-						height={20}
-						src={t.icon}
-						width={20}
-					/>
-					<span className="font-medium text-foreground tracking-wide">{t.label}</span>
-				</span>
-			))}
-		</div>
-	);
+	return tags.map((t) => (
+		<span key={t.key} className="bg-muted/25 inline-flex items-center gap-1">
+			<img
+				alt=""
+				className="filter-icon size-5 shrink-0 object-contain"
+				height={20}
+				src={t.icon}
+				width={20}
+			/>
+			<span className="font-medium text-foreground tracking-wide">{t.label}</span>
+		</span>
+	));
 }
 
 export function ChampionClassTags({ tags }: { tags: string[] }) {
@@ -710,7 +710,9 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Roles</span>
-				<ChampionLanePositionTags positions={b.positions} />
+				<div className="flex min-h-[1.25em] flex-wrap justify-end gap-2">
+					<ChampionLanePositionTags positions={b.positions} />
+				</div>
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Classes</span>

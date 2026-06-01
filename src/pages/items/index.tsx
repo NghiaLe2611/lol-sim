@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import ItemPopover from './components/ItemPopover';
 import clsx from 'clsx';
+import ItemDialog from './ItemDialog';
 
 const FILTER_CATEGORIES: ItemCategoryFilter[] = ['all', 'attack', 'magic', 'defense', 'boots'];
 const FILTER_TAGS = ITEM_TAG_FILTERS;
@@ -30,6 +31,7 @@ export default function ItemsPage() {
 	const [search, setSearch] = useState('');
 	const [category, setCategory] = useState<ItemCategoryFilter>('all');
 	const [tag, setTag] = useState<string | null>(null);
+	const [activeId, setActiveId] = useState<string | null>(null);
 
 	const itemsQuery = useQuery({
 		queryKey: ['items', patchVersion],
@@ -168,6 +170,7 @@ export default function ItemsPage() {
 						<ItemPopover key={item.id} item={item} itemsById={itemsById}>
 							<button
 								type="button"
+								onClick={() => setActiveId(item.id)}
 								className="hover:scale-105 w-full overflow-hidden bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
 								aria-label={item.name}
 							>
@@ -192,6 +195,14 @@ export default function ItemsPage() {
 					) : null}
 				</div>
 			)}
+
+			<ItemDialog
+				activeId={activeId}
+				onClose={() => setActiveId(null)}
+				onSelectActiveId={setActiveId}
+				itemsById={itemsById}
+				patchVersion={patchVersion!}
+			/>
 		</div>
 	);
 }

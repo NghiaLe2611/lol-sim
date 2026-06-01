@@ -28,6 +28,14 @@ import {
 } from '@/components/ui/select';
 import clsx from 'clsx';
 import HoverPopover from '@/components/HoverPopover';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { ChampionClassTags, ChampionLanePositionTags } from '../champion-detail';
 import { ChampionListRow, ChampionsApiPayload } from '@/types/champions';
 
@@ -165,6 +173,85 @@ function ChampionCardLaneIcons({ positions }: { positions: string[] }) {
 }
 
 type ViewType = 'small-grid' | 'large-grid' | 'table';
+
+function formatReleaseDateDisplay(date?: string): string {
+	if (!date) return '';
+	const parsed = new Date(`${date}T00:00:00`);
+	if (Number.isNaN(parsed.getTime())) return date;
+	return parsed.toLocaleDateString(undefined, {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric',
+	});
+}
+
+function ChampionsTableView({
+	champions,
+	releaseDates,
+}: {
+	champions: ChampionListRow[];
+	releaseDates: Record<string, string>;
+}) {
+	const { patchVersion: version } = useAppContext();
+	return (
+		<div className="hex-border overflow-hidden rounded-md border-2">
+			<Table>
+				<TableHeader>
+					<TableRow className="hover:bg-transparent [&_th]:text-center">
+						<TableHead className="min-w-[10rem] px-4">Name</TableHead>
+						<TableHead className="min-w-[8rem] px-4">Roles</TableHead>
+						<TableHead className="min-w-[8rem] px-4">Classes</TableHead>
+						<TableHead className="min-w-[7rem] px-4">Released</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{champions.map((c) => {
+						const releaseDate = releaseDates[c.id];
+						return (
+							<TableRow key={c.id} className="hover:bg-muted/30">
+								<TableCell className="px-4 py-3">
+									<Link
+										to={`/champions/${c.id}`}
+										className="group flex items-center gap-2 px-4 min-w-0"
+									>
+										<img
+											alt={c.name}
+											className="size-8 lg:size-10 shrink-0 object-contain rounded-full"
+											src={getSquareChampImg(version!, (c as any).key)}
+										/>
+										<div className="block">
+											<p className="text-sm font-semibold text-hex-gold group-hover:underline">
+												{c.name}
+											</p>
+											{c.title ? (
+												<p className="text-muted-foreground mt-0.5 text-xs capitalize italic">
+													{c.title}
+												</p>
+											) : null}
+										</div>
+									</Link>
+								</TableCell>
+								<TableCell className="px-4 py-3">
+									<div className="flex justify-center">
+										<ChampionLanePositionTags positions={c.positions} />
+									</div>
+								</TableCell>
+								<TableCell className="px-4 py-3">
+									<div className="flex gap-2 justify-center">
+										<ChampionClassTags tags={c.tags} />
+									</div>
+								</TableCell>
+								<TableCell className="text-muted-foreground px-4 py-3 text-sm tabular-nums text-center">
+									{releaseDate ? formatReleaseDateDisplay(releaseDate) : null}
+								</TableCell>
+							</TableRow>
+						);
+					})}
+				</TableBody>
+			</Table>
+		</div>
+	);
+}
 
 export default function ChampionsPage() {
 	const { t } = useTranslation();
@@ -348,12 +435,8 @@ export default function ChampionsPage() {
 			));
 		}
 
-		if (view === 'table') {
-			return <div>Table</div>;
-		}
-
 		return null;
-	}, [filtered, view]);
+	}, [filtered, view, version]);
 
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12">
@@ -518,7 +601,41 @@ export default function ChampionsPage() {
 					</p>
 				)}
 
-				{patchAndListLoading && (
+				{patchAndListLoading && view === 'table' && (
+					<div className="hex-border overflow-hidden rounded-md border-2">
+						<Table>
+							<TableHeader>
+								<TableRow className="hover:bg-transparent">
+									<TableHead className="px-4">Name</TableHead>
+									<TableHead className="px-4">Roles</TableHead>
+									<TableHead className="px-4">Classes</TableHead>
+									<TableHead className="px-4">Released</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{Array.from({ length: 12 }).map((_, i) => (
+									<TableRow key={i}>
+										<TableCell className="px-4 py-3">
+											<Skeleton className="h-5 w-32" />
+											<Skeleton className="mt-2 h-3 w-24" />
+										</TableCell>
+										<TableCell className="px-4 py-3">
+											<Skeleton className="h-5 w-20" />
+										</TableCell>
+										<TableCell className="px-4 py-3">
+											<Skeleton className="h-6 w-28" />
+										</TableCell>
+										<TableCell className="px-4 py-3">
+											<Skeleton className="h-4 w-24" />
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
+				)}
+
+				{patchAndListLoading && view !== 'table' && (
 					<div
 						className={clsx(
 							'grid',
@@ -556,34 +673,53 @@ export default function ChampionsPage() {
 
 				{showChampionGrid && version && (
 					<>
-						{/* <p className="text-xs font-medium text-right text-hex-gold-dark mb-4">
-							*{t('common.championNote')}
-						</p> */}
-						<div
-							className={clsx(
-								'grid',
-								view === 'large-grid' &&
-									'gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
-								view === 'small-grid' &&
-									'gap-1 grid-cols-6 md:grid-cols-12 lg:grid-cols-16'
-							)}
-						>
-							{gridContent}
-							{filtered.length === 0 && (
-								<div className="flex items-center justify-center text-muted-foreground col-span-full py-1">
-									<div>
+						{view === 'table' ? (
+							<>
+								{filtered.length > 0 ? (
+									<ChampionsTableView
+										champions={filtered}
+										releaseDates={bonusReleaseDates}
+									/>
+								) : (
+									<div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
 										<img
 											src="/images/bee.webp"
 											alt="No results"
-											className="size-20 2xl:size-28 mx-auto mb-2"
+											className="mx-auto mb-2 size-20 2xl:size-28"
 										/>
 										<span className="text-sm lg:text-base 5xl:text-lg">
 											No champions match your search.
 										</span>
 									</div>
-								</div>
-							)}
-						</div>
+								)}
+							</>
+						) : (
+							<div
+								className={clsx(
+									'grid',
+									view === 'large-grid' &&
+										'gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
+									view === 'small-grid' &&
+										'gap-1 grid-cols-6 md:grid-cols-12 lg:grid-cols-16'
+								)}
+							>
+								{gridContent}
+								{filtered.length === 0 && (
+									<div className="col-span-full flex items-center justify-center py-1 text-muted-foreground">
+										<div>
+											<img
+												src="/images/bee.webp"
+												alt="No results"
+												className="mx-auto mb-2 size-20 2xl:size-28"
+											/>
+											<span className="text-sm lg:text-base 5xl:text-lg">
+												No champions match your search.
+											</span>
+										</div>
+									</div>
+								)}
+							</div>
+						)}
 					</>
 				)}
 			</div>

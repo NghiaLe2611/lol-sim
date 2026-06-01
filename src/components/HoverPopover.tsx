@@ -17,6 +17,7 @@ export type HoverPopoverProps = {
 	closeDelayMs?: number;
 	/** Wrapper around the trigger anchor. Default `inline-flex`. Use `block w-full` for grid cells. */
 	triggerClassName?: string;
+	showTree?: boolean;
 };
 
 /**
@@ -32,6 +33,7 @@ function HoverPopover({
 	sideOffset = 10,
 	closeDelayMs = CLOSE_DELAY_MS,
 	triggerClassName = 'inline-flex',
+	showTree,
 }: HoverPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const triggerRef = useRef<HTMLDivElement>(null);

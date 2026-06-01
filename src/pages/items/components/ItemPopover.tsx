@@ -15,9 +15,11 @@ const POPOVER_CONTENT_CLASS =
 function ItemHoverContent({
 	item,
 	itemsById,
+	showTree,
 }: {
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
+	showTree?: boolean;
 }) {
 	const { patchVersion } = useAppContext();
 
@@ -76,7 +78,7 @@ function ItemHoverContent({
 					</p>
 				) : null}
 			</div>
-			{hasRecipe ? (
+			{hasRecipe && showTree ? (
 				<div className="border-t dark:border-[#5a4617]/60 border-[#bb994c]/60 p-3">
 					{/* <ItemTreeVertical item={item} itemsById={itemsById} patchVersion={patchVersion} /> */}
 					<ItemTreeHorizontal
@@ -94,16 +96,18 @@ interface ItemPopoverProps {
 	children: React.ReactNode;
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
+	showTree?: boolean;
 	// patchVersion: string;
 }
-const ItemPopover = ({ children, item, itemsById }: ItemPopoverProps) => {
+const ItemPopover = ({ children, item, itemsById, showTree = true }: ItemPopoverProps) => {
 	return (
 		<HoverPopover
+			showTree={showTree}
 			align="center"
 			side="top"
 			sideOffset={0}
 			closeDelayMs={0}
-			content={<ItemHoverContent item={item} itemsById={itemsById} />}
+			content={<ItemHoverContent item={item} itemsById={itemsById} showTree={showTree} />}
 			contentClassName={POPOVER_CONTENT_CLASS}
 		>
 			{children}
