@@ -60,10 +60,10 @@ const ItemDialog = ({
 								{line}
 							</h2>
 						))} */}
-						<h2 className="display text-base xl:text-xl font-semibold text-hex-gold leading-snug">
+						<h2 className="display text-base lg:text-xl font-semibold text-hex-gold leading-snug">
 							{item.name}
 						</h2>
-						<p className="text-hex-gold/80 mt-1 flex items-center gap-1.5 text-base font-medium">
+						<p className="text-hex-gold/80 mt-1 flex items-center gap-1.5 text-sm lg:text-base font-medium">
 							<Coins className="size-4 shrink-0" />
 							<span>{item.goldTotal.toLocaleString()}</span>
 						</p>
@@ -77,7 +77,7 @@ const ItemDialog = ({
 							{statLines.map((line, i) => (
 								<p
 									key={`${line}-${i}`}
-									className="text-foreground text-sm leading-relaxed font-medium"
+									className="text-foreground text-xs lg:text-sm leading-relaxed font-medium"
 								>
 									{line}
 								</p>
@@ -90,7 +90,7 @@ const ItemDialog = ({
 							{passives.map((block) => (
 								<p
 									key={block.title}
-									className="text-foreground leading-relaxed text-sm"
+									className="text-foreground leading-relaxed text-xs lg:text-sm"
 								>
 									<span className="font-semibold text-hex-gold/90">
 										{block.title}:

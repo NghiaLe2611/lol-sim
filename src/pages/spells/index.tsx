@@ -1,54 +1,92 @@
-import { Input } from '@/components/ui/input';
-import { summonerSpells } from '@/data/lol';
-import { Search, Timer } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+import { STALE_MS } from '@/constants/common';
+import { useAppContext } from '@/contexts/AppContext';
+import SpellPopover from '@/pages/spells/components/SpellPopover';
+import {
+	parseClassicSummonerSpells,
+	summonerSpellSpriteUrl,
+	type DdragonSummonerPayload,
+	type SummonerSpellView,
+} from '@/pages/spells/utils';
+import { getSummonerSpells } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+
+function SummonerSpellIcon({
+	spell,
+	patchVersion,
+}: {
+	spell: SummonerSpellView;
+	patchVersion: string;
+}) {
+	const { image } = spell;
+	const spriteUrl = summonerSpellSpriteUrl(patchVersion, image.sprite);
+
+	return (
+		<div
+			className="shrink-0 border border-[#8a7344]/80 bg-black/25 hover:cursor-pointer hover:scale-105 transition-all duration-200"
+			style={{
+				width: image.w,
+				height: image.h,
+				backgroundImage: `url(${spriteUrl})`,
+				backgroundPosition: `-${image.x}px -${image.y}px`,
+				backgroundRepeat: 'no-repeat',
+			}}
+			role="img"
+			aria-label={spell.name}
+		/>
+	);
+}
 
 export default function SummonersPage() {
-	const [q, setQ] = useState('');
-	const filtered = useMemo(() => {
-		const s = q.toLowerCase();
-		return summonerSpells.filter(
-			(sp) => sp.name.toLowerCase().includes(s) || sp.description.toLowerCase().includes(s)
-		);
-	}, [q]);
+	const { patchVersion, isPatchReady } = useAppContext();
+
+	const spellsQuery = useQuery({
+		queryKey: ['spells', patchVersion],
+		queryFn: () => getSummonerSpells(patchVersion!),
+		enabled: isPatchReady,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+		select: (raw: DdragonSummonerPayload) => parseClassicSummonerSpells(raw),
+	});
+
+	const spells = spellsQuery.data ?? [];
+	const isLoading = spellsQuery.isLoading || spellsQuery.isFetching;
 
 	return (
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">Spells</h1>
-				<p className="text-muted-foreground mt-2">Choose your two spells wisely.</p>
+				<p className="text-muted-foreground mt-2">
+					Summoner spells are special abilities that all players can have access to based
+					on the map, in addition to their champion abilities. Players choose their two
+					preferred summoner spells during champion select.
+				</p>
 			</header>
 
-			<div className="relative mb-8 md:w-96">
-				<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-				<Input
-					className="bg-input/60 pl-9"
-					onChange={(e) => setQ(e.target.value)}
-					placeholder="Filter spells..."
-					value={q}
-				/>
-			</div>
-
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{filtered.map((s) => (
-					<div key={s.id} className="hex-border rounded-lg p-5">
-						<div className="mb-2 flex items-center gap-3">
-							<div className="h-10 w-10 rotate-45 border border-hex-gold/60 bg-gradient-to-br from-hex-gold/30 to-hex-blue/30" />
-							<div className="display text-lg text-hex-gold">{s.name}</div>
-						</div>
-						<p className="text-muted-foreground text-sm">{s.description}</p>
-						<div className="text-muted-foreground mt-3 flex justify-between text-xs">
-							<span className="flex items-center gap-1">
-								<Timer className="h-3 w-3" />
-								{s.cooldown}s
-							</span>
-							<span>
-								Range: <span className="text-foreground">{s.range}</span>
-							</span>
-						</div>
-					</div>
-				))}
-			</div>
+			{isLoading ? (
+				<div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+					<Spinner type="default" className="size-10 text-hex-gold" />
+					<Skeleton className="h-4 w-48" />
+				</div>
+			) : spellsQuery.isError ? (
+				<div className="flex items-center justify-center py-12">
+					<p className="text-muted-foreground text-center">Failed to load spells.</p>
+				</div>
+			) : (
+				<div className="flex flex-wrap gap-4">
+					{spells.map((spell) => (
+						<SpellPopover key={spell.id} spell={spell}>
+							{patchVersion ? (
+								<SummonerSpellIcon spell={spell} patchVersion={patchVersion} />
+							) : null}
+							<p className="text-foreground max-w-[4.5rem] truncate text-center font-medium text-xs lg:text-sm">
+								{spell.name}
+							</p>
+						</SpellPopover>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

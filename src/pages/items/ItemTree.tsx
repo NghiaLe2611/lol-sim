@@ -115,7 +115,7 @@ function ItemTreeNodeCompact({
 			</div>
 			<p
 				className={cn(
-					'text-hex-gold/80 text-center font-medium leading-none transition-colors',
+					'text-hex-gold/80 mt-1 text-center font-medium leading-none transition-colors',
 					onClick && 'group-hover:text-hex-gold'
 				)}
 			>

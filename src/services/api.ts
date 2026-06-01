@@ -134,6 +134,8 @@ async function getRunes(version: string) {
 
 // Get summoner spell list
 async function getSummonerSpells(version: string) {
+	// https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json
+	// https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/data/spells/icons2d/
 	const url = `${apiUrl}/cdn/${version}/data/en_US/summoner.json`;
 	try {
 		const response = await fetch(url);
