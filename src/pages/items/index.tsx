@@ -88,7 +88,7 @@ export default function ItemsPage() {
 		<div className="mx-auto w-full max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">List of items</h1>
-				<p className="text-muted-foreground mt-2">
+				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
 					All in-game items for League of Legends (Summoner's Rift).
 				</p>
 			</header>

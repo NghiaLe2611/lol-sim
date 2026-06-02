@@ -63,7 +63,7 @@ export default function BuildPage() {
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display font-semibold gold-text text-4xl">Build Calculator</h1>
-				<p className="text-muted-foreground mt-2">
+				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
 					Pick a champion, set your level, allocate skill points and equip items.
 				</p>
 			</header>

@@ -6,11 +6,13 @@ import RuneDialog from '@/pages/runes/components/RuneDialog';
 import { parseRunePaths, runePathCardUrl, type DdragonRunePath } from '@/pages/runes/utils';
 import { getRunes } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
+import clsx from 'clsx';
 import { useState } from 'react';
 
 export default function RunesPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
 	const [activePathKey, setActivePathKey] = useState<string | null>(null);
+	const [hoverId, setHoverId] = useState<string | null>(null);
 
 	const runesQuery = useQuery({
 		queryKey: ['runes', patchVersion],
@@ -30,7 +32,7 @@ export default function RunesPage() {
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">Runes</h1>
-				<p className="text-muted-foreground mt-2">
+				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
 					Runes are enhancements that add new abilities or buffs to the champion. The
 					player can choose their loadout of runes before the match begins, during
 					champion select, or their Collection tab.
@@ -47,28 +49,36 @@ export default function RunesPage() {
 					<p className="text-muted-foreground text-center">Failed to load runes.</p>
 				</div>
 			) : (
-				<div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-0">
+				<div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
 					{/* Sort by id */}
 					{paths
 						.sort((a, b) => a.id - b.id)
-						.map((path) => (
-							<button
-								key={path.key}
-								type="button"
-								onClick={() => setActivePathKey(path.key)}
-								className="group flex min-w-0 flex-col transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 overflow-hidden"
-							>
-								<img
-									alt=""
-									className="aspect-[3/4] w-full object-cover object-top group-hover:scale-105 transition-all"
-									loading="lazy"
-									src={runePathCardUrl(path.key)}
-								/>
-								<p className="py-2.5 text-center text-xs lg:text-sm font-semibold tracking-wider uppercase">
-									{path.name}
-								</p>
-							</button>
-						))}
+						.map((path) => {
+							const isDimmed = hoverId !== null && hoverId !== path.key;
+
+							return (
+								<button
+									key={path.key}
+									type="button"
+									style={{ opacity: isDimmed ? 0.5 : 1 }}
+									onClick={() => setActivePathKey(path.key)}
+									onMouseEnter={() => setHoverId(path.key)}
+									onMouseLeave={() => setHoverId(null)}
+									className="opacity-90 flex min-w-0 flex-col transition-opacity border border-[#ab8f57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 overflow-hidden"
+								>
+									<img
+										alt={path.name}
+										// group-hover:scale-105 transition-all
+										className="aspect-[3/4] w-full object-cover object-top border-b border-[#ab8f57]"
+										loading="lazy"
+										src={runePathCardUrl(path.key)}
+									/>
+									<p className="py-2.5 text-center text-xs lg:text-sm font-semibold tracking-wider uppercase">
+										{path.name}
+									</p>
+								</button>
+							);
+						})}
 				</div>
 			)}
 

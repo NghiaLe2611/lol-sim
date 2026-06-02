@@ -443,7 +443,7 @@ export default function ChampionsPage() {
 			<div className="flex flex-col h-full">
 				<header className="mb-8">
 					<h1 className="display gold-text text-4xl">Champions</h1>
-					<p className="text-muted-foreground mt-2">
+					<p className="text-muted-foreground text-xs lg:text-sm mt-2">
 						Click any champion for detailed stats and abilities.
 					</p>
 				</header>

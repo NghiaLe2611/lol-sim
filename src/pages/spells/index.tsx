@@ -57,7 +57,7 @@ export default function SummonersPage() {
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">Spells</h1>
-				<p className="text-muted-foreground mt-2">
+				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
 					Summoner spells are special abilities that all players can have access to based
 					on the map, in addition to their champion abilities. Players choose their two
 					preferred summoner spells during champion select.
