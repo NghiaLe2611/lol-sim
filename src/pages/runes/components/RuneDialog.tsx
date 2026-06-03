@@ -115,19 +115,25 @@ function SlotDivider({ name, style }: { name: string; style: RunePathStyle }) {
 
 function PathMainBanner({ name, style }: { name: string; style: RunePathStyle }) {
 	return (
-		<div className="relative flex items-center justify-center w-full max-w-md py-4 my-2">
+		<div className="relative flex items-center justify-center w-full">
 			{/* Left/Right diamond + line */}
 			<div className="absolute left-0 right-0 h-px flex items-center justify-between pointer-events-none px-4">
 				<div
-					className="size-1.5 rotate-45 border"
-					style={{ borderColor: style.color, backgroundColor: style.color }}
+					className="size-2 rotate-45 border"
+					style={{
+						borderColor: style.color,
+						// backgroundColor: style.color
+					}}
 				/>
 				<div className="h-px flex-1 mx-2" style={{ backgroundColor: `${style.color}40` }} />
 				<div className="w-[200px] shrink-0" />
 				<div className="h-px flex-1 mx-2" style={{ backgroundColor: `${style.color}40` }} />
 				<div
-					className="size-1.5 rotate-45 border"
-					style={{ borderColor: style.color, backgroundColor: style.color }}
+					className="size-2 rotate-45 border"
+					style={{
+						borderColor: style.color,
+						// backgroundColor: style.color
+					}}
 				/>
 			</div>
 
@@ -169,7 +175,9 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 			<DialogContent
 				showCloseButton
 				className={cn(
-					'max-w-2xl border-hex-gold bg-background p-0 shadow-2xl',
+					style.borderColor,
+					// border-hex-gold
+					'max-w-2xl bg-background p-0 border-2 shadow-2xl',
 					'max-h-[min(95vh,950px)] overflow-y-auto'
 				)}
 			>
@@ -180,11 +188,6 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 
 				<div
 					className="relative flex flex-col items-center px-4 pb-8 pt-6 select-none bg-background min-w-[320px] sm:min-w-[500px]"
-					// style={{
-					// 	backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.95)), url(${runePathCardUrl(activePath.key)})`,
-					// 	backgroundSize: 'cover',
-					// 	backgroundPosition: 'center top',
-					// }}
 					style={{
 						backgroundImage: `url(/public/images/runes/${activePath.key.toLowerCase()}.png)`,
 						backgroundSize: 'cover',
@@ -194,17 +197,18 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 				>
 					<img
 						alt=""
-						className={cn('object-contain rounded-full border p-2', style.borderColor)}
+						className={cn(
+							'size-12 object-contain rounded-full border p-2 mb-4',
+							style.borderColor
+						)}
 						style={{
 							borderColor: style.color,
 							boxShadow: `0 0 15px ${style.color}20`,
 						}}
 						src={runePathIconUrl(activePath.icon)}
 					/>
-
 					<PathMainBanner name={activePath.name} style={style} />
-
-					<div className="mt-6 flex w-full max-w-3xl flex-col gap-6">
+					<div className="mt-10 4xl:mt-16 flex w-full max-w-3xl flex-col gap-6">
 						{activePath.slots.map((slot, slotIndex) => {
 							const slotName = style.slotNames[slotIndex];
 							return (
@@ -215,12 +219,12 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 									{slotIndex > 0 && slotName && (
 										<SlotDivider name={slotName} style={style} />
 									)}
-									<div className="flex flex-wrap items-start justify-center gap-4 sm:gap-6">
+									<div className="w-full flex flex-wrap items-start justify-center gap-4 sm:gap-6">
 										{slot.runes.map((rune) => (
 											<RunePopover key={rune.id} rune={rune}>
 												<button
 													type="button"
-													className="group flex w-[7.5rem] flex-col items-center gap-2 rounded-sm p-2 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 sm:w-[8.5rem]"
+													className="group flex w-[7.5rem] flex-col items-center gap-2 rounded-sm text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 sm:w-[8.5rem]"
 												>
 													<img
 														alt=""

@@ -64,12 +64,12 @@ export default function RunesPage() {
 									onClick={() => setActivePathKey(path.key)}
 									onMouseEnter={() => setHoverId(path.key)}
 									onMouseLeave={() => setHoverId(null)}
-									className="opacity-90 flex min-w-0 flex-col transition-opacity border border-[#ab8f57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 overflow-hidden"
+									className="opacity-90 flex min-w-0 flex-col transition-opacity border-2 border-[#ab8f57] dark:border-[#46372a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 overflow-hidden"
 								>
 									<img
 										alt={path.name}
 										// group-hover:scale-105 transition-all
-										className="aspect-[3/4] w-full object-cover object-top border-b border-[#ab8f57]"
+										className="aspect-[3/4] w-full object-cover object-top border-b-2 border-[#ab8f57] dark:border-[#46372a]"
 										loading="lazy"
 										src={runePathCardUrl(path.key)}
 									/>
