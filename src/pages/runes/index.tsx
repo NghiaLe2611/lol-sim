@@ -6,8 +6,8 @@ import RuneDialog from '@/pages/runes/components/RuneDialog';
 import { parseRunePaths, runePathCardUrl, type DdragonRunePath } from '@/pages/runes/utils';
 import { getRunes } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import clsx from 'clsx';
 import { useState } from 'react';
+import BuildRune from './BuildRune';
 
 export default function RunesPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
@@ -83,6 +83,13 @@ export default function RunesPage() {
 			)}
 
 			<RuneDialog activePath={activePath} onClose={() => setActivePathKey(null)} />
+
+			<div className="mt-16 4xl:mt-24">
+				<h2 className="display gold-text text-4xl uppercase text-center mb-8 4xl:mt-12">
+					Create Your Playstyle
+				</h2>
+				<BuildRune />
+			</div>
 		</div>
 	);
 }

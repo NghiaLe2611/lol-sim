@@ -1,0 +1,284 @@
+@keyframes perk-glow-shift {
+	0% {
+		filter: brightness(100%);
+	}
+	50% {
+		filter: brightness(170%);
+	}
+	100% {
+		filter: brightness(100%);
+	}
+}
+
+.build-rune-container {
+	display: flex;
+	align-items: stretch;
+	height: 645px;
+	background: #010a13;
+	position: relative;
+	overflow: hidden;
+	user-select: none;
+	@apply border-2 border-[#ab8f57] dark:border-[#46372a];
+
+	// Auto running glow animation from left to right when not hovered
+	&.animate-running {
+		.path-block {
+			animation: perk-glow-shift 2s ease infinite;
+
+			&:nth-child(1) {
+				animation-delay: 0s;
+			}
+			&:nth-child(2) {
+				animation-delay: 0.4s;
+			}
+			&:nth-child(3) {
+				animation-delay: 0.8s;
+			}
+			&:nth-child(4) {
+				animation-delay: 1.2s;
+			}
+			&:nth-child(5) {
+				animation-delay: 1.6s;
+			}
+		}
+	}
+
+	// Disable auto running animation on hover container
+	&:hover {
+		.path-block {
+			animation: none !important;
+		}
+	}
+}
+
+.path-block {
+	flex: 1 1 0%;
+	width: 20%;
+	height: 100%;
+	text-align: center;
+	position: relative;
+	transition: opacity 0.3s ease;
+	border-right: 1px solid rgba(1, 10, 19, 0.85);
+
+	&:last-child {
+		border-right: none;
+	}
+}
+
+.perk-wrap {
+	@apply flex flex-col justify-start items-center w-full h-full relative cursor-pointer;
+	background: #010a13;
+	box-shadow: 0 0 0 1px rgba(1, 10, 19, 0.85);
+
+	&:hover {
+		// Glow and active state
+		.perk-glow {
+			filter: brightness(150%);
+		}
+
+		.path-vfx {
+			opacity: 1;
+		}
+
+		.path-title {
+			color: #f0e6d2 !important;
+		}
+
+		.path-body,
+		.path-footer {
+			opacity: 1;
+		}
+
+		.path-icon-symbol {
+			opacity: 1;
+			filter: grayscale(0%);
+		}
+	}
+}
+
+/* lines.png — 211×639, anchored top, full column height (ref. Path__PerkBackground) */
+.perk-lines {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 211px;
+	height: 100%;
+	min-height: 639px;
+	pointer-events: none;
+	object-fit: fill;
+	object-position: top center;
+	transition: filter 0.15s ease-out;
+	z-index: 1;
+}
+
+.perk-glow {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	object-fit: cover;
+	object-position: top center;
+	transition: filter 0.15s ease-out;
+	z-index: 1;
+}
+
+.path-icon-wrap {
+	position: relative;
+	width: 100%;
+	height: 246px;
+	margin-top: 40px;
+	margin-bottom: 46px;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.path-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	aspect-ratio: 1;
+	max-width: 220px;
+	margin: 0 auto;
+	background: url('/images/runes/ring.png') center no-repeat;
+	background-size: contain;
+	position: relative;
+	z-index: 2;
+    padding: 10px;
+}
+
+.path-icon-symbol {
+	display: block;
+	width: 100%;
+	// height: 42%;
+	// max-width: 72px;
+	// max-height: 72px;
+	// object-fit: contain;
+	// pointer-events: none;
+	// opacity: 0.7;
+	transition: filter 0.15s ease-out;
+}
+
+.path-vfx {
+	margin: 0;
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100%;
+	max-width: 225px;
+	aspect-ratio: 1;
+	opacity: 0;
+	transition: opacity 0.25s ease-out;
+	pointer-events: none;
+	object-fit: contain;
+	z-index: 1;
+}
+
+.path-header {
+	width: 100%;
+	text-transform: uppercase;
+	position: absolute;
+	top: 199px;
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	z-index: 3;
+}
+
+.path-title {
+	color: #727271;
+	font-family: 'Beaufort', 'BeaufortforLOL-Medium', sans-serif;
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: 0.15em;
+	line-height: 1.2;
+	margin-bottom: 4px;
+	transition: color 0.15s ease;
+}
+
+.path-body {
+	color: #ddd;
+	font-size: 10px;
+	letter-spacing: 0.075em;
+	line-height: 14px;
+	opacity: 0.2;
+	transition: opacity 0.15s ease-out;
+}
+
+.keystones-container {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	position: relative;
+	z-index: 10;
+	width: 100%;
+	padding: 0 16px;
+	margin-top: -10px;
+}
+
+.keystone-node {
+	flex: auto 0 0;
+	width: 50%;
+	text-align: center;
+	position: relative;
+	z-index: 1;
+	display: flex;
+	justify-content: center;
+	padding: 8px 0;
+
+	&:nth-child(3) {
+		width: 100%;
+	}
+}
+
+.keystone-inner {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 9999px;
+	background: rgba(0, 0, 0, 0.4);
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+	position: relative;
+
+	&:hover {
+		transform: scale(1.08);
+	}
+}
+
+.keystone-img {
+	border-radius: 9999px;
+	width: 62px;
+	height: 62px;
+	cursor: pointer;
+	object-fit: cover;
+	background-color: #010a13;
+	border: 1px solid rgba(171, 143, 87, 0.2);
+	transition: border-color 0.2s ease;
+
+	&:hover {
+		border-color: rgba(171, 143, 87, 0.8);
+	}
+}
+
+.path-footer {
+	margin: 46px 0 0;
+	padding: 0 22px;
+	width: 100%;
+	font-size: 11px;
+	font-weight: 400;
+	letter-spacing: 0.05em;
+	color: #ddd;
+	opacity: 0.2;
+	transition: opacity 0.15s ease-out;
+	z-index: 5;
+}
