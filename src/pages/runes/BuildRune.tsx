@@ -1,14 +1,12 @@
-import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getRunes } from '@/services/api';
-import { useAppContext } from '@/contexts/AppContext';
 import { STALE_MS } from '@/constants/common';
-import {
-	parseRunePaths,
-	runePerkImgUrl,
-	type DdragonRunePath,
-} from '@/pages/runes/utils';
+import { useAppContext } from '@/contexts/AppContext';
 import RunePopover from '@/pages/runes/components/RunePopover';
+import { parseRunePaths, runePerkImgUrl, type DdragonRunePath } from '@/pages/runes/utils';
+import { getRunes } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import clsx from 'clsx';
+import { Undo2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import './build-rune.scss';
 
 // Subtitle maps matching the preseason design
@@ -46,6 +44,7 @@ const KEY_MAP: Record<string, string> = {
 
 export default function BuildRune() {
 	const { patchVersion, isPatchReady } = useAppContext();
+	const [activePath, setActivePath] = useState<string | null>(null);
 
 	const runesQuery = useQuery({
 		queryKey: ['runes', patchVersion],
@@ -63,81 +62,121 @@ export default function BuildRune() {
 		return [...paths].sort((a, b) => a.id - b.id);
 	}, [paths]);
 
+	const activePathData = useMemo(() => {
+		return sortedPaths.find((p) => p.key === activePath);
+	}, [sortedPaths, activePath]);
+
+	console.log(activePathData);
+
 	if (runesQuery.isLoading) {
 		return (
 			<div className="flex h-[645px] items-center justify-center bg-[#010a13] border border-hex-gold/30">
-				<span className="text-hex-gold font-medium animate-pulse">Loading Rune Builder...</span>
+				<span className="text-hex-gold font-medium animate-pulse">
+					Loading Rune Builder...
+				</span>
 			</div>
 		);
 	}
 
 	return (
-		<div className="build-rune-container animate-running">
-			{sortedPaths.map((path) => {
-				const shortKey = KEY_MAP[path.key] || 'd';
-				const subs = PATH_SUBTITLES[path.key] || {
-					body: 'Custom playstyle',
-					footer: 'Strategic enhancements',
-				};
+		<div className="build-rune-container">
+			<div
+				className={clsx(
+					'rune-content rune-content--detail',
+					activePath && 'rune-content--visible'
+				)}
+				aria-hidden={!activePath}
+			>
+				<div className="text-right p-4">
+					<button
+						type="button"
+						className="p-2 border border-hex-gold/80 hover:opacity-85"
+						onClick={() => setActivePath(null)}
+						tabIndex={activePath ? 0 : -1}
+					>
+						<Undo2 className="size-4 text-hex-gold/80" />
+					</button>
+				</div>
+				{/* TODO: full rune tree for {activePath} */}
+			</div>
 
-				// Get the 3 keystone runes from slot 0
-				const keystones = path.slots?.[0]?.runes || [];
+			<div
+				className={clsx(
+					'rune-content rune-content--picker animate-running',
+					!activePath && 'rune-content--visible'
+				)}
+				aria-hidden={Boolean(activePath)}
+			>
+				{sortedPaths.map((path) => {
+					const shortKey = KEY_MAP[path.key] || 'd';
+					const subs = PATH_SUBTITLES[path.key] || {
+						body: 'Custom playstyle',
+						footer: 'Strategic enhancements',
+					};
 
-				return (
-					<div key={path.id} className="path-block">
-						<div className="perk-wrap">
-							{/* Vertical lines — full column height */}
-							<img className="perk-lines" src="/images/runes/lines.png" alt="" />
-							{/* Glow background */}
-							<img
-								className="perk-glow"
-								src={`/images/runes/glow-${shortKey}.png`}
-								alt=""
-							/>
+					// Get the 3 keystone runes from slot 0
+					const keystones = path.slots?.[0]?.runes || [];
 
-							{/* Icon and VFX */}
-							<div className="path-icon-wrap">
-								<div className="path-icon">
-									<img
-										className="path-icon-symbol"
-										src={`/images/runes/icon-${shortKey}.png`}
-										alt=""
-									/>
-								</div>
+					return (
+						<div
+							key={path.id}
+							className="path-block"
+							onClick={() => setActivePath(path.key)}
+						>
+							<div className="perk-wrap">
+								{/* Vertical lines — full column height */}
+								<img className="perk-lines" src="/images/runes/lines.png" alt="" />
+								{/* Glow background */}
 								<img
-									className="path-vfx"
-									src={`/images/runes/vfx-${shortKey}.png`}
+									className="perk-glow"
+									src={`/images/runes/glow-${shortKey}.png`}
 									alt=""
 								/>
-								<header className="path-header">
-									<div className="path-title">{path.name}</div>
-									<div className="path-body">{subs.body}</div>
-								</header>
-							</div>
 
-							{/* 3 Keystones from slot 0 */}
-							<div className="keystones-container">
-								{keystones.slice(0, 3).map((rune) => (
-									<div key={rune.id} className="keystone-node">
-										<RunePopover rune={rune}>
-											<div className="keystone-inner">
-												<img
-													className="keystone-img"
-													src={runePerkImgUrl(rune.icon)}
-													alt={rune.name}
-												/>
-											</div>
-										</RunePopover>
+								{/* Icon and VFX */}
+								<div className="path-icon-wrap">
+									<div className="path-icon">
+										<img
+											className="path-icon-symbol"
+											src={`/images/runes/icon-${shortKey}.png`}
+											alt=""
+										/>
 									</div>
-								))}
-							</div>
+									<img
+										className="path-vfx"
+										src={`/images/runes/vfx-${shortKey}.png`}
+										alt=""
+									/>
+									<div className="path-header">
+										<p className="path-title">{path.name}</p>
+										<p className="path-body">{subs.body}</p>
+									</div>
+								</div>
 
-							{/* Path Footer */}
-							<div className="path-footer">{subs.footer}</div>
+								{/* 3 Keystones from slot 0 */}
+								<div className="keystones-container">
+									{keystones.slice(0, 3).map((rune) => (
+										<div key={rune.id} className="keystone-node">
+											<RunePopover rune={rune}>
+												<div className="keystone-inner">
+													<img
+														className="keystone-img"
+														src={runePerkImgUrl(rune.icon)}
+														alt={rune.name}
+													/>
+												</div>
+											</RunePopover>
+										</div>
+									))}
+								</div>
+
+								{/* Path Footer */}
+								<div className="path-footer">{subs.footer}</div>
+							</div>
 						</div>
-					</div>
-				);
-			})}
+					);
+				})}
+			</div>
 		</div>
 	);
 }
