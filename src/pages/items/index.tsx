@@ -88,13 +88,13 @@ export default function ItemsPage() {
 		<div className="mx-auto w-full max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">List of items</h1>
-				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
+				<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
 					All in-game items for League of Legends (Summoner's Rift).
 				</p>
 			</header>
 
 			<div className="mb-6 flex flex-col gap-2">
-				<div className="flex flex-col lg:flex-row gap-4">
+				<div className="flex flex-col gap-4 lg:flex-row">
 					<div className="w-full lg:w-96">
 						<SearchAutocomplete
 							getImgUrl={(item) => itemImgUrl(patchVersion!, item.id) as string}
@@ -116,9 +116,9 @@ export default function ItemsPage() {
 								}}
 								type="button"
 								className={clsx(
-									'text-muted-foreground text-xs lg:text-sm hover:opacity-80 py-1 px-3 border-b-2 border-transparent',
+									'border-b-2 border-transparent px-3 py-1 text-xs text-muted-foreground hover:opacity-80 lg:text-sm',
 									{
-										'!text-hex-gold font-medium bg-hex-gold/10 !border-hex-gold':
+										'!border-hex-gold bg-hex-gold/10 font-medium !text-hex-gold':
 											cate === category,
 									}
 								)}
@@ -135,9 +135,9 @@ export default function ItemsPage() {
 							onClick={() => setTag(t === tag ? null : t)}
 							type="button"
 							className={clsx(
-								'bg-background text-muted-foreground text-xs 5xl:text-sm hover:opacity-80 py-1 px-3 border border-neutral-400/50 dark:border-hex-gold/50 rounded-sm',
+								'rounded-sm border border-neutral-400/50 bg-background px-3 py-1 text-xs text-muted-foreground hover:opacity-80 dark:border-hex-gold/50 5xl:text-sm',
 								{
-									'!text-hex-gold font-medium bg-hex-gold/10 !border-hex-gold':
+									'!border-hex-gold bg-hex-gold/10 font-medium !text-hex-gold':
 										t === tag,
 								}
 							)}
@@ -159,37 +159,37 @@ export default function ItemsPage() {
 						<img
 							src="/images/bee.webp"
 							alt="No results"
-							className="size-20 2xl:size-28 mx-auto mb-2"
+							className="mx-auto mb-2 size-20 2xl:size-28"
 						/>
-						<p className="text-muted-foreground text-center">Failed to load items.</p>
+						<p className="text-center text-muted-foreground">Failed to load items.</p>
 					</div>
 				</div>
 			) : (
-				<div className="grid grid-cols-6 sm:grid-cols-12 md:grid-cols-[repeat(18,minmax(0,1fr))] 2xl:grid-cols-[repeat(24,minmax(0,1fr))] gap-2">
+				<div className="grid grid-cols-6 gap-2 sm:grid-cols-12 md:grid-cols-[repeat(18,minmax(0,1fr))] 2xl:grid-cols-[repeat(24,minmax(0,1fr))]">
 					{filtered.map((item) => (
 						<ItemPopover key={item.id} item={item} itemsById={itemsById}>
 							<button
 								type="button"
 								onClick={() => setActiveId(item.id)}
-								className="hover:scale-105 w-full overflow-hidden bg-muted/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+								className="bg-muted/20 w-full overflow-hidden transition-colors hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
 								aria-label={item.name}
 							>
 								<div className="aspect-square">
 									<img
 										alt={item.name}
-										className="h-full w-full object-cover rounded-md hex-border border-2"
+										className="hex-border h-full w-full rounded-md border-2 object-cover"
 										loading="lazy"
 										src={itemImgUrl(patchVersion as string, item.id)}
 									/>
 								</div>
-								<p className="text-muted-foreground text-center text-xs lg:text-sm font-medium">
+								<p className="text-center text-xs font-medium text-muted-foreground lg:text-sm">
 									{item.goldTotal ? item.goldTotal : <>&nbsp;</>}
 								</p>
 							</button>
 						</ItemPopover>
 					))}
 					{filtered.length === 0 ? (
-						<p className="text-muted-foreground col-span-full py-12 text-center">
+						<p className="col-span-full py-12 text-center text-muted-foreground">
 							No items match your filters.
 						</p>
 					) : null}

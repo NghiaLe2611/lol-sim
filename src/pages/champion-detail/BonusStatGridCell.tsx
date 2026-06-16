@@ -19,7 +19,7 @@ export default function BonusStatGridCell({
 	const extras: string[] = [];
 	if (perLevel != null && perLevel !== 0)
 		extras.push(
-			`${perLevel >= 0 ? '+' : ''}${Number.isInteger(perLevel) ? perLevel : perLevel}/lvl`,
+			`${perLevel >= 0 ? '+' : ''}${Number.isInteger(perLevel) ? perLevel : perLevel}/lvl`
 		);
 	if (percentFlat != null && percentFlat !== 0)
 		extras.push(`${percentFlat >= 0 ? '+' : ''}${percentFlat}%`);
@@ -27,7 +27,7 @@ export default function BonusStatGridCell({
 		extras.push(`${perLevelPct >= 0 ? '+' : ''}${perLevelPct}%/lvl`);
 
 	return (
-		<div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 border-b border-border/40 py-2 text-xs 2xl:text-sm">
+		<div className="border-border/40 flex flex-wrap justify-between gap-x-2 gap-y-0.5 border-b py-2 text-xs 2xl:text-sm">
 			<Tooltip delayDuration={0}>
 				<TooltipTrigger asChild>
 					<span className="text-muted-foreground hover:cursor-help">{short}</span>

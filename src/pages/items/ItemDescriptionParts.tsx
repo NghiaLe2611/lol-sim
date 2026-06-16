@@ -1,7 +1,4 @@
-import {
-	ITEM_TAG_TEXT_CLASS,
-	type ItemDescriptionPart,
-} from '@/pages/items/utils';
+import { ITEM_TAG_TEXT_CLASS, type ItemDescriptionPart } from '@/pages/items/utils';
 import { Fragment } from 'react';
 
 export function ItemDescriptionParts({ parts }: { parts: ItemDescriptionPart[] }) {
@@ -11,7 +8,8 @@ export function ItemDescriptionParts({ parts }: { parts: ItemDescriptionPart[] }
 				if (part.kind === 'colored') {
 					return (
 						<span key={i} className={ITEM_TAG_TEXT_CLASS[part.tag]}>
-							{' '}{part.value}{' '}
+							{' '}
+							{part.value}{' '}
 						</span>
 					);
 				}

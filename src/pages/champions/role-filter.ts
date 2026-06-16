@@ -69,7 +69,10 @@ function hasChampionTag(tags: string[], tag: string) {
 
 /** Top: Fighter hoặc Tank */
 function matchesRoleTopByTags(tags: string[]): boolean {
-	return hasChampionTag(tags, 'Fighter') || (hasChampionTag(tags, 'Tank') && !hasChampionTag(tags, 'Support'));
+	return (
+		hasChampionTag(tags, 'Fighter') ||
+		(hasChampionTag(tags, 'Tank') && !hasChampionTag(tags, 'Support'))
+	);
 }
 
 /**

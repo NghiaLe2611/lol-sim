@@ -32,16 +32,16 @@ export default function AbilityPopover({
 
 	if (!src.trim()) {
 		return (
-			<p className="text-muted-foreground px-3 py-2 text-center text-xs">
+			<p className="px-3 py-2 text-center text-xs text-muted-foreground">
 				Video not available
 			</p>
 		);
 	}
 
 	return (
-		<div className="w-[min(350px,85vw)] rounded-md border border-border bg-background from-background p-3 4xl:p-4 shadow-lg">
+		<div className="w-[min(350px,85vw)] rounded-md border border-border bg-background from-background p-3 shadow-lg 4xl:p-4">
 			{caption ? (
-				<p className="mb-2 truncate bg-muted/30 text-xs font-medium leading-snug text-muted-foreground 4xl:text-sm">
+				<p className="bg-muted/30 mb-2 truncate text-xs font-medium leading-snug text-muted-foreground 4xl:text-sm">
 					{caption}
 				</p>
 			) : null}
@@ -58,7 +58,7 @@ export default function AbilityPopover({
 				<video
 					key={src}
 					ref={ref}
-					className="absolute inset-0 h-full w-full object-cover object-center bg-black"
+					className="absolute inset-0 h-full w-full bg-black object-cover object-center"
 					src={src}
 					muted
 					loop

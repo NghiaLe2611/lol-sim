@@ -114,18 +114,18 @@ function AttributeAngleIconTick(props: {
 						<TooltipTrigger asChild>
 							<button
 								aria-label={fullLabel}
-								className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full transition-colors"
+								className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
 								type="button"
 							>
 								<img
 									alt={fullLabel}
-									className="size-4 lg:size-5 object-contain filter-icon"
+									className="filter-icon size-4 object-contain lg:size-5"
 									src={icon}
 								/>
 							</button>
 						</TooltipTrigger>
 						<TooltipContent
-							className="border-border/60 bg-popover text-popover-foreground text-xs"
+							className="border-border/60 bg-popover text-xs text-popover-foreground"
 							side="top"
 							sideOffset={8}
 						>
@@ -183,7 +183,7 @@ function RadarAttributeVertexDot({
 				</g>
 			</TooltipTrigger>
 			<TooltipContent
-				className="border-border/60 bg-popover text-popover-foreground text-xs"
+				className="border-border/60 bg-popover text-xs text-popover-foreground"
 				side="top"
 				sideOffset={6}
 			>
@@ -199,7 +199,7 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 	const [hoveredVertex, setHoveredVertex] = useState<number | null>(null);
 
 	return (
-		<div className="mx-auto aspect-square w-full min-h-[190px] max-w-[250px] sm:min-h-[210px] sm:max-w-[270px] lg:min-h-[initial] lg:max-w-[initial]">
+		<div className="mx-auto aspect-square min-h-[190px] w-full max-w-[250px] sm:min-h-[210px] sm:max-w-[270px] lg:min-h-[initial] lg:max-w-[initial]">
 			<ResponsiveContainer width="100%" height="100%">
 				<RadarChart cx="50%" cy="50%" data={data} outerRadius="58%">
 					<PolarGrid
@@ -378,7 +378,7 @@ const LevelingModifierLines = memo(function LevelingModifierLines({
 	return (
 		<>
 			{lines.map((line, li) => (
-				<div key={li} className="font-medium mb-1 pl-3 last:mb-0">
+				<div key={li} className="mb-1 pl-3 font-medium last:mb-0">
 					{formatLevelingLineColored(line)}
 				</div>
 			))}
@@ -428,7 +428,7 @@ function AbilityStatStrip({
 		<dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs 2xl:text-sm">
 			{rows.map(({ key, node }) => (
 				<div key={key} className="flex gap-1.5 lowercase">
-					<dt className="font-medium whitespace-nowrap text-cyan-600 dark:text-sky-400 uppercase">
+					<dt className="whitespace-nowrap font-medium uppercase text-cyan-600 dark:text-sky-400">
 						{key}:
 					</dt>
 					<dd className="normal-case">{node}</dd>
@@ -476,7 +476,7 @@ function BonusAbilityEffectsBody({
 		const thumbImg = (
 			<img
 				alt=""
-				className="pointer-events-none size-[56px] rounded-md border border-hex-blue/40 object-cover"
+				className="border-hex-blue/40 pointer-events-none size-[56px] rounded-md border object-cover"
 				src={thumbSrc ?? ''}
 			/>
 		);
@@ -484,7 +484,7 @@ function BonusAbilityEffectsBody({
 		return (
 			<div
 				key={`${spellSegmentKey}-eff-${ei}`}
-				className="grid gap-6 py-2 4xl:py-4 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6"
+				className="grid gap-6 py-2 lg:grid-cols-[4rem,minmax(0,1fr),minmax(0,350px)] lg:gap-6 4xl:py-4"
 			>
 				<div className="flex items-start justify-center lg:justify-start">
 					{/* <button
@@ -528,7 +528,7 @@ function BonusAbilityEffectsBody({
 					</p>
 				</div>
 				{eff.leveling?.length ? (
-					<div className="rounded-md bg-muted/40 px-3 text-xs leading-snug 2xl:text-sm">
+					<div className="bg-muted/40 rounded-md px-3 text-xs leading-snug 2xl:text-sm">
 						{eff.leveling.map((block, bi) => (
 							<div key={`${block.attribute}-${bi}`} className="mb-4 last:mb-0">
 								<div className="mb-1 rounded-sm bg-cyan-500/20 px-3 py-1 font-medium uppercase tracking-wide text-cyan-600 dark:text-sky-400">
@@ -565,11 +565,11 @@ function BonusAbilityCard({
 	if (!spells.length) return null;
 
 	return (
-		<article className="border-border from-background mb-10 rounded-xl border bg-gradient-to-b to-muted/40 p-5 last:mb-0">
+		<article className="to-muted/40 mb-10 rounded-xl border border-border bg-gradient-to-b from-background p-5 last:mb-0">
 			{spells.length === 1 && primary != null ? (
 				<>
 					<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-						<h3 className="font-semibold text-lg capitalize 3xl:text-xl">
+						<h3 className="text-lg font-semibold capitalize 3xl:text-xl">
 							{abilityHeading(primary, slot)}
 						</h3>
 						<AbilityStatStrip championResource={championResource} spell={primary} />
@@ -590,7 +590,7 @@ function BonusAbilityCard({
 							className={si === 0 ? '' : 'border-border/50 mt-8 border-t pt-8'}
 						>
 							<div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-								<h3 className="font-semibold text-lg capitalize 3xl:text-xl">
+								<h3 className="text-lg font-semibold capitalize 3xl:text-xl">
 									{si === 0 ? abilityHeading(spell, slot) : spell.name}
 								</h3>
 								<AbilityStatStrip
@@ -661,7 +661,7 @@ export function ChampionLanePositionTags({ positions }: { positions?: string[] }
 				src={t.icon}
 				width={20}
 			/>
-			<span className="font-medium text-foreground tracking-wide">{t.label}</span>
+			<span className="font-medium tracking-wide text-foreground">{t.label}</span>
 		</span>
 	));
 }
@@ -671,7 +671,7 @@ export function ChampionClassTags({ tags }: { tags: string[] }) {
 	return tagBades.map((tg) => (
 		<Badge
 			key={tg}
-			className="gap-2 2xl:text-sm border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white"
+			className="gap-2 border-hex-gold/40 bg-hex-gold/15 text-hex-gold light:border-hex-gold light:bg-hex-gold light:text-white 2xl:text-sm"
 			variant="outline"
 		>
 			{/* <img src={`/images/icons/role_icon_${tg.toLowerCase()}.png`} alt={tg} className="size-5" /> */}
@@ -701,10 +701,10 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 			? `https://universe.leagueoflegends.com/images/${mapRegionImg[b?.faction?.toLowerCase() as keyof typeof mapRegionImg] ?? b?.faction?.toLowerCase()}_emblem.png`
 			: null;
 	return (
-		<div className="divide-border/50 text-muted-foreground divide-y text-xs 2xl:text-sm">
+		<div className="divide-border/50 divide-y text-xs text-muted-foreground 2xl:text-sm">
 			<div className={rowClass}>
 				<span className="font-medium">Released Date</span>
-				<span className="text-foreground min-h-[1.25em] text-right">
+				<span className="min-h-[1.25em] text-right text-foreground">
 					{b.releaseDate ?? ''}
 				</span>
 			</div>
@@ -722,19 +722,19 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Range Type</span>
-				<span className="text-foreground min-h-[1.25em] text-right">
+				<span className="min-h-[1.25em] text-right text-foreground">
 					{formatStatValue(b.attackType ?? '')}
 				</span>
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Resource</span>
-				<span className="text-foreground min-h-[1.25em] text-right">
+				<span className="min-h-[1.25em] text-right text-foreground">
 					{formatStatValue(b.resource ?? '')}
 				</span>
 			</div>
 			<div className={rowClass}>
 				<span className="font-medium">Adaptive Type</span>
-				<span className="text-foreground min-h-[1.25em] text-right">
+				<span className="min-h-[1.25em] text-right text-foreground">
 					{formatStatValue(b.adaptiveType ?? '')}
 				</span>
 			</div>
@@ -746,14 +746,14 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 							<img
 								src="/images/icon-blue.png"
 								alt="Blue Essence"
-								className="w-4 h-4"
+								className="h-4 w-4"
 							/>
 							{b?.price?.blueEssence}
 						</p>
 					)}
 					{b?.price?.rp && (
 						<p className="flex items-center gap-1">
-							<img src="/images/icon-rp.png" alt="RP" className="w-4 h-4" />
+							<img src="/images/icon-rp.png" alt="RP" className="h-4 w-4" />
 							{b?.price?.rp}
 						</p>
 					)}
@@ -764,7 +764,7 @@ function ChampionBonusInfoRows({ b }: { b: BonusChampionDetail }) {
 					<span className="font-medium">Region</span>
 					<div className="ml-auto">
 						<Link
-							className="flex items-center gap-2 text-foreground uppercase hover:opacity-80"
+							className="flex items-center gap-2 uppercase text-foreground hover:opacity-80"
 							target="_blank"
 							to={`https://universe.leagueoflegends.com/en_US/region/${b.faction.toLowerCase()}`}
 						>
@@ -835,11 +835,11 @@ function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
 					className="h-full w-full object-cover object-top"
 					src={splashChampionImg(champion.key)}
 				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/25" />
+				<div className="via-background/60 to-background/25 absolute inset-0 bg-gradient-to-t from-background" />
 				<div className="absolute inset-x-0 bottom-0 mx-auto px-6 pb-6">
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<div className="inline-flex items-center gap-4 group">
+							<div className="group inline-flex items-center gap-4">
 								<h1 className="display gold-text text-5xl font-medium">
 									{champion.name}
 								</h1>
@@ -880,17 +880,17 @@ function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
 								</Popover>
 							</div>
 							<div className="flex items-center gap-4">
-								<p className="text-muted-foreground capitalize italic">
+								<p className="capitalize italic text-muted-foreground">
 									{champion.title}
 								</p>
 								<span title="Play voice" onClick={handlePlayVoice}>
-									<AudioLines className="text-muted-foreground hover:text-foreground hover:cursor-pointer" />
+									<AudioLines className="text-muted-foreground hover:cursor-pointer hover:text-foreground" />
 								</span>
 								{/* https://wiki.leagueoflegends.com/en-us/Zed/Audio */}
 							</div>
 						</div>
 						{champion.lore ? (
-							<p className="text-muted-foreground whitespace-pre-line leading-relaxed text-xs lg:text-sm 4xl:text-base">
+							<p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground lg:text-sm 4xl:text-base">
 								{champion.lore}
 							</p>
 						) : null}
@@ -898,9 +898,9 @@ function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 4xl:gap-y-12 px-6 py-8 lg:grid-cols-[60%_1fr]">
+			<div className="grid grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-[60%_1fr] 4xl:gap-y-12">
 				<div className="hex-border rounded-lg p-6">
-					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
+					<h3 className="display mb-4 text-lg font-semibold text-hex-gold lg:text-xl">
 						Attributes
 					</h3>
 					<div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start lg:gap-6">
@@ -911,7 +911,7 @@ function ChampionDetail({ champion }: { champion: BonusChampionDetail }) {
 					</div>
 				</div>
 				<div className="hex-border rounded-lg p-6">
-					<h3 className="display mb-4 text-lg lg:text-xl font-semibold text-hex-gold">
+					<h3 className="display mb-4 text-lg font-semibold text-hex-gold lg:text-xl">
 						Base Stats
 					</h3>
 					<BonusStatGrid stats={champion.stats} />

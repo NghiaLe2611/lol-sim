@@ -28,7 +28,7 @@ function ItemHoverContent({
 
 	return (
 		<div className="w-[min(20rem,calc(100vw-2rem))]">
-			<div className="flex gap-3 border-b dark:border-[#5a4617] border-[#bb994c] p-3">
+			<div className="flex gap-3 border-b border-[#bb994c] p-3 dark:border-[#5a4617]">
 				<img
 					alt=""
 					className="size-12 shrink-0 object-cover"
@@ -42,13 +42,13 @@ function ItemHoverContent({
 								'leading-snug',
 								i === 0
 									? 'display text-base font-semibold text-hex-gold'
-									: 'text-muted-foreground mt-0.5 text-xs'
+									: 'mt-0.5 text-xs text-muted-foreground'
 							)}
 						>
 							{line}
 						</p>
 					))}
-					<p className="text-hex-gold/80 mt-1 flex items-center gap-1 text-sm">
+					<p className="mt-1 flex items-center gap-1 text-sm text-hex-gold/80">
 						<Coins className="size-3.5 shrink-0" />
 						<span className="font-semibold">{item.goldTotal.toLocaleString()}</span>
 					</p>
@@ -58,7 +58,7 @@ function ItemHoverContent({
 				{statLines.map((line, i) => (
 					<p
 						key={`${line}-${i}`}
-						className="text-foreground text-xs leading-snug lg:text-sm"
+						className="text-xs leading-snug text-foreground lg:text-sm"
 					>
 						{line}
 					</p>
@@ -66,20 +66,20 @@ function ItemHoverContent({
 				{passives.map((block, index) => (
 					<p
 						key={`${block.title}-${index}`}
-						className="text-foreground !mt-2 leading-snug text-xs lg:text-sm"
+						className="!mt-2 text-xs leading-snug text-foreground lg:text-sm"
 					>
 						<span className="font-semibold">{block.title}:</span>{' '}
 						<ItemDescriptionParts parts={block.parts} />
 					</p>
 				))}
 				{item.plaintext ? (
-					<p className="text-muted-foreground !mt-3 leading-snug text-xs lg:text-sm">
+					<p className="!mt-3 text-xs leading-snug text-muted-foreground lg:text-sm">
 						{item.plaintext}
 					</p>
 				) : null}
 			</div>
 			{hasRecipe && showTree ? (
-				<div className="border-t dark:border-[#5a4617]/60 border-[#bb994c]/60 p-3">
+				<div className="border-t border-[#bb994c]/60 p-3 dark:border-[#5a4617]/60">
 					{/* <ItemTreeVertical item={item} itemsById={itemsById} patchVersion={patchVersion} /> */}
 					<ItemTreeHorizontal
 						item={item}

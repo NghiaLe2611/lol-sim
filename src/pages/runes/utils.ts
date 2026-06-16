@@ -61,7 +61,10 @@ export function stripRuneMarkupToText(html: string): string {
 /** shortDesc in dialog — strip LoL tags, keep basic emphasis. */
 export function prepareRuneShortDescHtml(html: string): string {
 	return html
-		.replace(/<lol-uikit-tooltipped-keyword[^>]*>([\s\S]*?)<\/lol-uikit-tooltipped-keyword>/gi, '$1')
+		.replace(
+			/<lol-uikit-tooltipped-keyword[^>]*>([\s\S]*?)<\/lol-uikit-tooltipped-keyword>/gi,
+			'$1'
+		)
 		.replace(/<keywordMajor>([\s\S]*?)<\/keywordMajor>/gi, '$1')
 		.replace(/<trueDamage>([\s\S]*?)<\/trueDamage>/gi, '$1')
 		.replace(/<speed>([\s\S]*?)<\/speed>/gi, '$1')

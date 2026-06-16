@@ -1,7 +1,5 @@
 const ChampionDetail = () => {
-  return (
-    <div>ChampionDetail</div>
-  )
-}
+	return <div>ChampionDetail</div>;
+};
 
-export default ChampionDetail
+export default ChampionDetail;

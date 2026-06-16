@@ -13,8 +13,7 @@ function ddragonSkinFolder(num: number): string {
 export function ddragonSkinLoadScreenUrl(championId: string, num: number): string {
 	const slug = championId.toLowerCase();
 	const folder = ddragonSkinFolder(num);
-	const filename =
-		num === 0 ? `${slug}loadscreen.jpg` : `${slug}loadscreen_${num}.jpg`;
+	const filename = num === 0 ? `${slug}loadscreen.jpg` : `${slug}loadscreen_${num}.jpg`;
 	return `${CDR_ASSETS_BASE}/${slug}/skins/${folder}/${filename}`;
 }
 
@@ -33,7 +32,7 @@ function formatDdragonSkinName(name: string): string {
 /** Top-level skins only — excludes chroma rows with `parentSkin`. */
 export function mapDdragonSkinsToChampionSkins(
 	championId: string,
-	skins: DdragonSkinApi[] | undefined,
+	skins: DdragonSkinApi[] | undefined
 ): ChampionSkin[] {
 	if (!skins?.length) return [];
 

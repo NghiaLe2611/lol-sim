@@ -14,13 +14,13 @@ function RuneHoverContent({ rune }: { rune: DdragonRune }) {
 				<img
 					src={runePerkImgUrl(rune.icon)}
 					alt={rune.name}
-					className="size-12 object-contain rounded-full"
+					className="size-12 rounded-full object-contain"
 				/>
 				<p className="display text-sm font-semibold text-hex-gold lg:text-base">
 					{rune.name}
 				</p>
 			</div>
-			<p className="text-foreground mt-2 whitespace-pre-line text-xs leading-relaxed lg:text-sm">
+			<p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-foreground lg:text-sm">
 				{longText}
 			</p>
 		</div>
@@ -30,13 +30,14 @@ function RuneHoverContent({ rune }: { rune: DdragonRune }) {
 type RunePopoverProps = {
 	rune: DdragonRune;
 	children: ReactNode;
+	side?: 'top' | 'right' | 'bottom' | 'left';
 };
 
-const RunePopover = ({ rune, children }: RunePopoverProps) => {
+const RunePopover = ({ rune, children, side = 'right' }: RunePopoverProps) => {
 	return (
 		<HoverPopover
 			align="center"
-			side="right"
+			side={side}
 			sideOffset={8}
 			closeDelayMs={0}
 			triggerClassName="inline-flex"

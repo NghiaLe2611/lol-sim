@@ -71,9 +71,9 @@ const PATH_STYLES: Record<string, RunePathStyle> = {
 
 function SlotDivider({ name, style }: { name: string; style: RunePathStyle }) {
 	return (
-		<div className="relative flex items-center justify-center w-full py-2 my-1">
+		<div className="relative my-1 flex w-full items-center justify-center py-2">
 			<div
-				className="absolute left-0 right-0 h-px flex items-center justify-between pointer-events-none px-4 sm:px-12 bg-hex-gold/20"
+				className="pointer-events-none absolute left-0 right-0 flex h-px items-center justify-between bg-hex-gold/20 px-4 sm:px-12"
 				// style={{
 				// 	backgroundImage: `linear-gradient(to right, transparent, ${style.color}66)`,
 				// }}
@@ -82,9 +82,9 @@ function SlotDivider({ name, style }: { name: string; style: RunePathStyle }) {
 	);
 
 	return (
-		<div className="relative flex items-center justify-center w-full py-2 my-1">
+		<div className="relative my-1 flex w-full items-center justify-center py-2">
 			{/* Horizontal lines */}
-			<div className="absolute left-0 right-0 h-px flex items-center justify-between pointer-events-none px-4 sm:px-12">
+			<div className="pointer-events-none absolute left-0 right-0 flex h-px items-center justify-between px-4 sm:px-12">
 				<div
 					className="h-px flex-1"
 					style={{
@@ -101,7 +101,7 @@ function SlotDivider({ name, style }: { name: string; style: RunePathStyle }) {
 			</div>
 
 			<div
-				className="relative z-10 px-4 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wider text-center text-white italic display rounded-sm border"
+				className="display relative z-10 rounded-sm border px-4 py-0.5 text-center text-[10px] font-bold italic tracking-wider text-white sm:text-[11px]"
 				style={{
 					backgroundColor: `${style.color}15`,
 					borderColor: `${style.color}40`,
@@ -115,9 +115,9 @@ function SlotDivider({ name, style }: { name: string; style: RunePathStyle }) {
 
 function PathMainBanner({ name, style }: { name: string; style: RunePathStyle }) {
 	return (
-		<div className="relative flex items-center justify-center w-full">
+		<div className="relative flex w-full items-center justify-center">
 			{/* Left/Right diamond + line */}
-			<div className="absolute left-0 right-0 h-px flex items-center justify-between pointer-events-none px-4">
+			<div className="pointer-events-none absolute left-0 right-0 flex h-px items-center justify-between px-4">
 				<div
 					className="size-2 rotate-45 border"
 					style={{
@@ -125,9 +125,9 @@ function PathMainBanner({ name, style }: { name: string; style: RunePathStyle })
 						// backgroundColor: style.color
 					}}
 				/>
-				<div className="h-px flex-1 mx-2" style={{ backgroundColor: `${style.color}40` }} />
+				<div className="mx-2 h-px flex-1" style={{ backgroundColor: `${style.color}40` }} />
 				<div className="w-[200px] shrink-0" />
-				<div className="h-px flex-1 mx-2" style={{ backgroundColor: `${style.color}40` }} />
+				<div className="mx-2 h-px flex-1" style={{ backgroundColor: `${style.color}40` }} />
 				<div
 					className="size-2 rotate-45 border"
 					style={{
@@ -139,7 +139,7 @@ function PathMainBanner({ name, style }: { name: string; style: RunePathStyle })
 
 			{/* Text Banner with border */}
 			<div
-				className="relative z-10 px-8 py-1.5 font-bold tracking-widest text-center text-white display uppercase text-base sm:text-lg border"
+				className="display relative z-10 border px-8 py-1.5 text-center text-base font-bold uppercase tracking-widest text-white sm:text-lg"
 				style={{
 					backgroundColor: `${style.color}1a`,
 					borderColor: style.color,
@@ -177,7 +177,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 				className={cn(
 					style.borderColor,
 					// border-hex-gold
-					'max-w-2xl bg-background p-0 border-2 shadow-2xl',
+					'max-w-2xl border-2 bg-background p-0 shadow-2xl',
 					'max-h-[min(95vh,950px)] overflow-y-auto'
 				)}
 			>
@@ -187,7 +187,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 				</VisuallyHidden.Root>
 
 				<div
-					className="relative flex flex-col items-center px-4 pb-8 pt-6 select-none bg-background min-w-[320px] sm:min-w-[500px]"
+					className="relative flex min-w-[320px] select-none flex-col items-center bg-background px-4 pb-8 pt-6 sm:min-w-[500px]"
 					style={{
 						backgroundImage: `url(/public/images/runes/${activePath.key.toLowerCase()}.png)`,
 						backgroundSize: 'cover',
@@ -198,7 +198,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 					<img
 						alt=""
 						className={cn(
-							'size-12 object-contain rounded-full border p-2 mb-4',
+							'mb-4 size-12 rounded-full border object-contain p-2',
 							style.borderColor
 						)}
 						style={{
@@ -208,7 +208,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 						src={runePathIconUrl(activePath.icon)}
 					/>
 					<PathMainBanner name={activePath.name} style={style} />
-					<div className="mt-10 4xl:mt-16 flex w-full max-w-3xl flex-col gap-6">
+					<div className="mt-10 flex w-full max-w-3xl flex-col gap-6 4xl:mt-16">
 						{activePath.slots.map((slot, slotIndex) => {
 							const slotName = style.slotNames[slotIndex];
 							return (
@@ -219,7 +219,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 									{slotIndex > 0 && slotName && (
 										<SlotDivider name={slotName} style={style} />
 									)}
-									<div className="w-full flex flex-wrap items-start justify-center gap-4 sm:gap-6">
+									<div className="flex w-full flex-wrap items-start justify-center gap-4 sm:gap-6">
 										{slot.runes.map((rune) => (
 											<RunePopover key={rune.id} rune={rune}>
 												<button
@@ -229,10 +229,10 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 													<img
 														alt=""
 														className={cn(
-															'rounded-full transition-transform duration-200 group-hover:scale-110 object-cover bg-black/60 shrink-0 border-2',
+															'shrink-0 rounded-full border-2 bg-black/60 object-cover transition-transform duration-200 group-hover:scale-110',
 															slotIndex === 0
-																? 'size-14 sm:size-16 border-2'
-																: 'size-10 sm:size-12 border'
+																? 'size-14 border-2 sm:size-16'
+																: 'size-10 border sm:size-12'
 														)}
 														style={{
 															borderColor: style.color,
@@ -243,7 +243,7 @@ const RuneDialog = ({ activePath, onClose }: RuneDialogProps) => {
 														}}
 														src={runePerkImgUrl(rune.icon)}
 													/>
-													<p className="text-[#a09b8c] dark:text-foreground text-xs font-semibold leading-snug sm:text-sm">
+													<p className="text-xs font-semibold leading-snug text-[#a09b8c] dark:text-foreground sm:text-sm">
 														{rune.name}
 													</p>
 													{/* <p

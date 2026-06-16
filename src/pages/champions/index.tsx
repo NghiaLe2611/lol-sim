@@ -115,7 +115,7 @@ function ChampionCardTagIcons({ tags }: { tags: string[] }) {
 							<span className="inline-flex items-center justify-center">
 								<img
 									alt="role"
-									className="size-[14px] object-contain filter-icon"
+									className="filter-icon size-[14px] object-contain"
 									src={meta.src}
 									height={14}
 									width={14}
@@ -124,7 +124,7 @@ function ChampionCardTagIcons({ tags }: { tags: string[] }) {
 						</TooltipTrigger>
 						<TooltipContent
 							side="bottom"
-							className="bg-yellow-700 dark:bg-[#624e1e] text-xs text-white"
+							className="bg-yellow-700 text-xs text-white dark:bg-[#624e1e]"
 						>
 							{meta.label}
 						</TooltipContent>
@@ -140,7 +140,7 @@ function ChampionCardLaneIcons({ positions }: { positions: string[] }) {
 	if (lanes.length === 0) return null;
 
 	return (
-		<div className="absolute top-0 left-0 w-full p-2 hidden group-hover:block">
+		<div className="absolute left-0 top-0 hidden w-full p-2 group-hover:block">
 			<div className="flex flex-col items-end gap-2">
 				{lanes.map((laneId) => {
 					const item = ROLE_BAR_ITEMS.find((x) => x.id === laneId);
@@ -148,10 +148,10 @@ function ChampionCardLaneIcons({ positions }: { positions: string[] }) {
 					return (
 						<Tooltip key={laneId}>
 							<TooltipTrigger asChild>
-								<span className="inline-flex rounded-sm p-1 bg-[#bb9301e6] dark:bg-[#082639bd]">
+								<span className="inline-flex rounded-sm bg-[#bb9301e6] p-1 dark:bg-[#082639bd]">
 									<img
 										alt={`role-${laneId}`}
-										className="size-[24px] lg:size-[16px] object-contain filter-white"
+										className="filter-white size-[24px] object-contain lg:size-[16px]"
 										src={item.iconSrc}
 										height={24}
 										width={24}
@@ -160,7 +160,7 @@ function ChampionCardLaneIcons({ positions }: { positions: string[] }) {
 							</TooltipTrigger>
 							<TooltipContent
 								side="right"
-								className="bg-yellow-700 dark:bg-[#624e1e] text-xs text-white select-none pointer-events-none"
+								className="pointer-events-none select-none bg-yellow-700 text-xs text-white dark:bg-[#624e1e]"
 							>
 								{item.tooltip}
 							</TooltipContent>
@@ -212,11 +212,11 @@ function ChampionsTableView({
 								<TableCell className="px-4 py-3">
 									<Link
 										to={`/champions/${c.id}`}
-										className="group flex items-center gap-2 px-4 min-w-0"
+										className="group flex min-w-0 items-center gap-2 px-4"
 									>
 										<img
 											alt={c.name}
-											className="size-8 lg:size-10 shrink-0 object-contain rounded-full"
+											className="size-8 shrink-0 rounded-full object-contain lg:size-10"
 											src={getSquareChampImg(version!, (c as any).key)}
 										/>
 										<div className="block">
@@ -224,7 +224,7 @@ function ChampionsTableView({
 												{c.name}
 											</p>
 											{c.title ? (
-												<p className="text-muted-foreground mt-0.5 text-xs capitalize italic">
+												<p className="mt-0.5 text-xs capitalize italic text-muted-foreground">
 													{c.title}
 												</p>
 											) : null}
@@ -237,11 +237,11 @@ function ChampionsTableView({
 									</div>
 								</TableCell>
 								<TableCell className="px-4 py-3">
-									<div className="flex gap-2 justify-center">
+									<div className="flex justify-center gap-2">
 										<ChampionClassTags tags={c.tags} />
 									</div>
 								</TableCell>
-								<TableCell className="text-muted-foreground px-4 py-3 text-sm tabular-nums text-center">
+								<TableCell className="px-4 py-3 text-center text-sm tabular-nums text-muted-foreground">
 									{releaseDate ? formatReleaseDateDisplay(releaseDate) : null}
 								</TableCell>
 							</TableRow>
@@ -344,10 +344,10 @@ export default function ChampionsPage() {
 			return filtered.map((c) => (
 				<Link
 					key={c.id}
-					className="hex-border group hover:border-hex-gold overflow-hidden rounded-md border-2 self-start"
+					className="hex-border group self-start overflow-hidden rounded-md border-2 hover:border-hex-gold"
 					to={`/champions/${c.id}`}
 				>
-					<div className="aspect-square overflow-hidden bg-secondary relative">
+					<div className="relative aspect-square overflow-hidden bg-secondary">
 						<img
 							alt={c.name}
 							loading="lazy"
@@ -358,8 +358,8 @@ export default function ChampionsPage() {
 						/>
 						<ChampionCardLaneIcons positions={c.positions} />
 					</div>
-					<div className="p-2 lg:py-2 space-y-2">
-						<h5 className="display text-sm lg:text-base 5xl:text-lg font-bold text-hex-gold">
+					<div className="space-y-2 p-2 lg:py-2">
+						<h5 className="display text-sm font-bold text-hex-gold lg:text-base 5xl:text-lg">
 							{c.name}
 						</h5>
 						<div className="space-y-1">
@@ -392,7 +392,7 @@ export default function ChampionsPage() {
 			return filtered.map((c) => (
 				<Link
 					key={c.id}
-					className="aspect-square hex-border group hover:border-hex-gold w-full overflow-hidden rounded-md border-2"
+					className="hex-border group aspect-square w-full overflow-hidden rounded-md border-2 hover:border-hex-gold"
 					// self-start
 					to={`/champions/${c.id}`}
 				>
@@ -401,17 +401,17 @@ export default function ChampionsPage() {
 						triggerClassName="block w-full"
 						contentClassName="!transition-none"
 						content={({ open }) => (
-							<div className="min-w-48 rounded-md border border-border bg-background from-background p-2 4xl:p-3 shadow-lg">
-								<h3 className="text-sm lg:text-base font-medium">{c.name}</h3>
-								<p className="text-xs 4xl:text-sm text-muted-foreground capitalize italic mb-3">
+							<div className="min-w-48 rounded-md border border-border bg-background from-background p-2 shadow-lg 4xl:p-3">
+								<h3 className="text-sm font-medium lg:text-base">{c.name}</h3>
+								<p className="mb-3 text-xs capitalize italic text-muted-foreground 4xl:text-sm">
 									{c.title}
 								</p>
 								<div className="space-y-1">
-									<div className="flex items-center flex-wrap gap-2 text-xs 4xl:text-sm">
+									<div className="flex flex-wrap items-center gap-2 text-xs 4xl:text-sm">
 										<span>Roles:</span>
 										<ChampionLanePositionTags positions={c.positions} />
 									</div>
-									<div className="flex items-center flex-wrap gap-2 text-xs 4xl:text-sm">
+									<div className="flex flex-wrap items-center gap-2 text-xs 4xl:text-sm">
 										<span>Classes:</span>
 										<ChampionClassTags tags={c.tags} />
 									</div>
@@ -440,15 +440,15 @@ export default function ChampionsPage() {
 
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12">
-			<div className="flex flex-col h-full">
+			<div className="flex h-full flex-col">
 				<header className="mb-8">
 					<h1 className="display gold-text text-4xl">Champions</h1>
-					<p className="text-muted-foreground text-xs lg:text-sm mt-2">
+					<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
 						Click any champion for detailed stats and abilities.
 					</p>
 				</header>
 
-				<div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center justify-between">
+				<div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
 					<div className="flex flex-1">
 						{/* Search */}
 						<div className="flex w-full min-w-0 items-center lg:max-w-md lg:flex-1">
@@ -475,7 +475,7 @@ export default function ChampionsPage() {
 						{/* Filter roles */}
 						<div
 							// border-hex-gold-dark dark:border-border
-							className="self-start bg-card/60 border-yellow-700/20 dark:border-border inline-flex shrink-0 overflow-hidden rounded-md border"
+							className="bg-card/60 inline-flex shrink-0 self-start overflow-hidden rounded-md border border-yellow-700/20 dark:border-border"
 							role="toolbar"
 							aria-label="Filter by role"
 						>
@@ -486,7 +486,7 @@ export default function ChampionsPage() {
 										{index > 0 ? (
 											<div
 												// bg-yellow-700 dark:bg-border
-												className="w-px self-stretch dark:bg-border bg-yellow-700/20"
+												className="w-px self-stretch bg-yellow-700/20 dark:bg-border"
 												aria-hidden
 											/>
 										) : null}
@@ -496,9 +496,9 @@ export default function ChampionsPage() {
 													type="button"
 													aria-pressed={selected}
 													className={
-														'hover:opacity-80 text-muted-foreground hover:bg-secondary/80 flex items-center justify-center transition-colors size-8 md:size-10 ' +
+														'hover:bg-secondary/80 flex size-8 items-center justify-center text-muted-foreground transition-colors hover:opacity-80 md:size-10 ' +
 														(selected
-															? 'dark:bg-hex-gold bg-yellow-700 text-primary-foreground hover:opacity-85'
+															? 'bg-yellow-700 text-primary-foreground hover:opacity-85 dark:bg-hex-gold'
 															: '')
 													}
 													onClick={() => setRoleFilter(item.id)}
@@ -508,7 +508,7 @@ export default function ChampionsPage() {
 														className={
 															selected
 																? 'size-5 shrink-0 brightness-0 invert md:size-6'
-																: 'size-5 shrink-0 opacity-[0.82] md:size-6 dark:brightness-0 dark:invert dark:opacity-[0.42]'
+																: 'size-5 shrink-0 opacity-[0.82] dark:opacity-[0.42] dark:brightness-0 dark:invert md:size-6'
 														}
 														src={item.iconSrc}
 														height={24}
@@ -518,7 +518,7 @@ export default function ChampionsPage() {
 											</TooltipTrigger>
 											<TooltipContent
 												side="top"
-												className="bg-yellow-700 dark:bg-[#624e1e] text-white select-none pointer-events-none"
+												className="pointer-events-none select-none bg-yellow-700 text-white dark:bg-[#624e1e]"
 											>
 												{item.tooltip}
 											</TooltipContent>
@@ -529,15 +529,15 @@ export default function ChampionsPage() {
 						</div>
 						{/* View */}
 						<div className="flex items-center gap-3">
-							<div className="inline-flex rounded-md -space-x-px" role="group">
+							<div className="inline-flex -space-x-px rounded-md" role="group">
 								<button
 									title="Small grid"
 									type="button"
 									onClick={() => setView('small-grid')}
 									className={clsx(
-										'text-muted-foreground hover:text-foreground flex items-center justify-center rounded-l-md border border-yellow-700/20 dark:border-border focus:outline-none size-8 md:size-10',
+										'flex size-8 items-center justify-center rounded-l-md border border-yellow-700/20 text-muted-foreground hover:text-foreground focus:outline-none dark:border-border md:size-10',
 										view === 'small-grid' &&
-											'!text-white dark:bg-hex-gold bg-yellow-700'
+											'bg-yellow-700 !text-white dark:bg-hex-gold'
 									)}
 								>
 									<Grid2x2 size={18} />
@@ -547,9 +547,9 @@ export default function ChampionsPage() {
 									type="button"
 									onClick={() => setView('large-grid')}
 									className={clsx(
-										'text-muted-foreground hover:text-foreground flex items-center justify-center border border-yellow-700/18 dark:border-border focus:outline-none size-8 md:size-10',
+										'border-yellow-700/18 flex size-8 items-center justify-center border text-muted-foreground hover:text-foreground focus:outline-none dark:border-border md:size-10',
 										view === 'large-grid' &&
-											'!text-white dark:bg-hex-gold bg-yellow-700'
+											'bg-yellow-700 !text-white dark:bg-hex-gold'
 									)}
 								>
 									<Grid3x3 size={18} />
@@ -559,9 +559,9 @@ export default function ChampionsPage() {
 									type="button"
 									onClick={() => setView('table')}
 									className={clsx(
-										'text-muted-foreground hover:text-foreground flex items-center justify-center rounded-r-md border border-yellow-700/20 dark:border-border focus:outline-none size-8 md:size-10',
+										'flex size-8 items-center justify-center rounded-r-md border border-yellow-700/20 text-muted-foreground hover:text-foreground focus:outline-none dark:border-border md:size-10',
 										view === 'table' &&
-											'!text-white dark:bg-hex-gold bg-yellow-700'
+											'bg-yellow-700 !text-white dark:bg-hex-gold'
 									)}
 								>
 									<TableProperties size={20} />
@@ -575,7 +575,7 @@ export default function ChampionsPage() {
 								setSort(value as SortType);
 							}}
 						>
-							<SelectTrigger className="size-8 md:size-10 w-full min-w-32 border-yellow-700/20 dark:border-border !bg-transparent !bg-white dark:!bg-neutral-900">
+							<SelectTrigger className="size-8 w-full min-w-32 border-yellow-700/20 !bg-transparent !bg-white dark:border-border dark:!bg-neutral-900 md:size-10">
 								<SelectValue placeholder="Sort by" />
 							</SelectTrigger>
 							<SelectContent>
@@ -596,7 +596,7 @@ export default function ChampionsPage() {
 				</div>
 
 				{isError && (
-					<p className="text-muted-foreground py-12 text-center">
+					<p className="py-12 text-center text-muted-foreground">
 						Could not load champions.
 					</p>
 				)}
@@ -640,9 +640,9 @@ export default function ChampionsPage() {
 						className={clsx(
 							'grid',
 							view === 'large-grid' &&
-								'gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
+								'grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
 							view === 'small-grid' &&
-								'gap-1 grid-cols-6 md:grid-cols-12 lg:grid-cols-16'
+								'lg:grid-cols-16 grid-cols-6 gap-1 md:grid-cols-12'
 						)}
 					>
 						{Array.from({
@@ -651,14 +651,14 @@ export default function ChampionsPage() {
 							view === 'small-grid' ? (
 								<div
 									key={i}
-									className="hex-border w-full animate-pulse overflow-hidden rounded-md border-2 border-border/60 bg-card/40"
+									className="hex-border border-border/60 bg-card/40 w-full animate-pulse overflow-hidden rounded-md border-2"
 								>
 									<Skeleton className="aspect-square w-full rounded-none" />
 								</div>
 							) : (
 								<div
 									key={i}
-									className="hex-border animate-pulse overflow-hidden rounded-md border-2 border-border/60 bg-card/40"
+									className="hex-border border-border/60 bg-card/40 animate-pulse overflow-hidden rounded-md border-2"
 								>
 									<Skeleton className="aspect-square w-full rounded-none" />
 									<div className="space-y-2 p-2 lg:py-2">
@@ -698,9 +698,9 @@ export default function ChampionsPage() {
 								className={clsx(
 									'grid',
 									view === 'large-grid' &&
-										'gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
+										'grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8',
 									view === 'small-grid' &&
-										'gap-1 grid-cols-6 md:grid-cols-12 lg:grid-cols-16'
+										'lg:grid-cols-16 grid-cols-6 gap-1 md:grid-cols-12'
 								)}
 							>
 								{gridContent}

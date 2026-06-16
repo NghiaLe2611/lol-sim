@@ -62,8 +62,8 @@ export default function BuildPage() {
 	return (
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
-				<h1 className="display font-semibold gold-text text-4xl">Build Calculator</h1>
-				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
+				<h1 className="display gold-text text-4xl font-semibold">Build Calculator</h1>
+				<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
 					Pick a champion, set your level, allocate skill points and equip items.
 				</p>
 			</header>
@@ -72,7 +72,7 @@ export default function BuildPage() {
 				{/* lg:sticky lg:top-24 lg:self-start  */}
 				<div className="space-y-6">
 					<section className="hex-border rounded-lg p-4 3xl:p-6">
-						<h2 className="display font-medium mb-4 text-xl text-hex-gold">Champion</h2>
+						<h2 className="display mb-4 text-xl font-medium text-hex-gold">Champion</h2>
 						<div className="flex flex-col gap-4">
 							<div className="w-full">
 								<SearchAutocomplete
@@ -123,10 +123,10 @@ export default function BuildPage() {
 									src={champion.imageUrl}
 								/>
 								<div>
-									<div className="display font-medium text-2xl text-hex-gold">
+									<div className="display text-2xl font-medium text-hex-gold">
 										{champion.name}
 									</div>
-									<div className="text-muted-foreground text-sm italic">
+									<div className="text-sm italic text-muted-foreground">
 										{champion.title}
 									</div>
 									<div className="mt-2 flex gap-1">
@@ -147,7 +147,7 @@ export default function BuildPage() {
 
 					<section className="hex-border rounded-lg p-4 3xl:p-6">
 						<div className="mb-4 flex items-center justify-between">
-							<h2 className="display font-medium text-xl text-hex-gold">Levels</h2>
+							<h2 className="display text-xl font-medium text-hex-gold">Levels</h2>
 							<div className="gold-text text-3xl font-bold">{level}</div>
 						</div>
 						<Slider
@@ -158,20 +158,20 @@ export default function BuildPage() {
 							step={1}
 							value={[level]}
 						/>
-						<div className="text-muted-foreground mt-2 flex justify-between text-xs">
+						<div className="mt-2 flex justify-between text-xs text-muted-foreground">
 							<span>1</span>
 							<span>18</span>
 						</div>
 					</section>
 
 					<section className="hex-border rounded-lg p-4 3xl:p-6">
-						<h2 className="display font-medium mb-4 text-xl text-hex-gold">Skills</h2>
+						<h2 className="display mb-4 text-xl font-medium text-hex-gold">Skills</h2>
 						<div className="space-y-3">
 							{champion.spells.map((spell) => {
 								const rank = skillRanks[spell.key] ?? 0;
 								return (
 									<div key={spell.key} className="flex items-start gap-3">
-										<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-hex-blue/40 bg-secondary font-bold text-hex-blue-glow">
+										<div className="border-hex-blue/40 flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-secondary font-bold text-hex-blue-glow">
 											{spell.key}
 										</div>
 										<div className="flex-1">
@@ -179,7 +179,7 @@ export default function BuildPage() {
 												<span className="text-sm font-semibold">
 													{spell.name}
 												</span>
-												<span className="text-muted-foreground text-xs">
+												<span className="text-xs text-muted-foreground">
 													Rank {rank}/{spell.maxRank}
 												</span>
 											</div>
@@ -194,7 +194,7 @@ export default function BuildPage() {
 															'h-2 flex-1 rounded-sm transition-colors ' +
 															(n <= rank
 																? 'bg-gradient-to-r from-hex-gold to-hex-gold-dark'
-																: 'border-border bg-secondary border')
+																: 'border border-border bg-secondary')
 														}
 														onClick={() =>
 															setRank(
@@ -208,7 +208,7 @@ export default function BuildPage() {
 												))}
 											</div>
 											{rank > 0 && (
-												<div className="text-muted-foreground mt-1 text-xs">
+												<div className="mt-1 text-xs text-muted-foreground">
 													CD:{' '}
 													<span className="text-hex-gold">
 														{spell.cooldown.split('/')[
@@ -239,10 +239,10 @@ export default function BuildPage() {
 				<div className="space-y-6">
 					<section className="hex-border rounded-lg p-4 3xl:p-6">
 						<div className="mb-4 flex items-center justify-between">
-							<h2 className="display font-medium text-xl text-hex-gold">
+							<h2 className="display text-xl font-medium text-hex-gold">
 								Items ({selected.length}/6)
 							</h2>
-							<div className="text-amber-500 font-medium flex items-center gap-1 text-sm">
+							<div className="flex items-center gap-1 text-sm font-medium text-amber-500">
 								<Coins className="h-4 w-4" />
 								{totalCost}
 							</div>
@@ -254,7 +254,7 @@ export default function BuildPage() {
 								return (
 									<div
 										key={i}
-										className="group border-hex-gold/30 relative flex aspect-square items-center justify-center rounded-md border bg-secondary/50 p-1 text-center hover:cursor-pointer"
+										className="bg-secondary/50 group relative flex aspect-square items-center justify-center rounded-md border border-hex-gold/30 p-1 text-center hover:cursor-pointer"
 										onContextMenu={
 											it
 												? (e) => {
@@ -267,11 +267,11 @@ export default function BuildPage() {
 									>
 										{it ? (
 											<>
-												<span className="text-foreground text-[10px] leading-tight">
+												<span className="text-[10px] leading-tight text-foreground">
 													{it.name}
 												</span>
 												<button
-													className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full opacity-0 group-hover:opacity-100"
+													className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100"
 													onClick={() => removeItem(i)}
 													type="button"
 												>
@@ -279,7 +279,7 @@ export default function BuildPage() {
 												</button>
 											</>
 										) : (
-											<Plus className="text-muted-foreground h-4 w-4" />
+											<Plus className="h-4 w-4 text-muted-foreground" />
 										)}
 									</div>
 								);
@@ -316,19 +316,19 @@ export default function BuildPage() {
 							{filteredItems.map((i) => (
 								<button
 									key={i.id}
-									className="border-border hover:border-hex-gold rounded border p-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+									className="rounded border border-border p-2 text-left transition-colors hover:border-hex-gold disabled:cursor-not-allowed disabled:opacity-40"
 									disabled={selected.length >= 6}
 									onClick={() => addItem(i)}
 									type="button"
 								>
 									<div className="flex items-start justify-between">
 										<span className="text-sm text-hex-gold">{i.name}</span>
-										<span className="text-hex-gold-dark flex items-center gap-0.5 text-xs">
+										<span className="flex items-center gap-0.5 text-xs text-hex-gold-dark">
 											<Coins className="h-3 w-3" />
 											{i.cost}
 										</span>
 									</div>
-									<div className="text-muted-foreground line-clamp-1 text-[10px]">
+									<div className="line-clamp-1 text-[10px] text-muted-foreground">
 										{i.tags.join(' • ')}
 									</div>
 								</button>
@@ -339,10 +339,10 @@ export default function BuildPage() {
 				<div className="space-y-6">
 					{/* Stats */}
 					<div className="hex-border rounded-lg p-4 3xl:p-6">
-						<h2 className="display font-medium mb-4 text-xl text-hex-gold">
+						<h2 className="display mb-4 text-xl font-medium text-hex-gold">
 							Base Stats
 						</h2>
-						<p className="text-muted-foreground mb-4 text-xs">
+						<p className="mb-4 text-xs text-muted-foreground">
 							Lv. {level} · {selected.length} item(s)
 						</p>
 						<dl className="space-y-2 text-sm">
@@ -384,7 +384,7 @@ function StatRow({
 	return (
 		<div className="border-border/40 flex justify-between border-b pb-1">
 			<dt className="text-muted-foreground">{label}</dt>
-			<dd className={highlight ? 'text-hex-gold font-semibold' : 'text-foreground'}>
+			<dd className={highlight ? 'font-semibold text-hex-gold' : 'text-foreground'}>
 				{value}
 			</dd>
 		</div>

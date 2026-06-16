@@ -32,7 +32,7 @@ export default function RunesPage() {
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">Runes</h1>
-				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
+				<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
 					Runes are enhancements that add new abilities or buffs to the champion. The
 					player can choose their loadout of runes before the match begins, during
 					champion select, or their Collection tab.
@@ -46,10 +46,10 @@ export default function RunesPage() {
 				</div>
 			) : runesQuery.isError ? (
 				<div className="flex items-center justify-center py-12">
-					<p className="text-muted-foreground text-center">Failed to load runes.</p>
+					<p className="text-center text-muted-foreground">Failed to load runes.</p>
 				</div>
 			) : (
-				<div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+				<div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
 					{/* Sort by id */}
 					{paths
 						.sort((a, b) => a.id - b.id)
@@ -64,16 +64,16 @@ export default function RunesPage() {
 									onClick={() => setActivePathKey(path.key)}
 									onMouseEnter={() => setHoverId(path.key)}
 									onMouseLeave={() => setHoverId(null)}
-									className="opacity-90 flex min-w-0 flex-col transition-opacity border-2 border-[#ab8f57] dark:border-[#46372a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 overflow-hidden"
+									className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 dark:border-[#46372a]"
 								>
 									<img
 										alt={path.name}
 										// group-hover:scale-105 transition-all
-										className="aspect-[3/4] w-full object-cover object-top border-b-2 border-[#ab8f57] dark:border-[#46372a]"
+										className="aspect-[3/4] w-full border-b-2 border-[#ab8f57] object-cover object-top dark:border-[#46372a]"
 										loading="lazy"
 										src={runePathCardUrl(path.key)}
 									/>
-									<p className="py-2.5 text-center text-xs lg:text-sm font-semibold tracking-wider uppercase">
+									<p className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider lg:text-sm">
 										{path.name}
 									</p>
 								</button>
@@ -85,7 +85,7 @@ export default function RunesPage() {
 			<RuneDialog activePath={activePath} onClose={() => setActivePathKey(null)} />
 
 			<div className="mt-16 4xl:mt-24">
-				<h2 className="display gold-text text-4xl uppercase text-center mb-8 4xl:mt-12">
+				<h2 className="display gold-text mb-8 text-center text-4xl uppercase 4xl:mt-12">
 					Create Your Playstyle
 				</h2>
 				<BuildRune />

@@ -4,7 +4,7 @@ export default function VersionTag() {
 	const { patchVersion, isPatchPending, isPatchError } = useAppContext();
 
 	return (
-		<div className="border-border text-hex-gold inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs tracking-wide tabular-nums light:bg-white/80">
+		<div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs tabular-nums tracking-wide text-hex-gold light:bg-white/80">
 			<span className="inline-grid grid-cols-1 grid-rows-1 place-items-center">
 				<span
 					aria-hidden

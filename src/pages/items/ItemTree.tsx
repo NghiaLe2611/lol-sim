@@ -93,17 +93,15 @@ function ItemTreeNodeCompact({
 			type={onClick ? 'button' : undefined}
 			onClick={onClick}
 			className={cn(
-				'flex w-[4.5rem] flex-col items-center text-xs lg:text-sm focus:outline-none',
+				'flex w-[4.5rem] flex-col items-center text-xs focus:outline-none lg:text-sm',
 				onClick && 'group cursor-pointer',
 				variant === 'parent' && 'mb-2'
 			)}
 		>
 			<div
 				className={cn(
-					'flex items-center justify-center rounded-sm border border-[#8a7344]/80 p-1 transition-colors bg-white dark:bg-black/25',
-					variant === 'parent'
-						? 'size-12'
-						: 'size-10',
+					'flex items-center justify-center rounded-sm border border-[#8a7344]/80 bg-white p-1 transition-colors dark:bg-black/25',
+					variant === 'parent' ? 'size-12' : 'size-10',
 					onClick && 'group-hover:border-hex-gold'
 				)}
 			>
@@ -115,7 +113,7 @@ function ItemTreeNodeCompact({
 			</div>
 			<p
 				className={cn(
-					'text-hex-gold/80 mt-1 text-center font-medium leading-none transition-colors',
+					'mt-1 text-center font-medium leading-none text-hex-gold/80 transition-colors',
 					onClick && 'group-hover:text-hex-gold'
 				)}
 			>
@@ -175,7 +173,7 @@ function ItemTreeNodeRow({
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="truncate font-medium leading-snug text-foreground">{item.name}</p>
-				<p className="text-hex-gold/80 mt-0.5 flex items-center gap-1 text-xs">
+				<p className="mt-0.5 flex items-center gap-1 text-xs text-hex-gold/80">
 					<Coins className="size-3 shrink-0" />
 					<span>{item.goldTotal.toLocaleString()}</span>
 				</p>

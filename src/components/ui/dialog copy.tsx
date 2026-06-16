@@ -67,8 +67,8 @@ const DialogContent = React.forwardRef<
 				<DialogPrimitive.Content
 					ref={ref}
 					className={cn(
-						'max-w-lg fixed z-50 left-[50%] translate-x-[-50%] grid w-full gap-4 border bg-background p-3 2xl:p-4 4xl:p-6 shadow-lg duration-200 rounded-sm md:rounded-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-left-1/2',
-						'outline-none ring-0 *:',
+						'fixed left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] gap-4 rounded-sm border bg-background p-3 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=open]:slide-in-from-left-1/2 md:rounded-lg 2xl:p-4 4xl:p-6',
+						'*: outline-none ring-0',
 						// isMobile() ? 'max-w-96' : 'max-w-lg',
 						// focus:outline-none focus-visible:outline-none focus-visible:ring-0
 						positionClasses[position] ?? positionClasses['center'],
@@ -80,7 +80,7 @@ const DialogContent = React.forwardRef<
 					{showCloseButton && (
 						<DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
 							{/* focus:ring-2 focus:ring-ring focus:ring-offset-2 */}
-							<X className="h-4 w-4 lg:w-6 lg:h-6" />
+							<X className="h-4 w-4 lg:h-6 lg:w-6" />
 							<span className="sr-only">Close</span>
 						</DialogPrimitive.Close>
 					)}

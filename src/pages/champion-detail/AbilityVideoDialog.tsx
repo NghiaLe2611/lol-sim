@@ -51,8 +51,8 @@ export default function AbilityVideoDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-3xl gap-3 sm:max-w-3xl outline:none !ring-0">
-				<DialogHeader className='mb-4'>
+			<DialogContent className="outline:none max-w-3xl gap-3 !ring-0 sm:max-w-3xl">
+				<DialogHeader className="mb-4">
 					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription className="sr-only">
 						Official ability spotlight video from Riot CDN when available.
@@ -74,7 +74,7 @@ export default function AbilityVideoDialog({
 						) : null}
 					</div>
 					{unavailable ? (
-						<p className="text-muted-foreground text-center text-sm">
+						<p className="text-center text-sm text-muted-foreground">
 							Video not available.
 						</p>
 					) : null}

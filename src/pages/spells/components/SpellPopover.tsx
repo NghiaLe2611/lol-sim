@@ -14,9 +14,9 @@ const POPOVER_CONTENT_CLASS =
 
 function SpellStatRow({ label, value }: { label: string; value: ReactNode }) {
 	return (
-		<div className="flex items-center justify-between gap-4 border-t dark:border-[#5a4617]/60 border-[#bb994c]/60 px-3 py-2 text-xs lg:text-sm">
+		<div className="flex items-center justify-between gap-4 border-t border-[#bb994c]/60 px-3 py-2 text-xs dark:border-[#5a4617]/60 lg:text-sm">
 			<span className="font-semibold text-foreground">{label}</span>
-			<span className="text-foreground text-right">{value}</span>
+			<span className="text-right text-foreground">{value}</span>
 		</div>
 	);
 }
@@ -27,13 +27,13 @@ function SpellHoverContent({ spell }: { spell: SummonerSpellView }) {
 
 	return (
 		<div className="w-[min(20rem,calc(100vw-2rem))]">
-			<div className="border-b dark:border-[#5a4617] border-[#bb994c] bg-muted/30 px-3 py-2 text-center">
-				<p className="display text-sm lg:text-base font-semibold text-hex-gold">
+			<div className="bg-muted/30 border-b border-[#bb994c] px-3 py-2 text-center dark:border-[#5a4617]">
+				<p className="display text-sm font-semibold text-hex-gold lg:text-base">
 					{spell.name}
 				</p>
 			</div>
 
-			<div className="flex justify-center border-b dark:border-[#5a4617]/60 border-[#bb994c]/60 p-3">
+			<div className="flex justify-center border-b border-[#bb994c]/60 p-3 dark:border-[#5a4617]/60">
 				<img
 					alt={spell.name}
 					// className="size-12 shrink-0 border border-[#8a7344]/80 object-cover"
@@ -44,8 +44,8 @@ function SpellHoverContent({ spell }: { spell: SummonerSpellView }) {
 			{descriptionHtml ? (
 				<div
 					className={cn(
-						'border-b dark:border-[#5a4617]/60 border-[#bb994c]/60 p-3',
-						'text-foreground leading-relaxed text-xs lg:text-sm',
+						'border-b border-[#bb994c]/60 p-3 dark:border-[#5a4617]/60',
+						'text-xs leading-relaxed text-foreground lg:text-sm',
 						'[&_br]:block [&_em]:italic [&_em]:text-muted-foreground',
 						'[&_b]:font-semibold [&_strong]:font-semibold'
 					)}

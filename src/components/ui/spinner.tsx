@@ -50,12 +50,12 @@ export function Spinner({ size, show, type, children, className }: SpinnerConten
 			)}
 
 			{type === 'bars' && (
-				<div className="flex justify-center items-end h-10 space-x-1">
+				<div className="flex h-10 items-end justify-center space-x-1">
 					{bars.map((delay, index) => (
 						<div
 							key={index}
 							className={clsx(
-								'w-[2px] h-full bg-primary inline-block animate-loading-bars',
+								'inline-block h-full w-[2px] animate-loading-bars bg-primary',
 								className
 							)}
 							style={{

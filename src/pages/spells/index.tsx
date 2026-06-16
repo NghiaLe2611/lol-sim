@@ -24,7 +24,7 @@ function SummonerSpellIcon({
 
 	return (
 		<div
-			className="shrink-0 border border-[#8a7344]/80 bg-black/25 hover:cursor-pointer hover:scale-105 transition-all duration-200"
+			className="shrink-0 border border-[#8a7344]/80 bg-black/25 transition-all duration-200 hover:scale-105 hover:cursor-pointer"
 			style={{
 				width: image.w,
 				height: image.h,
@@ -57,7 +57,7 @@ export default function SummonersPage() {
 		<div className="mx-auto max-w-container px-6 py-12">
 			<header className="mb-8">
 				<h1 className="display gold-text text-4xl">Spells</h1>
-				<p className="text-muted-foreground text-xs lg:text-sm mt-2">
+				<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
 					Summoner spells are special abilities that all players can have access to based
 					on the map, in addition to their champion abilities. Players choose their two
 					preferred summoner spells during champion select.
@@ -71,7 +71,7 @@ export default function SummonersPage() {
 				</div>
 			) : spellsQuery.isError ? (
 				<div className="flex items-center justify-center py-12">
-					<p className="text-muted-foreground text-center">Failed to load spells.</p>
+					<p className="text-center text-muted-foreground">Failed to load spells.</p>
 				</div>
 			) : (
 				<div className="flex flex-wrap gap-4">
@@ -80,7 +80,7 @@ export default function SummonersPage() {
 							{patchVersion ? (
 								<SummonerSpellIcon spell={spell} patchVersion={patchVersion} />
 							) : null}
-							<p className="text-foreground max-w-[4.5rem] truncate text-center font-medium text-xs lg:text-sm">
+							<p className="max-w-[4.5rem] truncate text-center text-xs font-medium text-foreground lg:text-sm">
 								{spell.name}
 							</p>
 						</SpellPopover>

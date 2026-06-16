@@ -49,7 +49,10 @@ export function prepareSummonerDescriptionHtml(description: string): string {
 		.replace(/class="colorFF99FF00"/gi, 'class="text-hex-gold font-medium"')
 		.replace(/class="colorFFFFFFFF"/gi, 'class="text-foreground"')
 		.replace(/class="colorFF8B4513"/gi, 'class="text-orange-400"')
-		.replace(/<attention>([\s\S]*?)<\/attention>/gi, '<em class="text-muted-foreground">$1</em>');
+		.replace(
+			/<attention>([\s\S]*?)<\/attention>/gi,
+			'<em class="text-muted-foreground">$1</em>'
+		);
 }
 
 export function parseClassicSummonerSpells(payload: DdragonSummonerPayload): SummonerSpellView[] {

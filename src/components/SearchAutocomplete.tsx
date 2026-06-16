@@ -59,7 +59,7 @@ export function SearchAutocomplete<T>({
 	return (
 		<div className="relative w-full min-w-0">
 			<div className="relative">
-				<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+				<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 				<Input
 					value={value}
 					onChange={(e) => onChange(e.target.value)}
@@ -74,13 +74,13 @@ export function SearchAutocomplete<T>({
 					}}
 					placeholder={placeholder}
 					className={cn(
-						'bg-input/60 border-border/60 focus:border-hex-gold pl-9',
+						'bg-input/60 border-border/60 pl-9 focus:border-hex-gold',
 						inputClassName
 					)}
 				/>
 			</div>
 			{focused && suggestions.length > 0 && (
-				<div className="absolute z-30 mt-1 w-full bg-popover border border-hex-gold/30 rounded-md shadow-hex overflow-hidden">
+				<div className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-hex-gold/30 bg-popover shadow-hex">
 					{suggestions.map((s, i) => (
 						<button
 							key={i}
@@ -90,13 +90,13 @@ export function SearchAutocomplete<T>({
 								onChange(getLabel(s));
 								handleClick?.(s);
 							}}
-							className="flex items-center w-full text-left px-3 py-2 text-sm hover:bg-secondary text-foreground"
+							className="flex w-full items-center px-3 py-2 text-left text-sm text-foreground hover:bg-secondary"
 						>
 							{getImgUrl && (
 								<img
 									src={getImgUrl(s)}
 									alt={getLabel(s)}
-									className="w-4 h-4 mr-1"
+									className="mr-1 h-4 w-4"
 								/>
 							)}
 							{getLabel(s)}

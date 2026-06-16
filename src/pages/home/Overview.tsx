@@ -103,10 +103,10 @@ const Overview = () => {
 				return (
 					<Link
 						key={c.to}
-						className="border-2 hex-border group rounded-lg p-6 hover:border-hex-gold hover:scale-105 transition-transform"
+						className="hex-border group rounded-lg border-2 p-6 transition-transform hover:scale-105 hover:border-hex-gold"
 						to={c.to}
 					>
-						<div className="flex items-center justify-center gap-4 pr-4 mb-6">
+						<div className="mb-6 flex items-center justify-center gap-4 pr-4">
 							<c.icon className="h-8 w-8 shrink-0 text-hex-gold" />
 							<h3 className="display text-xl font-semibold leading-snug">
 								{t(c.titleKey)}
@@ -118,7 +118,7 @@ const Overview = () => {
 							aria-busy={showSkeleton}
 						>
 							{q.isError ? (
-								<span className="text-muted-foreground text-4xl font-bold leading-none">
+								<span className="text-4xl font-bold leading-none text-muted-foreground">
 									–
 								</span>
 							) : showSkeleton ? (

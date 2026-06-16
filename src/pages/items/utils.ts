@@ -88,14 +88,14 @@ export function applyBonusToSrItem(item: SrItem, bonus?: ItemBonusMeta): SrItem 
 
 export function applyBonusToSrItems(
 	items: SrItem[],
-	bonusById: Record<string, ItemBonusMeta>,
+	bonusById: Record<string, ItemBonusMeta>
 ): SrItem[] {
 	return items.map((item) => applyBonusToSrItem(item, bonusById[item.id]));
 }
 
 export function applyBonusToSrItemMap(
 	byId: Record<string, SrItem>,
-	bonusById: Record<string, ItemBonusMeta>,
+	bonusById: Record<string, ItemBonusMeta>
 ): Record<string, SrItem> {
 	const out: Record<string, SrItem> = {};
 	for (const [id, item] of Object.entries(byId)) {
@@ -120,7 +120,7 @@ export function matchesItemCategoryFilter(category: ItemCategoryFilter, tags: st
 
 	// Simple categories
 	if (category !== 'defense') {
-		return ITEM_CATEGORY_TAGS[category].some(t => tagSet.has(t));
+		return ITEM_CATEGORY_TAGS[category].some((t) => tagSet.has(t));
 	}
 
 	// Defense logic
@@ -129,7 +129,12 @@ export function matchesItemCategoryFilter(category: ItemCategoryFilter, tags: st
 	const hasAttackSpeed = tagSet.has('AttackSpeed');
 
 	// SpellBlock & Armor: must be pure defense (no damage/AS)
-	if ((tagSet.has('SpellBlock') || tagSet.has('Armor')) && !hasDamage && !hasSpellDamage && !hasAttackSpeed) {
+	if (
+		(tagSet.has('SpellBlock') || tagSet.has('Armor')) &&
+		!hasDamage &&
+		!hasSpellDamage &&
+		!hasAttackSpeed
+	) {
 		return true;
 	}
 

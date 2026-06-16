@@ -20,7 +20,7 @@ function AttributeBarRow({ label, value, max }: { label: string; value: number; 
 	return (
 		<div>
 			<div className="mb-1 flex justify-between text-xs lg:text-sm">
-				<span className="text-muted-foreground uppercase tracking-wider">{label}</span>
+				<span className="uppercase tracking-wider text-muted-foreground">{label}</span>
 				<span className="text-hex-gold">{value}</span>
 			</div>
 			<div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -51,7 +51,7 @@ export default function ChampionDetailFallback({
 			audioRef.current.currentTime = 0;
 		}
 		const audio = new Audio(
-			`https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/champion-choose-vo/${c.key}.ogg`,
+			`https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/champion-choose-vo/${c.key}.ogg`
 		);
 		audio.volume = 0.5;
 		audio.play().catch(console.error);
@@ -68,7 +68,7 @@ export default function ChampionDetailFallback({
 					className="h-full w-full object-cover object-top"
 					src={splashChampionImg(c.id)}
 				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+				<div className="via-background/60 to-background/20 absolute inset-0 bg-gradient-to-t from-background" />
 				<div className="absolute inset-x-0 bottom-0 mx-auto px-6 pb-6">
 					<div className="mb-4">
 						<div className="mb-2 flex flex-wrap gap-2">
@@ -84,24 +84,24 @@ export default function ChampionDetailFallback({
 						</div>
 						<h1 className="display gold-text mb-2 text-5xl font-medium">{c.name}</h1>
 						<div className="flex items-center gap-4">
-							<p className="text-muted-foreground capitalize italic">{c.title}</p>
+							<p className="capitalize italic text-muted-foreground">{c.title}</p>
 							<span title="Play voice" onClick={handlePlayVoice}>
 								<AudioLines className="text-muted-foreground hover:cursor-pointer hover:text-foreground" />
 							</span>
 						</div>
 						{release ? (
-							<p className="text-muted-foreground mt-2 text-sm">
+							<p className="mt-2 text-sm text-muted-foreground">
 								Released: {release}
 							</p>
 						) : null}
 					</div>
-					<p className="text-muted-foreground whitespace-pre-line leading-relaxed text-xs lg:text-sm 4xl:text-base">
+					<p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground lg:text-sm 4xl:text-base">
 						{c.lore}
 					</p>
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 4xl:gap-y-12 px-6 py-8 lg:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 px-6 py-8 lg:grid-cols-2 4xl:gap-y-12">
 				<div className="hex-border rounded-lg p-6">
 					<h3 className="display mb-4 text-xl font-semibold text-hex-gold 3xl:text-2xl">
 						Attributes
@@ -153,11 +153,11 @@ export default function ChampionDetailFallback({
 							<div className="min-w-0">
 								<div className="font-semibold">
 									{c.passive.name}
-									<span className="text-muted-foreground ml-2 text-sm uppercase">
+									<span className="ml-2 text-sm uppercase text-muted-foreground">
 										Passive
 									</span>
 								</div>
-								<p className="text-muted-foreground mt-1 whitespace-pre-line text-sm">
+								<p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
 									{stripLolMarkupToText(c.passive.description)}
 								</p>
 							</div>
@@ -186,12 +186,12 @@ export default function ChampionDetailFallback({
 									>
 										<button
 											type="button"
-											className="shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-blue/60"
+											className="focus-visible:ring-hex-blue/60 shrink-0 rounded-md border-0 bg-transparent p-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2"
 											aria-label={`Video preview on hover — ${s.name} (${slot})`}
 										>
 											<img
 												alt=""
-												className="pointer-events-none h-12 w-12 shrink-0 rounded-md border border-hex-blue/40 object-cover"
+												className="border-hex-blue/40 pointer-events-none h-12 w-12 shrink-0 rounded-md border object-cover"
 												src={skillImgUrl(patchVersion, s.image.full)}
 											/>
 										</button>
@@ -200,32 +200,32 @@ export default function ChampionDetailFallback({
 										<div className="flex flex-wrap items-center justify-between gap-2">
 											<div className="flex flex-wrap items-center font-semibold">
 												{s.name}
-												<span className="text-muted-foreground ml-2 text-sm font-normal">
+												<span className="ml-2 text-sm font-normal text-muted-foreground">
 													({slot})
 												</span>
 											</div>
-											<div className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-1 text-xs 2xl:text-sm">
+											<div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground 2xl:text-sm">
 												<span>
-													<span className="font-medium whitespace-nowrap uppercase text-cyan-600 dark:text-sky-400">
+													<span className="whitespace-nowrap font-medium uppercase text-cyan-600 dark:text-sky-400">
 														Cost:
 													</span>{' '}
 													<span>{s.costBurn}</span>
 												</span>
 												<span>
-													<span className="font-medium whitespace-nowrap uppercase text-cyan-600 dark:text-sky-400">
+													<span className="whitespace-nowrap font-medium uppercase text-cyan-600 dark:text-sky-400">
 														Cooldown:
 													</span>{' '}
 													<span>{s.cooldownBurn}</span>
 												</span>
 												<span>
-													<span className="font-medium whitespace-nowrap uppercase text-cyan-600 dark:text-sky-400">
+													<span className="whitespace-nowrap font-medium uppercase text-cyan-600 dark:text-sky-400">
 														Range:
 													</span>{' '}
 													<span>{s.rangeBurn}</span>
 												</span>
 											</div>
 										</div>
-										<p className="text-muted-foreground mt-1 whitespace-pre-line text-sm">
+										<p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
 											{stripLolMarkupToText(s.description)}
 										</p>
 									</div>

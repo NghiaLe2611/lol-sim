@@ -1,0 +1,660 @@
+// Rune detail
+.rd-root {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 30px;
+}
+
+.rd-main-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left center;
+    z-index: 0;
+    opacity: 0.25;
+    pointer-events: none;
+}
+
+// Back / close button
+.rd-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: 1px solid rgba(171, 143, 87, 0.45);
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 0.75;
+    }
+}
+
+// ── Primary column ────────────────────────────────────────────────
+
+.rd-primary {
+    width: 380px;
+    min-width: 380px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(70, 55, 42, 0.55);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+// Background for primary/secondary columns
+.rd-col-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+}
+
+.rd-path-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    
+}
+
+.rd-path-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rd-path-name {
+    font-family: 'Beaufort', 'BeaufortforLOL-Medium', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.1;
+}
+
+.rd-path-sub {
+    font-size: 10px;
+    color: #888;
+    line-height: 1.3;
+}
+
+// Animated path header circles
+.rd-path-btn {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // 84px btn centered on 72px slot track below
+    margin-left: -6px;
+}
+
+.rd-path-circles,
+.rd-path-cup {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: block;
+}
+
+.rd-path-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+@keyframes rd-circ-a {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes rd-circ-b {
+    from { transform: rotate(60deg); }
+    to   { transform: rotate(420deg); }
+}
+@keyframes rd-circ-c {
+    from { transform: rotate(120deg); }
+    to   { transform: rotate(480deg); }
+}
+
+.rd-circ-a { transform-origin: center; animation: rd-circ-a 4s   linear infinite; }
+.rd-circ-b { transform-origin: center; animation: rd-circ-b 4.5s linear infinite; }
+.rd-circ-c { transform-origin: center; animation: rd-circ-c 5s   linear infinite; }
+
+// ── Perk circle button ────────────────────────────────────────────
+
+.rd-perk-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: filter 0.15s ease;
+    border-radius: 50%;
+    @apply bg-gray-50 dark:bg-[#252525];
+
+    &--lg { width: 72px; height: 72px; }
+    &--md { width: 56px; height: 56px; }
+    &--sm { width: 42px; height: 42px; }
+
+    .rd-perk-spinner { display: none; }
+
+    &--active .rd-perk-spinner {
+        display: block;
+    }
+
+    &--has-rune {
+        .rd-perk-outer {
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.25));
+        }
+    }
+
+    // Highlighted (currently selected option in open drawer)
+    &--selected {
+        .rd-perk-outer {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.55));
+        }
+    }
+
+    &--dimmed {
+        opacity: 0.38;
+    }
+
+    // Hover: outer ring glow + faint shadow
+    &:hover:not(.rd-perk-btn--active) {
+        .rd-perk-outer {
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.6));
+        }
+    }
+
+    // Keystone specific logic: hide outer ring normally, show on hover/select
+    &--ks {
+        .rd-perk-outer {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        &:hover .rd-perk-outer,
+        &.rd-perk-btn--selected .rd-perk-outer {
+            opacity: 1;
+        }
+        &.rd-perk-btn--active .rd-perk-inner {
+            // When active, inner ring hugs icon
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+    }
+}
+
+.rd-perk-outer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.rd-perk-inner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    transition: transform 0.2s;
+}
+
+.rd-perk-icon {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+@keyframes rd-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.rd-perk-spinner {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: center;
+    animation: rd-spin 3s linear infinite;
+    pointer-events: none;
+}
+
+// ── Progress bar ─────────────────────────────────────────────────
+
+.rd-progress-track {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    z-index: 0; // Lower than circle wrap
+    display: flex;
+    justify-content: center;
+
+    &--top {
+        top: 0;
+        bottom: 50%;
+    }
+    &--bottom {
+        top: 50%;
+        bottom: 0;
+    }
+
+    // Two side lines
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: rgba(171, 143, 87, 0.4);
+    }
+    &::before { left: 0; }
+    &::after { right: 0; }
+}
+
+// For the first slot, make the top track go up to the header
+.rd-slot:first-child .rd-progress-track--top,
+.rd-sec-slots > .rd-slot:first-child .rd-progress-track--top {
+    top: -42px;
+}
+
+.rd-circle-wrap {
+    position: relative;
+    z-index: 2; // Higher than progress track (z-index: 0)
+}
+
+@keyframes rd-progress-anim {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+.rd-progress-bar {
+    width: 2px;
+    height: 100%;
+    background: #1e2328;
+    position: relative;
+    overflow: hidden;
+
+    .light & {
+        background: #e2dcd4;
+    }
+
+    &--filled::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent 0%, var(--rd-color) 50%, transparent 100%);
+        animation: rd-progress-anim 2s linear infinite;
+    }
+}
+
+// ── Keystone flourish SVG ─────────────────────────────────────────
+
+.rd-flourish {
+    position: absolute;
+    left: 72px;
+    right: 16px;
+    bottom: 0;
+    width: auto;
+    height: 9px;
+    max-width: none;
+    display: block;
+    pointer-events: none;
+    transform: translateY(50%);
+    z-index: 2;
+    overflow: visible;
+}
+
+.rd-normal-flourish {
+    position: absolute;
+    left: 72px;
+    right: 16px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(171, 143, 87, 0.38), transparent);
+    pointer-events: none;
+    z-index: 2;
+}
+
+// ── Slot rows ──────────────────────────────────────────────────────
+
+.rd-slots {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 20px;
+}
+
+.rd-slot {
+    display: flex;
+    align-items: center;
+    height: 96px;
+    flex-shrink: 0;
+    position: relative;
+
+    &--ks { height: 104px; }
+}
+
+.rd-slot-l {
+    width: 72px;
+    min-width: 64px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.rd-slot-r {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 10px 0 16px; // Increased left padding to align with icon
+    overflow: hidden;
+}
+
+// ── Drawer (rune option list) ─────────────────────────────────────
+
+.rd-drawer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+}
+
+.rd-drawer-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.rd-drawer--ks .rd-drawer-row {
+    gap: 10px;
+}
+
+// ── Selected rune description ─────────────────────────────────────
+
+.rd-desc {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-self: flex-start; 
+    // padding-top: 24px;
+
+    // &--ks {
+    //     padding-top: 32px; 
+    // }
+}
+
+.rd-desc-name {
+    font-family: 'Beaufort', 'BeaufortforLOL-Medium', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+}
+
+.rd-desc-text {
+    font-size: 9px;
+    color: #888;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.rd-placeholder {
+    font-size: 11px;
+    color: #4a4a4a;
+    line-height: 1.4;
+}
+
+// ── Secondary column ──────────────────────────────────────────────
+
+.rd-secondary {
+    width: 300px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(70, 55, 42, 0.55);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    padding-left: 12px;
+}
+
+.rd-sec-icons {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 10px;
+    justify-content: center;
+}
+
+.rd-sec-path-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0);
+    cursor: pointer;
+    padding: 3px;
+    opacity: 0.5;
+    transition: opacity 0.2s, border-color 0.2s;
+
+    &:hover { opacity: 0.9; }
+
+    &--active {
+        opacity: 1;
+        border-color: rgba(171, 143, 87, 0.55);
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 50%;
+    }
+}
+
+.rd-sec-div {
+    display: none;
+}
+
+.rd-sec-slots {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 12px;
+}
+
+.rd-sec-slot-r {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 8px 0 12px;
+    overflow: hidden;
+}
+
+.rd-sec-options {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+// SPLASH placeholders
+.rd-splash-rows {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 12px;
+}
+
+.rd-splash-row {
+    display: flex;
+    align-items: center;
+    height: 96px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.rd-splash-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px 0 12px;
+}
+
+.rd-splash-title {
+    font-family: 'Beaufort', 'BeaufortforLOL-Medium', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #4a4a4a;
+    margin-bottom: 3px;
+}
+
+.rd-splash-desc {
+    font-size: 9px;
+    color: #3a3a3a;
+    line-height: 1.4;
+}
+
+// Secondary progress uses path color via inline --rd-color
+.rd-secondary .rd-progress-track::before,
+.rd-secondary .rd-progress-track::after {
+    background: rgba(171, 143, 87, 0.35);
+}
+
+.rd-splash-rows > .rd-splash-row:first-child .rd-progress-track--top {
+    top: -42px;
+}
+
+.rd-sec-slot--dimmed {
+    opacity: 0.55;
+}
+
+// ── Construct image (right panel) ─────────────────────────────────
+
+.rd-construct {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.rd-construct-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.rd-construct-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.rd-construct-path-icon {
+    position: absolute;
+    top: 12%; // Adjust based on the construct image
+    width: 12%;
+    aspect-ratio: 1;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.85;
+}
+
+.rd-construct-ks {
+    position: absolute;
+    // Each construct image has its keystone slot roughly at center
+    // Fine-tuned: the keystone icon fills the circular "eye" of the construct
+    width: clamp(52px, 20%, 88px);
+    aspect-ratio: 1;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    border-radius: 50%;
+    animation: rd-ks-appear 0.35s ease-out forwards;
+}
+
+@keyframes rd-ks-appear {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+}

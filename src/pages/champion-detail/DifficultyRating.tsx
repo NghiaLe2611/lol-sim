@@ -28,7 +28,7 @@ export default function DifficultyRating({ rating, className }: DifficultyRating
 					<div
 						key={i}
 						className={cn(
-							'h-1.5 2xl:h-2 rounded-[4px]',
+							'h-1.5 rounded-[4px] 2xl:h-2',
 							isActive ? SEGMENT_GRADIENT_CLASS[i] : 'bg-muted dark:bg-white/10'
 							// isActive
 							// 	? 'bg-gradient-to-r from-sky-600 to-sky-200 dark:from-cyan-500 dark:to-cyan-100'

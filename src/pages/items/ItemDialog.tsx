@@ -32,7 +32,10 @@ const ItemDialog = ({
 	return (
 		<Dialog open={Boolean(activeId)} onOpenChange={(open) => !open && onClose()}>
 			{/* animate-in fade-in-0 zoom-in-95 duration-200 */}
-			<DialogContent showCloseButton={false} className="max-w-max bg-background border-hex-gold p-0 overflow-hidden shadow-2xl">
+			<DialogContent
+				showCloseButton={false}
+				className="max-w-max overflow-hidden border-hex-gold bg-background p-0 shadow-2xl"
+			>
 				<VisuallyHidden.Root>
 					<DialogTitle>{item.name}</DialogTitle>
 					<DialogDescription>
@@ -40,13 +43,13 @@ const ItemDialog = ({
 					</DialogDescription>
 				</VisuallyHidden.Root>
 
-				<div className="flex gap-4 border-b dark:border-[#5a4617] border-[#bb994c] p-3 3xl:p-5 bg-muted/10">
+				<div className="bg-muted/10 flex gap-4 border-b border-[#bb994c] p-3 dark:border-[#5a4617] 3xl:p-5">
 					<img
 						alt={item.name}
-						className="size-16 shrink-0 object-cover rounded-md border border-hex-gold/40 shadow-md"
+						className="size-16 shrink-0 rounded-md border border-hex-gold/40 object-cover shadow-md"
 						src={itemImgUrl(patchVersion, item.id)}
 					/>
-					<div className="min-w-0 flex-1 flex flex-col justify-center">
+					<div className="flex min-w-0 flex-1 flex-col justify-center">
 						{/* {item.nameLines.map((line, i) => (
 							<h2
 								key={`${line}-${i}`}
@@ -60,10 +63,10 @@ const ItemDialog = ({
 								{line}
 							</h2>
 						))} */}
-						<h2 className="display text-base lg:text-xl font-semibold text-hex-gold leading-snug">
+						<h2 className="display text-base font-semibold leading-snug text-hex-gold lg:text-xl">
 							{item.name}
 						</h2>
-						<p className="text-hex-gold/80 mt-1 flex items-center gap-1.5 text-sm lg:text-base font-medium">
+						<p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-hex-gold/80 lg:text-base">
 							<Coins className="size-4 shrink-0" />
 							<span>{item.goldTotal.toLocaleString()}</span>
 						</p>
@@ -71,13 +74,13 @@ const ItemDialog = ({
 				</div>
 
 				{/* Item stats & passives */}
-				<div className="!pt-0 p-3 3xl:p-5 space-y-3 max-h-[40vh] overflow-y-auto border-b dark:border-[#5a4617]/40 border-[#bb994c]/40">
+				<div className="max-h-[40vh] space-y-3 overflow-y-auto border-b border-[#bb994c]/40 p-3 !pt-0 dark:border-[#5a4617]/40 3xl:p-5">
 					{statLines.length > 0 && (
 						<div className="space-y-1">
 							{statLines.map((line, i) => (
 								<p
 									key={`${line}-${i}`}
-									className="text-foreground text-xs lg:text-sm leading-relaxed font-medium"
+									className="text-xs font-medium leading-relaxed text-foreground lg:text-sm"
 								>
 									{line}
 								</p>
@@ -90,7 +93,7 @@ const ItemDialog = ({
 							{passives.map((block) => (
 								<p
 									key={block.title}
-									className="text-foreground leading-relaxed text-xs lg:text-sm"
+									className="text-xs leading-relaxed text-foreground lg:text-sm"
 								>
 									<span className="font-semibold text-hex-gold/90">
 										{block.title}:
@@ -102,7 +105,7 @@ const ItemDialog = ({
 					)}
 
 					{item.plaintext && (
-						<p className="text-muted-foreground leading-relaxed text-sm italic pt-1">
+						<p className="pt-1 text-sm italic leading-relaxed text-muted-foreground">
 							{item.plaintext}
 						</p>
 					)}
@@ -110,11 +113,11 @@ const ItemDialog = ({
 
 				{/* Multi-level recursive tree */}
 				{hasRecipe && (
-					<div className="!pt-0 p-3 3xl:p-5 bg-muted/5 flex flex-col items-center">
+					<div className="bg-muted/5 flex flex-col items-center p-3 !pt-0 3xl:p-5">
 						{/* <h3 className="text-muted-foreground self-start text-xs lg:text-sm font-medium uppercase tracking-wider mb-4">
 							Build Tree
 						</h3> */}
-						<div className="w-full overflow-x-auto py-2 flex justify-center scrollbar-thin">
+						<div className="scrollbar-thin flex w-full justify-center overflow-x-auto py-2">
 							<div className="min-w-max px-4">
 								<ItemTreeHorizontalRecursive
 									item={item}

@@ -64,7 +64,7 @@ function SkinLoadScreen({ skin, onOpen }: { skin: ChampionSkin; onOpen: () => vo
 			<TooltipTrigger asChild>
 				<button
 					type="button"
-					className="border-border/50 bg-muted aspect-[11/20] w-full overflow-hidden rounded-md border transition-colors hover:border-hex-gold/40"
+					className="border-border/50 aspect-[11/20] w-full overflow-hidden rounded-md border bg-muted transition-colors hover:border-hex-gold/40"
 					onClick={onOpen}
 				>
 					<img
@@ -196,7 +196,7 @@ function LightboxSplashImage({ src, alt }: { src: string; alt: string }) {
 				alt={alt}
 				className={cn(
 					'h-full w-full object-contain transition-opacity duration-300',
-					loaded ? 'animate-in fade-in opacity-100' : 'opacity-0'
+					loaded ? 'opacity-100 animate-in fade-in' : 'opacity-0'
 				)}
 				onLoad={() => setLoaded(true)}
 				onError={() => setLoaded(true)}
@@ -275,24 +275,24 @@ function SkinLightbox({
 								aria-label="Previous skin"
 								className={cn(
 									'flex items-center justify-center',
-									'absolute left-2 top-1/2 z-20 h-10 w-10 4xl:h-12 4xl:w-12 -translate-y-1/2 rounded-full bg-black/40 !text-white',
+									'absolute left-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full bg-black/40 !text-white 4xl:h-12 4xl:w-12',
 									'opacity-0 transition-opacity hover:bg-black/60 group-hover/lightbox:opacity-100'
 								)}
 								onClick={goPrev}
 							>
-								<ChevronLeft className="h-4 w-4 4xl:h-6 4xl:w-6 -ml-1" />
+								<ChevronLeft className="-ml-1 h-4 w-4 4xl:h-6 4xl:w-6" />
 							</button>
 							<button
 								type="button"
 								aria-label="Next skin"
 								className={cn(
 									'flex items-center justify-center',
-									'absolute right-2 top-1/2 z-20 h-10 w-10 4xl:h-12 4xl:w-12 -translate-y-1/2 rounded-full bg-black/40 !text-white',
+									'absolute right-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full bg-black/40 !text-white 4xl:h-12 4xl:w-12',
 									'opacity-0 transition-opacity hover:bg-black/60 group-hover/lightbox:opacity-100'
 								)}
 								onClick={goNext}
 							>
-								<ChevronRight className="h-4 w-4 4xl:h-6 4xl:w-6 ml-1" />
+								<ChevronRight className="ml-1 h-4 w-4 4xl:h-6 4xl:w-6" />
 							</button>
 						</>
 					) : null}
@@ -301,7 +301,7 @@ function SkinLightbox({
 						{splashSrc ? (
 							<LightboxSplashImage src={splashSrc} alt={skin.name} />
 						) : (
-							<div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+							<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 								Image unavailable
 							</div>
 						)}
@@ -328,7 +328,7 @@ export default function ChampionSkinList({ skins }: { skins: ChampionSkin[] | un
 	const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
 
 	if (visibleSkins.length === 0) {
-		return <p className="text-muted-foreground text-sm">No skins available.</p>;
+		return <p className="text-sm text-muted-foreground">No skins available.</p>;
 	}
 
 	return (
