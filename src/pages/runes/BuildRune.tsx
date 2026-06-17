@@ -88,6 +88,7 @@ export default function BuildRune() {
                 <RuneDetail
                     key={activePathData?.key ?? 'none'}
                     onClose={() => setActivePath(null)}
+                    onPathChange={setActivePath}
                     activePathData={activePathData ?? null}
                     allPaths={sortedPaths}
                 />

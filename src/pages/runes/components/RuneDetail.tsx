@@ -1,4 +1,3 @@
-import * as Popover from '@radix-ui/react-popover';
 import clsx from 'clsx';
 import { Undo2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -13,20 +12,22 @@ import './rune-detail.scss';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const PATH_CFG: Record<string, { color: string; color2: string; gradId: string; shortKey: string }> =
-	{
-		Precision:   { color: '#c8aa6e', color2: '#aea789', gradId: 'precision',   shortKey: 'p' },
-		Domination:  { color: '#d44242', color2: '#dc4747', gradId: 'domination',  shortKey: 'd' },
-		Sorcery:     { color: '#9faafc', color2: '#6c75f5', gradId: 'sorcery',     shortKey: 's' },
-		Resolve:     { color: '#a1d586', color2: '#a4d08d', gradId: 'resolve',     shortKey: 'r' },
-		Inspiration: { color: '#49aab9', color2: '#48b4be', gradId: 'inspiration', shortKey: 'i' },
-	};
+const PATH_CFG: Record<
+	string,
+	{ color: string; color2: string; gradId: string; shortKey: string }
+> = {
+	Precision: { color: '#c8aa6e', color2: '#aea789', gradId: 'precision', shortKey: 'p' },
+	Domination: { color: '#d44242', color2: '#dc4747', gradId: 'domination', shortKey: 'd' },
+	Sorcery: { color: '#9faafc', color2: '#6c75f5', gradId: 'sorcery', shortKey: 's' },
+	Resolve: { color: '#a1d586', color2: '#a4d08d', gradId: 'resolve', shortKey: 'r' },
+	Inspiration: { color: '#49aab9', color2: '#48b4be', gradId: 'inspiration', shortKey: 'i' },
+};
 
 const PATH_SUBTITLES: Record<string, string> = {
-	Precision:   'Improved attacks and sustained damage',
-	Domination:  'Burst damage and target access',
-	Sorcery:     'Empowered abilities and resource manipulation',
-	Resolve:     'Durability and crowd control',
+	Precision: 'Improved attacks and sustained damage',
+	Domination: 'Burst damage and target access',
+	Sorcery: 'Empowered abilities and resource manipulation',
+	Resolve: 'Durability and crowd control',
 	Inspiration: 'Creative tools and rule bending',
 };
 
@@ -36,6 +37,10 @@ function cfgFor(key: string) {
 
 function constructKsUrl(pathId: number, ksId: number) {
 	return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/${pathId}/keystones/${ksId}.png`;
+}
+
+function secondaryConstructUrl(pathId: number, secondaPathId: number) {
+	return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/${pathId}/second/${secondaPathId}.png`;
 }
 
 // ─── SVG Gradient Defs ────────────────────────────────────────────────────────
@@ -52,6 +57,10 @@ function SvgDefs({ pathKey }: { pathKey: string }) {
 				<linearGradient id={`rd-g-${gradId}`} x1="0" y1="0" x2="0" y2="1">
 					<stop stopColor={color} offset="0%" />
 					<stop stopColor={color2} offset="100%" />
+				</linearGradient>
+				<linearGradient id={`rd-go-${gradId}`} x1="0" y1="0" x2="0" y2="1">
+					<stop stopColor={color} stopOpacity={0.45} offset="0%" />
+					<stop stopColor={color2} stopOpacity={0.45} offset="100%" />
 				</linearGradient>
 				<linearGradient id={`rd-c-${gradId}`} x1="1" y1="0.6" x2="0" y2="0">
 					<stop stopColor={color} stopOpacity={1} offset="0%" />
@@ -73,21 +82,50 @@ function SvgDefs({ pathKey }: { pathKey: string }) {
 
 // ─── PathCircleButton (animated header circle with path icon) ─────────────────
 
-function PathCircleBtn({ pathKey, fallbackGradId }: { pathKey?: string, fallbackGradId?: string }) {
-	const { shortKey, gradId } = pathKey ? cfgFor(pathKey) : { shortKey: null, gradId: fallbackGradId || 'precision' };
+function PathCircleBtn({ pathKey, fallbackGradId }: { pathKey?: string; fallbackGradId?: string }) {
+	const { shortKey, gradId } = pathKey
+		? cfgFor(pathKey)
+		: { shortKey: null, gradId: fallbackGradId || 'precision' };
 	return (
 		<div className="rd-path-btn" aria-hidden>
 			<svg className="rd-path-circles" viewBox="0 0 84 84">
-				<circle cx="50%" cy="50%" r="43%" fill="none" strokeWidth="2"
-					stroke={`url(#rd-c-${gradId})`} className="rd-circ-a" />
-				<circle cx="50%" cy="50%" r="43%" fill="none" strokeWidth="2"
-					stroke={`url(#rd-c-${gradId})`} className="rd-circ-b" />
-				<circle cx="50%" cy="50%" r="43%" fill="none" strokeWidth="2"
-					stroke={`url(#rd-c-${gradId})`} className="rd-circ-c" />
+				<circle
+					cx="50%"
+					cy="50%"
+					r="43%"
+					fill="none"
+					strokeWidth="2"
+					stroke={`url(#rd-c-${gradId})`}
+					className="rd-circ-a"
+				/>
+				<circle
+					cx="50%"
+					cy="50%"
+					r="43%"
+					fill="none"
+					strokeWidth="2"
+					stroke={`url(#rd-c-${gradId})`}
+					className="rd-circ-b"
+				/>
+				<circle
+					cx="50%"
+					cy="50%"
+					r="43%"
+					fill="none"
+					strokeWidth="2"
+					stroke={`url(#rd-c-${gradId})`}
+					className="rd-circ-c"
+				/>
 			</svg>
 			<svg className="rd-path-cup" viewBox="0 0 84 84">
-				<circle cx="50%" cy="50%" r="47.6%" fill="none" strokeWidth="2"
-					stroke={`url(#rd-cup-${gradId})`} />
+				<circle
+					cx="42"
+					cy="42"
+					r="42"
+					fill="none"
+					strokeWidth="2"
+					stroke={`url(#rd-cup-${gradId})`}
+				/>
 			</svg>
 			{shortKey && (
 				<img
@@ -111,18 +149,29 @@ interface PerkBtnProps {
 	rune?: DdragonRune;
 	isActive?: boolean;
 	isSelected?: boolean;
+	isMuted?: boolean;
 	onClick?: () => void;
 	className?: string;
 }
 
-function PerkBtn({ gradId, size = 'md', rune, isActive, isSelected, onClick, className }: PerkBtnProps) {
+function PerkBtn({
+	gradId,
+	size = 'md',
+	rune,
+	isActive,
+	isSelected,
+	isMuted,
+	onClick,
+	className,
+}: PerkBtnProps) {
 	const gid = `rd-g-${gradId}`;
+	const gidOuter = `rd-go-${gradId}`;
 	const isLg = size === 'lg';
 	const arc = isLg ? 'M 31 1.5 A 29.5 29.5 0 0 0 31 60.5' : 'M 23.5 1 A 22.5 22.5 0 0 0 23.5 46';
-	const vb  = isLg ? '0 0 62 62' : '0 0 47 47';
+	const vb = isLg ? '0 0 62 62' : '0 0 47 47';
 	const cx = isLg ? 31 : 23.5;
 	const rOuter = isLg ? 29.5 : 22.5;
-	const rInner = isLg ? 23.5 : 18;
+	const rInner = isLg ? 27.5 : 20.5;
 
 	return (
 		<button
@@ -133,27 +182,47 @@ function PerkBtn({ gradId, size = 'md', rune, isActive, isSelected, onClick, cla
 				isActive && 'rd-perk-btn--active',
 				isSelected && 'rd-perk-btn--selected',
 				rune && 'rd-perk-btn--has-rune',
+				isMuted && 'rd-perk-btn--muted',
 				className
 			)}
 			onClick={onClick}
 		>
-			{/* Outer gradient ring */}
-			<svg className="rd-perk-outer" viewBox={vb} aria-hidden>
-				<circle cx={cx} cy={cx} r={rOuter} strokeWidth={isLg ? 3 : 2} fill="none" stroke={`url(#${gid})`} />
+			<svg className="rd-perk-inner" viewBox={vb} aria-hidden>
+				<circle
+					cx={cx}
+					cy={cx}
+					r={rInner}
+					strokeWidth="2"
+					fill="none"
+					stroke={`url(#${gid})`}
+				/>
 			</svg>
-			{/* Icon */}
 			{rune && (
-				<img className="rd-perk-icon" src={runePerkImgUrl(rune.icon)} alt={rune.name} draggable={false} />
+				<img
+					className="rd-perk-icon"
+					src={runePerkImgUrl(rune.icon)}
+					alt={rune.name}
+					draggable={false}
+				/>
 			)}
-			{/* Inner gradient ring */}
-			{rune && (
-				<svg className="rd-perk-inner" viewBox={vb} aria-hidden>
-					<circle cx={cx} cy={cx} r={rInner} strokeWidth="2" fill="none" stroke={`url(#${gid})`} />
-				</svg>
-			)}
-			{/* Spinner arc (visible only when --active) */}
+			<svg className="rd-perk-outer" viewBox={vb} aria-hidden>
+				<circle
+					cx={cx}
+					cy={cx}
+					r={rOuter}
+					strokeWidth={isLg ? 3 : 2}
+					fill="none"
+					stroke={`url(#${gidOuter})`}
+				/>
+			</svg>
 			<svg className="rd-perk-spinner" viewBox={vb} aria-hidden>
-				<path fill="none" strokeLinecap="round" strokeWidth="2" stroke="url(#rd-w)" d={arc} />
+				<path
+					fill="none"
+					strokeLinecap="round"
+					strokeWidth="2"
+					stroke="url(#rd-w)"
+					d={arc}
+				/>
 				<ellipse cx="50%" cy="1.5" fill="#fff" rx="4" ry="2" />
 			</svg>
 		</button>
@@ -181,7 +250,35 @@ function KsFlourish({ gradId, color, color2 }: { gradId: string; color: string; 
 
 function NormalFlourish({ color }: { color: string }) {
 	return (
-		<div className="rd-normal-flourish" style={{ '--rd-color': color } as React.CSSProperties} />
+		<div
+			className="rd-normal-flourish"
+			style={{ '--rd-color': color } as React.CSSProperties}
+		/>
+	);
+}
+
+function ProgressColumn({
+	fillHeight,
+	trackHeight,
+	color,
+}: {
+	fillHeight: string;
+	trackHeight: string;
+	color: string;
+}) {
+	return (
+		<div className="rd-progress" style={{ height: trackHeight }} aria-hidden>
+			<div className="rd-progress-border">
+				<div className="rd-progress-outer">
+					<div className="rd-progress-fill" style={{ height: fillHeight }}>
+						<div
+							className="rd-progress-highlight"
+							style={{ '--rd-color': color } as React.CSSProperties}
+						/>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }
 
@@ -213,8 +310,12 @@ function SlotRow({
 	onToggle,
 }: SlotRowProps) {
 	const isKs = slotIdx === 0;
-	const sel = runes.find(r => r.id === selectedId) ?? null;
-	const placeholder = isKs ? 'Select Keystone' : slotIdx === 1 ? 'Select Greater Rune' : 'Select Rune';
+	const sel = runes.find((r) => r.id === selectedId) ?? null;
+	const placeholder = isKs
+		? 'Select Keystone'
+		: slotIdx === 1
+			? 'Select Greater Rune'
+			: 'Select Rune';
 
 	const circleBtn = (
 		<PerkBtn
@@ -228,21 +329,15 @@ function SlotRow({
 
 	return (
 		<div className={clsx('rd-slot', isKs && 'rd-slot--ks', isOpen && 'rd-slot--open')}>
-			{/* Left: progress bar + circle */}
 			<div className="rd-slot-l">
-				<div className="rd-progress-track rd-progress-track--top">
-					<div className={clsx('rd-progress-bar', prevFilled && 'rd-progress-bar--filled')} style={{ '--rd-color': color } as React.CSSProperties} />
-				</div>
-				{slotIdx < 3 && (
-					<div className="rd-progress-track rd-progress-track--bottom">
-						<div className={clsx('rd-progress-bar', sel != null && 'rd-progress-bar--filled')} style={{ '--rd-color': color } as React.CSSProperties} />
-					</div>
-				)}
 				<div className="rd-circle-wrap">
-					{sel && !isOpen
-						? <RunePopover rune={sel} side="right">{circleBtn}</RunePopover>
-						: circleBtn
-					}
+					{sel && !isOpen ? (
+						<RunePopover rune={sel} side="right" triggerClassName="flex">
+							{circleBtn}
+						</RunePopover>
+					) : (
+						circleBtn
+					)}
 				</div>
 			</div>
 
@@ -251,13 +346,14 @@ function SlotRow({
 				{isOpen ? (
 					<div className={clsx('rd-drawer', isKs && 'rd-drawer--ks')}>
 						<div className="rd-drawer-row">
-							{runes.map(rune => (
+							{runes.map((rune) => (
 								<RunePopover key={rune.id} rune={rune} side="top">
 									<PerkBtn
 										gradId={gradId}
 										size={isKs ? 'md' : 'sm'}
 										rune={rune}
 										isSelected={rune.id === selectedId}
+										isMuted={selectedId != null && rune.id !== selectedId}
 										onClick={() => onSelect(rune.id)}
 									/>
 								</RunePopover>
@@ -266,7 +362,9 @@ function SlotRow({
 					</div>
 				) : sel ? (
 					<div className={clsx('rd-desc', isKs && 'rd-desc--ks')}>
-						<div className="rd-desc-name" style={{ color }}>{sel.name.toUpperCase()}</div>
+						<div className="rd-desc-name" style={{ color }}>
+							{sel.name.toUpperCase()}
+						</div>
 						<p className="rd-desc-text">{stripRuneMarkupToText(sel.shortDesc)}</p>
 					</div>
 				) : (
@@ -275,97 +373,139 @@ function SlotRow({
 			</div>
 
 			{/* Separator at bottom (except for last slot) */}
-			{slotIdx < 3 && (
-				isKs
-					? <KsFlourish gradId={gradId} color={color} color2={color2} />
-					: <NormalFlourish color={color} />
-			)}
+			{slotIdx < 3 &&
+				(isKs ? (
+					<KsFlourish gradId={gradId} color={color} color2={color2} />
+				) : (
+					<NormalFlourish color={color} />
+				))}
 		</div>
 	);
 }
 
-// ─── Secondary Slot Row ───────────────────────────────────────────────────────
+// ─── Secondary rune grid ─────────────────────────────────────────────────────
 
-function SecSlotRow({
-	runes,
-	rowIdx,
-	slotIdx,
-	selectedId,
-	prevFilled,
-	isMaxed,
-	gradId,
-	color,
+type SecPick = { rowIdx: number; runeId: number };
+
+function SecRuneGrid({
+	secData,
+	secPicks,
 	onSelect,
+	fillHeight,
+	trackHeight,
 }: {
-	runes: DdragonRune[];
-	rowIdx: number;
-	slotIdx: number;
-	selectedId: number | undefined;
-	prevFilled: boolean;
-	isMaxed: boolean;
-	gradId: string;
-	color: string;
+	secData: DdragonRunePath;
+	secPicks: SecPick[];
 	onSelect: (id: number, rowIdx: number) => void;
+	fillHeight: string;
+	trackHeight: string;
 }) {
-	const sel = runes.find(r => r.id === selectedId);
-	const isLast = slotIdx === 2;
+	const sc = cfgFor(secData.key);
+	const rows = [1, 2, 3] as const;
+	const [gridOpen, setGridOpen] = useState(true);
 
-	const circleBtn = sel ? (
-		<RunePopover rune={sel} side="left">
-			<PerkBtn gradId={gradId} size="md" rune={sel} onClick={() => onSelect(sel.id, rowIdx)} />
-		</RunePopover>
-	) : (
-		<PerkBtn gradId={gradId} size="md" isActive={false} />
-	);
+	useEffect(() => {
+		if (secPicks.length === 2) {
+			setGridOpen(false);
+		} else {
+			setGridOpen(true);
+		}
+	}, [secPicks]);
+
+	const getRune = (pick: SecPick | undefined) =>
+		pick ? secData.slots[pick.rowIdx]?.runes.find((r) => r.id === pick.runeId) : undefined;
+
+	const getSelectedId = (rowIdx: number) =>
+		secPicks.find((p) => p.rowIdx === rowIdx)?.runeId;
+
+	const canToggleGrid = secPicks.length === 2;
+	const showGrid = gridOpen || secPicks.length < 2;
+
+	const circleBtn = (slotIdx: number, rune: DdragonRune | undefined) => {
+		if (rune) {
+			const btn = (
+				<PerkBtn
+					gradId={sc.gradId}
+					size="md"
+					rune={rune}
+					onClick={canToggleGrid ? () => setGridOpen((prev) => !prev) : undefined}
+				/>
+			);
+			return canToggleGrid ? btn : (
+				<RunePopover rune={rune} side="left" triggerClassName="flex">
+					{btn}
+				</RunePopover>
+			);
+		}
+		return <PerkBtn gradId={sc.gradId} size="md" />;
+	};
 
 	return (
-		<div className={clsx('rd-slot', isMaxed && !selectedId && 'rd-sec-slot--dimmed')}>
-			<div className="rd-slot-l">
-				<div className="rd-progress-track rd-progress-track--top">
-					<div
-						className={clsx('rd-progress-bar', prevFilled && 'rd-progress-bar--filled')}
-						style={{ '--rd-color': color } as React.CSSProperties}
-					/>
-				</div>
-				{!isLast && (
-					<div className="rd-progress-track rd-progress-track--bottom">
-						<div
-							className={clsx('rd-progress-bar', sel != null && 'rd-progress-bar--filled')}
-							style={{ '--rd-color': color } as React.CSSProperties}
-						/>
+		<div className="rd-sec-picker">
+			<div className="rd-sec-track-col">
+				<ProgressColumn
+					fillHeight={fillHeight}
+					trackHeight={trackHeight}
+					color={sc.color}
+				/>
+				{[0, 1].map((slotIdx) => (
+					<div key={slotIdx} className="rd-sec-track-slot" data-slot={slotIdx}>
+						{circleBtn(slotIdx, getRune(secPicks[slotIdx]))}
 					</div>
-				)}
-				<div className="rd-circle-wrap">{circleBtn}</div>
+				))}
 			</div>
-			<div className="rd-sec-slot-r">
-				<div className="rd-sec-options">
-					{runes.map(rune => (
-						<RunePopover key={rune.id} rune={rune} side="top">
-							<PerkBtn
-								gradId={gradId}
-								size="sm"
-								rune={rune}
-								isSelected={rune.id === selectedId}
-								onClick={() => onSelect(rune.id, rowIdx)}
-								className={isMaxed && rune.id !== selectedId ? 'rd-perk-btn--dimmed' : undefined}
-							/>
-						</RunePopover>
-					))}
+			{showGrid ? (
+				<div className="rd-sec-grid" style={{ borderColor: sc.color }}>
+					{rows.map((rowIdx) => {
+						const rowRunes = secData.slots[rowIdx]?.runes ?? [];
+						const selectedId = getSelectedId(rowIdx);
+						return (
+							<div key={rowIdx} className="rd-sec-grid-row">
+								{rowRunes.map((rune) => (
+									<PerkBtn
+										key={rune.id}
+										gradId={sc.gradId}
+										size="sm"
+										rune={rune}
+										isSelected={rune.id === selectedId}
+										isMuted={selectedId != null && rune.id !== selectedId}
+										onClick={() => onSelect(rune.id, rowIdx)}
+									/>
+								))}
+							</div>
+						);
+					})}
 				</div>
-			</div>
-			{!isLast && <NormalFlourish color={color} />}
+			) : (
+				<div className="rd-sec-summary">
+					{secPicks.map((pick, idx) => {
+						const rune = getRune(pick);
+						if (!rune) return null;
+						return (
+							<div key={idx} className="rd-sec-summary-row">
+								<div className="rd-desc">
+									<div className="rd-desc-name" style={{ color: sc.color }}>
+										{rune.name.toUpperCase()}
+									</div>
+									<p className="rd-desc-text">
+										{stripRuneMarkupToText(rune.shortDesc)}
+									</p>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			)}
 		</div>
 	);
 }
 
 function SecSplashRow({
 	slotIdx,
-	prevFilled,
 	gradId,
 	color,
 }: {
 	slotIdx: number;
-	prevFilled: boolean;
 	gradId: string;
 	color: string;
 }) {
@@ -374,17 +514,6 @@ function SecSplashRow({
 	return (
 		<div className="rd-splash-row">
 			<div className="rd-slot-l">
-				<div className="rd-progress-track rd-progress-track--top">
-					<div
-						className={clsx('rd-progress-bar', prevFilled && 'rd-progress-bar--filled')}
-						style={{ '--rd-color': color } as React.CSSProperties}
-					/>
-				</div>
-				{!isLast && (
-					<div className="rd-progress-track rd-progress-track--bottom">
-						<div className="rd-progress-bar" style={{ '--rd-color': color } as React.CSSProperties} />
-					</div>
-				)}
 				<div className="rd-circle-wrap">
 					<PerkBtn gradId={gradId} size="md" isActive={false} />
 				</div>
@@ -402,25 +531,41 @@ function SecSplashRow({
 
 export interface RuneDetailProps {
 	onClose: () => void;
+	onPathChange: (pathKey: string) => void;
 	activePathData: DdragonRunePath | null;
 	allPaths: DdragonRunePath[];
 }
 
-export default function RuneDetail({ onClose, activePathData, allPaths }: RuneDetailProps) {
-	const [selectedKs,    setSelectedKs]    = useState<number | null>(null);
+export default function RuneDetail({
+	onClose,
+	onPathChange,
+	activePathData,
+	allPaths,
+}: RuneDetailProps) {
+	const [selectedKs, setSelectedKs] = useState<number | null>(null);
 	const [selectedSlots, setSelectedSlots] = useState<(number | null)[]>([null, null, null]);
-	const [openSlot,      setOpenSlot]      = useState<number>(0);
-	const [secPathKey,    setSecPathKey]    = useState<string | null>(null);
-	const [secSelected,   setSecSelected]   = useState<Record<number, number>>({});
+	const [openSlot, setOpenSlot] = useState<number>(0);
+	const [secPathKey, setSecPathKey] = useState<string | null>(null);
+	const [secPicks, setSecPicks] = useState<SecPick[]>([]);
+	const [showSecDropdown, setShowSecDropdown] = useState<boolean>(false);
+	const [showPrimaryDropdown, setShowPrimaryDropdown] = useState<boolean>(false);
 
-	useEffect(() => { setSecSelected({}); }, [secPathKey]);
+	useEffect(() => {
+		setSecPicks([]);
+	}, [secPathKey]);
+
+	useEffect(() => {
+		if (secPicks.length === 2) {
+			setShowSecDropdown(false);
+		}
+	}, [secPicks]);
 
 	if (!activePathData) return null;
 
-	const cfg      = cfgFor(activePathData.key);
+	const cfg = cfgFor(activePathData.key);
 	const subtitle = PATH_SUBTITLES[activePathData.key] ?? '';
-	const secPaths = allPaths.filter(p => p.key !== activePathData.key);
-	const secData  = allPaths.find(p => p.key === secPathKey) ?? null;
+	const secPaths = allPaths.filter((p) => p.key !== activePathData.key);
+	const secData = allPaths.find((p) => p.key === secPathKey) ?? null;
 
 	const ks = activePathData.slots[0]?.runes ?? [];
 	const s1 = activePathData.slots[1]?.runes ?? [];
@@ -440,25 +585,92 @@ export default function RuneDetail({ onClose, activePathData, allPaths }: RuneDe
 	};
 
 	const handleSecSelect = (runeId: number, rowIdx: number) => {
-		setSecSelected(prev => {
-			const next = { ...prev };
-			if (next[rowIdx] === runeId) { delete next[rowIdx]; return next; }
-			if (rowIdx in next) { next[rowIdx] = runeId; return next; }
-			if (Object.keys(next).length >= 2) {
-				const oldest = Math.min(...Object.keys(next).map(Number));
-				delete next[oldest];
+		setSecPicks((prev) => {
+			const k1 = prev[0];
+			const k2 = prev[1];
+
+			if (k1?.rowIdx === rowIdx && k1.runeId === runeId) {
+				return k2 ? [k2] : [];
 			}
-			next[rowIdx] = runeId;
-			return next;
+			if (k2?.rowIdx === rowIdx && k2.runeId === runeId) {
+				return k1 ? [k1] : [];
+			}
+
+			const pick = { rowIdx, runeId };
+
+			if (k1?.rowIdx === rowIdx) {
+				return k2 ? [pick, k2] : [pick];
+			}
+			if (k2?.rowIdx === rowIdx) {
+				return k1 ? [k1, pick] : [pick];
+			}
+
+			if (!k1) return [pick];
+			if (!k2) return [k1, pick];
+			return [k1, pick];
 		});
 	};
 
-	const toggleSlot = (idx: number) => setOpenSlot(prev => prev === idx ? -1 : idx);
-	const secCount   = Object.keys(secSelected).length;
+	const toggleSlot = (idx: number) => setOpenSlot((prev) => (prev === idx ? -1 : idx));
+
+	const handlePrimaryPathSelect = (pathKey: string) => {
+		if (pathKey !== activePathData.key) {
+			onPathChange(pathKey);
+		}
+		setShowPrimaryDropdown(false);
+	};
+
+	let primLevel = 0;
+	if (selectedKs != null) primLevel = 1;
+	if (primLevel === 1 && selectedSlots[0] != null) primLevel = 2;
+	if (primLevel === 2 && selectedSlots[1] != null) primLevel = 3;
+	if (primLevel === 3 && selectedSlots[2] != null) primLevel = 4;
+	// const primHeights = [107, 220, 316, 364, 412];
+	// const primHeight = `${primHeights[primLevel]}px`;
+	const primTrackHeight = '412px';
+
+	const selectedCount = secPicks.length;
+	const secFillHeights = ['0px', '90px', '186px'];
+	const secFillHeight = secFillHeights[selectedCount] || '0px';
+	const secTrackHeight = '186px';
+	const splashTrackHeight = '186px';
 
 	return (
 		<div className="rd-root">
-			<img className="rd-main-bg" src={`/images/runes/${activePathData.key.toLowerCase()}.png`} alt="" />
+			<img
+				className="rd-main-bg"
+				src={`/images/runes/${activePathData.key.toLowerCase()}.png`}
+				alt=""
+			/>
+			<img
+				src={`/images/runes/construct-${cfg.shortKey}.png`}
+				alt=""
+				className="rd-construct-img"
+				draggable={false}
+			/>
+			{secData && (
+				<img
+					src={secondaryConstructUrl(activePathData.id, secData.id)}
+					alt=""
+					className="rd-secondary-construct-img"
+					draggable={false}
+				/>
+			)}
+
+			{/* <img
+						src={`/images/runes/icon-${cfg.shortKey}-36x36.png`}
+						alt=""
+						className="rd-construct-path-icon"
+						draggable={false}
+					/> */}
+			{selectedKs && (
+				<img
+					src={constructKsUrl(activePathData.id, selectedKs)}
+					alt=""
+					className="rd-construct-ks"
+					draggable={false}
+				/>
+			)}
 			<SvgDefs pathKey={activePathData.key} />
 			{secData && <SvgDefs pathKey={secData.key} />}
 
@@ -474,32 +686,80 @@ export default function RuneDetail({ onClose, activePathData, allPaths }: RuneDe
 
 			{/* ── Primary column ─────────────────────────────────────────── */}
 			<div className="rd-primary">
-				<div className="rd-path-header">
-					<PathCircleBtn pathKey={activePathData.key} />
-					<div className="rd-path-info">
-						<div className="rd-path-name" style={{ color: cfg.color }}>
-							{activePathData.name.toUpperCase()}
+				<div className="rd-primary-header">
+					<button
+						type="button"
+						onClick={() => setShowPrimaryDropdown((prev) => !prev)}
+						className="rd-path-header cursor-pointer text-left bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+					>
+						<PathCircleBtn pathKey={activePathData.key} />
+					</button>
+					{showPrimaryDropdown ? (
+						<div className="rd-path-dropdown items-center">
+							{allPaths.map((p) => {
+								const pc = cfgFor(p.key);
+								return (
+									<button
+										key={p.key}
+										type="button"
+										className={clsx(
+											'rd-sec-path-btn',
+											activePathData.key === p.key &&
+												'rd-sec-path-btn--active'
+										)}
+										onClick={() => handlePrimaryPathSelect(p.key)}
+										title={p.name}
+									>
+										<img
+											src={`/images/runes/icon-${pc.shortKey}-36x36.png`}
+											alt={p.name}
+											draggable={false}
+										/>
+									</button>
+								);
+							})}
 						</div>
-						<p className="rd-path-sub">{subtitle}</p>
-					</div>
+					) : (
+						<div className="rd-path-info py-2">
+							<div className="rd-path-name" style={{ color: cfg.color }}>
+								{activePathData.name.toUpperCase()}
+							</div>
+							<p className="rd-path-sub">{subtitle}</p>
+						</div>
+					)}
 				</div>
 
 				<div className="rd-slots">
+					<ProgressColumn
+						fillHeight={primTrackHeight}
+						trackHeight={primTrackHeight}
+						color={cfg.color}
+					/>
+
 					<SlotRow
-						slotIdx={0} runes={ks}
-						selectedId={selectedKs} isOpen={openSlot === 0}
+						slotIdx={0}
+						runes={ks}
+						selectedId={selectedKs}
+						isOpen={openSlot === 0}
 						prevFilled={true}
-						gradId={cfg.gradId} color={cfg.color} color2={cfg.color2}
-						onSelect={handleKsSelect} onToggle={() => toggleSlot(0)}
+						gradId={cfg.gradId}
+						color={cfg.color}
+						color2={cfg.color2}
+						onSelect={handleKsSelect}
+						onToggle={() => toggleSlot(0)}
 					/>
 					{([s1, s2, s3] as DdragonRune[][]).map((sr, i) => (
 						<SlotRow
 							key={i + 1}
-							slotIdx={i + 1} runes={sr}
-							selectedId={selectedSlots[i] ?? null} isOpen={openSlot === i + 1}
+							slotIdx={i + 1}
+							runes={sr}
+							selectedId={selectedSlots[i] ?? null}
+							isOpen={openSlot === i + 1}
 							prevFilled={i === 0 ? selectedKs != null : selectedSlots[i - 1] != null}
-							gradId={cfg.gradId} color={cfg.color} color2={cfg.color2}
-							onSelect={id => handleSlotSelect(i + 1, id)}
+							gradId={cfg.gradId}
+							color={cfg.color}
+							color2={cfg.color2}
+							onSelect={(id) => handleSlotSelect(i + 1, id)}
 							onToggle={() => toggleSlot(i + 1)}
 						/>
 					))}
@@ -508,104 +768,79 @@ export default function RuneDetail({ onClose, activePathData, allPaths }: RuneDe
 
 			{/* ── Secondary column ───────────────────────────────────────── */}
 			<div className="rd-secondary">
-				<Popover.Root>
-					<Popover.Trigger asChild>
-						<button className="rd-path-header cursor-pointer text-left w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60">
-							<PathCircleBtn pathKey={secData?.key} fallbackGradId={cfg.gradId} />
-							<div className="rd-path-info">
-								<div className="rd-path-name" style={{ color: secData ? cfgFor(secData.key).color : cfg.color }}>
-									{secData ? secData.name.toUpperCase() : 'SELECT SECONDARY'}
-								</div>
+				<button
+					onClick={() => setShowSecDropdown((prev) => !prev)}
+					className="rd-path-header cursor-pointer text-left w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+				>
+					<PathCircleBtn pathKey={secData?.key} fallbackGradId={cfg.gradId} />
+					{showSecDropdown ? (
+						<div className="flex gap-2">
+							{secPaths.map((p) => {
+								const sc = cfgFor(p.key);
+								return (
+									<button
+										key={p.key}
+										type="button"
+										className={clsx(
+											'rd-sec-path-btn',
+											secPathKey === p.key && 'rd-sec-path-btn--active'
+										)}
+										onClick={(e) => {
+											e.stopPropagation();
+											setSecPathKey((prev) =>
+												prev === p.key ? null : p.key
+											);
+										}}
+										title={p.name}
+									>
+										<img
+											src={`/images/runes/icon-${sc.shortKey}-36x36.png`}
+											alt={p.name}
+											draggable={false}
+										/>
+									</button>
+								);
+							})}
+						</div>
+					) : (
+						<div className="rd-path-info">
+							<div
+								className="rd-path-name"
+								style={{ color: secData ? cfgFor(secData.key).color : cfg.color }}
+							>
+								{secData ? secData.name.toUpperCase() : 'SELECT SECONDARY'}
 							</div>
-						</button>
-					</Popover.Trigger>
-					<Popover.Portal>
-						<Popover.Content side="right" sideOffset={10} className="z-[100] rounded-md border border-border bg-popover p-2 shadow-md">
-							<div className="flex gap-2">
-								{secPaths.map(p => {
-									const sc = cfgFor(p.key);
-									return (
-										<button
-											key={p.key}
-											type="button"
-											className={clsx('rd-sec-path-btn', secPathKey === p.key && 'rd-sec-path-btn--active')}
-											onClick={() => setSecPathKey(prev => prev === p.key ? null : p.key)}
-											title={p.name}
-										>
-											<img src={`/images/runes/icon-${sc.shortKey}-36x36.png`} alt={p.name} draggable={false} />
-										</button>
-									);
-								})}
-							</div>
-						</Popover.Content>
-					</Popover.Portal>
-				</Popover.Root>
+						</div>
+					)}
+				</button>
 
 				<div className="rd-sec-div" />
 
 				{secData ? (
-					<div className="rd-sec-slots">
-						{([1, 2, 3] as const).map((rowIdx, slotIdx) => {
-							const sc = cfgFor(secData.key);
-							const rowRunes = secData.slots[rowIdx]?.runes ?? [];
-							const prevFilled = slotIdx === 0
-								? true
-								: secSelected[[1, 2, 3][slotIdx - 1]!] != null;
-							return (
-								<SecSlotRow
-									key={rowIdx}
-									runes={rowRunes}
-									rowIdx={rowIdx}
-									slotIdx={slotIdx}
-									selectedId={secSelected[rowIdx]}
-									prevFilled={prevFilled}
-									isMaxed={secCount >= 2}
-									gradId={sc.gradId}
-									color={sc.color}
-									onSelect={handleSecSelect}
-								/>
-							);
-						})}
-					</div>
+					<SecRuneGrid
+						secData={secData}
+						secPicks={secPicks}
+						onSelect={handleSecSelect}
+						fillHeight={secFillHeight}
+						trackHeight={secTrackHeight}
+					/>
 				) : (
 					<div className="rd-splash-rows">
-						{[0, 1].map(i => (
+						<ProgressColumn
+							fillHeight="90px"
+							trackHeight={splashTrackHeight}
+							color={cfg.color}
+						/>
+						{[0, 1].map((i) => (
 							<SecSplashRow
 								key={i}
 								slotIdx={i}
-								prevFilled={i === 0}
 								gradId={cfg.gradId}
 								color={cfg.color}
 							/>
 						))}
 					</div>
 				)}
-			</div>
-
-			{/* ── Construct (right panel) ─────────────────────────────────── */}
-			<div className="rd-construct">
-				<div className="rd-construct-wrap">
-					<img
-						src={`/images/runes/construct-${cfg.shortKey}.png`}
-						alt=""
-						className="rd-construct-img"
-						draggable={false}
-					/>
-					<img
-						src={`/images/runes/icon-${cfg.shortKey}-36x36.png`}
-						alt=""
-						className="rd-construct-path-icon"
-						draggable={false}
-					/>
-					{selectedKs && (
-						<img
-							src={constructKsUrl(activePathData.id, selectedKs)}
-							alt=""
-							className="rd-construct-ks"
-							draggable={false}
-						/>
-					)}
-				</div>
 			</div>
 		</div>
 	);

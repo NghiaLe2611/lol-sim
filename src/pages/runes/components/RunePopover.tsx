@@ -31,16 +31,22 @@ type RunePopoverProps = {
 	rune: DdragonRune;
 	children: ReactNode;
 	side?: 'top' | 'right' | 'bottom' | 'left';
+	triggerClassName?: string;
 };
 
-const RunePopover = ({ rune, children, side = 'right' }: RunePopoverProps) => {
+const RunePopover = ({
+	rune,
+	children,
+	side = 'right',
+	triggerClassName = 'inline-flex',
+}: RunePopoverProps) => {
 	return (
 		<HoverPopover
 			align="center"
 			side={side}
 			sideOffset={8}
 			closeDelayMs={0}
-			triggerClassName="inline-flex"
+			triggerClassName={triggerClassName}
 			content={<RuneHoverContent rune={rune} />}
 			contentClassName={POPOVER_CONTENT_CLASS}
 		>
