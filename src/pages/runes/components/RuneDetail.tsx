@@ -258,9 +258,7 @@ function MobileRuneList({
 					className={clsx(
 						'rd-mobile-list-item',
 						selectedId === rune.id && 'rd-mobile-list-item--selected',
-						selectedId != null &&
-							rune.id !== selectedId &&
-							'rd-mobile-list-item--muted'
+						selectedId != null && rune.id !== selectedId && 'rd-mobile-list-item--muted'
 					)}
 					onClick={() => onSelect(rune.id)}
 				>
@@ -442,12 +440,7 @@ function SlotRow({
 						<div className="rd-desc-name" style={{ color }}>
 							{sel.name.toUpperCase()}
 						</div>
-						<p
-							className={clsx(
-								'rd-desc-text',
-								isMobile && 'rd-desc-text--full'
-							)}
-						>
+						<p className={clsx('rd-desc-text', isMobile && 'rd-desc-text--full')}>
 							{stripRuneMarkupToText(sel.shortDesc)}
 						</p>
 					</div>
@@ -501,8 +494,7 @@ function SecRuneGrid({
 	const getRune = (pick: SecPick | undefined) =>
 		pick ? secData.slots[pick.rowIdx]?.runes.find((r) => r.id === pick.runeId) : undefined;
 
-	const getSelectedId = (rowIdx: number) =>
-		secPicks.find((p) => p.rowIdx === rowIdx)?.runeId;
+	const getSelectedId = (rowIdx: number) => secPicks.find((p) => p.rowIdx === rowIdx)?.runeId;
 
 	const canToggleGrid = secPicks.length === 2;
 	const showGrid = gridOpen || secPicks.length < 2;
@@ -517,7 +509,9 @@ function SecRuneGrid({
 					onClick={canToggleGrid ? () => setGridOpen((prev) => !prev) : undefined}
 				/>
 			);
-			return canToggleGrid || isMobile ? btn : (
+			return canToggleGrid || isMobile ? (
+				btn
+			) : (
 				<RunePopover rune={rune} side="left" triggerClassName="flex">
 					{btn}
 				</RunePopover>
@@ -541,23 +535,37 @@ function SecRuneGrid({
 				))}
 			</div>
 			{showGrid ? (
-				<div className="rd-sec-grid" style={{ borderColor: sc.color }}>
+				<div className="rd-sec-grid">
 					{rows.map((rowIdx) => {
 						const rowRunes = secData.slots[rowIdx]?.runes ?? [];
 						const selectedId = getSelectedId(rowIdx);
 						return (
-							<div key={rowIdx} className="rd-sec-grid-row">
-								{rowRunes.map((rune) => (
-									<PerkBtn
-										key={rune.id}
-										gradId={sc.gradId}
-										size="sm"
-										rune={rune}
-										isSelected={rune.id === selectedId}
-										isMuted={selectedId != null && rune.id !== selectedId}
-										onClick={() => onSelect(rune.id, rowIdx)}
+							<div key={rowIdx}>
+								<div className="rd-sec-grid-row">
+									{rowRunes.map((rune) => (
+										<PerkBtn
+											key={rune.id}
+											gradId={sc.gradId}
+											size="sm"
+											rune={rune}
+											isSelected={rune.id === selectedId}
+											isMuted={selectedId != null && rune.id !== selectedId}
+											onClick={() => onSelect(rune.id, rowIdx)}
+										/>
+									))}
+								</div>
+								{rowIdx <= 2 && (
+									<div
+                                        className={clsx("h-[1px] my-4", isMobile && 'hidden')}
+										style={
+											{
+												'--rd-color': sc.color,
+												background:
+													'linear-gradient(90deg, transparent, var(--rd-color), transparent)',
+											} as React.CSSProperties
+										}
 									/>
-								))}
+								)}
 							</div>
 						);
 					})}
@@ -783,7 +791,7 @@ export default function RuneDetail({
 				</button>
 			)}
 
-			<div className={clsx(isMobile && 'rd-mobile-body')}>
+			<div className={clsx(isMobile ? 'rd-mobile-body' :'flex gap-2')}>
 				{/* ── Primary column ─────────────────────────────────────────── */}
 				<div className="rd-primary">
 					<div className="rd-primary-header">
@@ -939,7 +947,7 @@ export default function RuneDetail({
 						)}
 					</button>
 
-					<div className={clsx('rd-sec-div', isMobile && 'rd-sec-div--visible')} />
+					{/* <div className={clsx('rd-sec-div', isMobile && 'rd-sec-div--visible')} /> */}
 
 					{secData ? (
 						<SecRuneGrid

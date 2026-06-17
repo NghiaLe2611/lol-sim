@@ -40,7 +40,7 @@ function HoverPopover({
 	const [computedSide, setComputedSide] = useState<Popover.PopoverContentProps['side']>(side);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	useEffect(() => {
+    useEffect(() => {
 		setComputedSide(side);
 	}, [side]);
 

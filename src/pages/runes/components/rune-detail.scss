@@ -248,7 +248,7 @@
 }
 
 .rd-slot--ks {
-    .rd-perk-icon{
+    .rd-perk-icon {
         width: 100%;
         height: 100%;
         transform: scale(1.5);
@@ -609,7 +609,6 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    @apply gap-2;
 }
 
 .rd-sec-summary {
@@ -630,12 +629,7 @@
 .rd-sec-grid-row {
     // height: 96px;
     flex-shrink: 0;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    &:not(:last-child){
-        @apply pb-2 border-b
-    }
+    @apply flex items-center gap-4;
 }
 
 // SPLASH placeholders
@@ -704,8 +698,8 @@
     height: 100%;
 }
 
-.rd-construct-img ,
-.rd-secondary-construct-img{
+.rd-construct-img,
+.rd-secondary-construct-img {
     max-height: 100%;
     @apply max-w-[50%] xl:max-w-full;
     object-fit: contain;
@@ -782,7 +776,8 @@
         object-position: center top;
     }
 
-    .rd-construct-img {
+    .rd-construct-img,
+    .rd-secondary-construct-img {
         position: absolute;
         right: -8%;
         top: -12%;
@@ -792,27 +787,21 @@
         max-width: none;
         aspect-ratio: 1;
         object-fit: contain;
+    }
+
+    .rd-construct-img {
         opacity: 0.55;
     }
 
     .rd-secondary-construct-img {
-        position: absolute;
-        right: -5%;
-        top: 8%;
-        width: 58%;
-        height: auto;
-        max-height: none;
-        max-width: none;
-        aspect-ratio: 1;
-        object-fit: contain;
         opacity: 0.45;
     }
 
     .rd-construct-ks {
         position: absolute;
-        right: 6%;
-        top: 18%;
-        width: 38%;
+        right: -7%;
+        top: -12%;
+        width:70%;
         height: auto;
         max-width: none;
         aspect-ratio: 1;
@@ -827,7 +816,25 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding-top: clamp(140px, 38vw, 200px);
+    padding-top: clamp(50px, 20vw, 100px);
+    .rd-path-btn {
+        width: 70px;
+        height: 70px;
+    }
+    .rd-perk-btn {
+        &--lg {
+            width: 68px;
+            height: 68px;
+        }
+        &--md {
+            width: 50px;
+            height: 50px;
+        }
+        &--sm {
+            width: 44px;
+            height: 44px;
+        }
+    }
 }
 
 .rd-root--mobile .rd-primary {
@@ -854,7 +861,7 @@
     min-height: 72px;
     max-height: none;
     align-items: flex-start;
-    padding: 10px 0;
+    padding: 16px 0;
 
     &--ks {
         min-height: 88px;
@@ -879,7 +886,7 @@
 .rd-root--mobile .rd-slot-r {
     height: auto;
     min-height: 0;
-    padding: 0 8px 0 12px;
+    // padding: 0 8px 0 12px;
     overflow: visible;
 }
 
@@ -934,12 +941,7 @@
     display: block;
     height: 1px;
     margin: 8px 0 4px;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(171, 143, 87, 0.45),
-        transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(171, 143, 87, 0.45), transparent);
 }
 
 .rd-root--mobile .rd-sec-picker {
@@ -953,14 +955,19 @@
     padding: 10px 8px 10px 12px;
 }
 
+.rd-root--mobile .rd-sec-grid {
+    @apply gap-y-4;
+}
+
 .rd-root--mobile .rd-sec-grid-row {
     justify-content: flex-start;
 }
 
 .rd-root--mobile .rd-progress {
-    top: -36px;
-    left: -4px;
-    width: 72px;
+    // top: -36px;
+    // left: -4px;
+    // width: 72px;
+    display: none;
 }
 
 .rd-root--mobile .rd-sec-track-col {
@@ -969,4 +976,7 @@
 
 .rd-root--mobile .rd-sec-track-slot {
     width: 72px;
+    &[data-slot="1"] {
+        top: 70px;
+    }
 }

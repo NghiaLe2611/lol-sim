@@ -2,17 +2,95 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
+import { cn } from '@/lib/utils';
 import RuneDialog from '@/pages/runes/components/RuneDialog';
-import { parseRunePaths, runePathCardUrl, type DdragonRunePath } from '@/pages/runes/utils';
+import {
+	parseRunePaths,
+	runePathCardUrl,
+	runePerkImgUrl,
+	stripRuneMarkupToText,
+	type DdragonRunePath,
+} from '@/pages/runes/utils';
 import { getRunes } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import BuildRune from './BuildRune';
+
+function RunePathMobileRow({
+	path,
+	expanded,
+	onToggle,
+}: {
+	path: DdragonRunePath;
+	expanded: boolean;
+	onToggle: () => void;
+}) {
+	const allRunes = path.slots.flatMap((slot) => slot.runes);
+
+	return (
+		<div className="border-b-2 border-[#ab8f57] last:border-b-0 dark:border-[#46372a]">
+			<button
+				type="button"
+				className="group relative flex h-[72px] w-full items-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+				onClick={onToggle}
+			>
+				<div
+					className="absolute inset-0 bg-cover bg-center opacity-50"
+					style={{ backgroundImage: `url(/images/runes/${path.key.toLowerCase()}.png)` }}
+				/>
+				<div className="absolute inset-0 bg-black/55 group-hover:bg-black/70" />
+				<span className="relative z-10 pl-4 text-sm font-bold uppercase tracking-wider text-white">
+					{path.name}
+				</span>
+				<img
+					alt={path.key}
+					// h-[145%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+					className="pointer-events-none absolute z-[2] opacity-50 max-w-none object-contain top-1/2 -translate-y-1/2 left-0"
+					loading="lazy"
+					src={runePathCardUrl(path.key)}
+				/>
+				<span className="relative z-10 ml-auto mr-3 flex size-8 shrink-0 items-center justify-center">
+					<ChevronDown
+						className={cn(
+							'size-6 text-[#ab8f57] transition-transform duration-200',
+							expanded && 'rotate-180'
+						)}
+					/>
+				</span>
+			</button>
+
+			{expanded && (
+				<div className="border-t border-[#ab8f57]/40 bg-black/10 dark:bg-black/50">
+					{allRunes.map((rune) => (
+						<div
+							key={rune.id}
+							className="flex items-start gap-3 border-b border-[#46372a]/40 px-4 py-3 last:border-b-0"
+						>
+							<img
+								alt=""
+								className="size-10 shrink-0 rounded-full border border-[#ab8f57]/50 object-cover"
+								loading="lazy"
+								src={runePerkImgUrl(rune.icon)}
+							/>
+							<p className="text-sm leading-snug text-muted-foreground">
+								<span className="font-semibold text-foreground">{rune.name}</span>
+								{' - '}
+								{stripRuneMarkupToText(rune.shortDesc)}
+							</p>
+						</div>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}
 
 export default function RunesPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
 	const [activePathKey, setActivePathKey] = useState<string | null>(null);
 	const [hoverId, setHoverId] = useState<string | null>(null);
+	const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
 	const runesQuery = useQuery({
 		queryKey: ['runes', patchVersion],
@@ -25,8 +103,18 @@ export default function RunesPage() {
 
 	const paths = runesQuery.data ?? [];
 	const activePath = paths.find((p) => p.key === activePathKey) ?? null;
+	const sortedPaths = [...paths].sort((a, b) => a.id - b.id);
 
 	const isLoading = runesQuery.isLoading || runesQuery.isFetching;
+
+	const toggleExpanded = (key: string) => {
+		setExpandedKeys((prev) => {
+			const next = new Set(prev);
+			if (next.has(key)) next.delete(key);
+			else next.add(key);
+			return next;
+		});
+	};
 
 	return (
 		<div className="mx-auto max-w-container px-6 py-12">
@@ -49,11 +137,9 @@ export default function RunesPage() {
 					<p className="text-center text-muted-foreground">Failed to load runes.</p>
 				</div>
 			) : (
-				<div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-					{/* Sort by id */}
-					{paths
-						.sort((a, b) => a.id - b.id)
-						.map((path) => {
+				<>
+					<div className="hidden gap-2 lg:grid lg:grid-cols-5">
+						{sortedPaths.map((path) => {
 							const isDimmed = hoverId !== null && hoverId !== path.key;
 
 							return (
@@ -68,7 +154,6 @@ export default function RunesPage() {
 								>
 									<img
 										alt={path.name}
-										// group-hover:scale-105 transition-all
 										className="aspect-[3/4] w-full border-b-2 border-[#ab8f57] object-cover object-top dark:border-[#46372a]"
 										loading="lazy"
 										src={runePathCardUrl(path.key)}
@@ -79,7 +164,19 @@ export default function RunesPage() {
 								</button>
 							);
 						})}
-				</div>
+					</div>
+
+					<div className="overflow-hidden border-2 border-[#ab8f57] lg:hidden dark:border-[#46372a]">
+						{sortedPaths.map((path) => (
+							<RunePathMobileRow
+								key={path.key}
+								expanded={expandedKeys.has(path.key)}
+								onToggle={() => toggleExpanded(path.key)}
+								path={path}
+							/>
+						))}
+					</div>
+				</>
 			)}
 
 			<RuneDialog activePath={activePath} onClose={() => setActivePathKey(null)} />
