@@ -1,12 +1,12 @@
-import clsx from 'clsx';
-import { Undo2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import {
 	runePerkImgUrl,
 	stripRuneMarkupToText,
 	type DdragonRune,
 	type DdragonRunePath,
 } from '@/pages/runes/utils';
+import clsx from 'clsx';
+import { Undo2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import RunePopover from './RunePopover';
 import './rune-detail.scss';
 
@@ -152,6 +152,7 @@ interface PerkBtnProps {
 	isMuted?: boolean;
 	onClick?: () => void;
 	className?: string;
+	static?: boolean;
 }
 
 function PerkBtn({
@@ -163,7 +164,9 @@ function PerkBtn({
 	isMuted,
 	onClick,
 	className,
+	static: isStatic,
 }: PerkBtnProps) {
+	const Tag = isStatic ? 'div' : 'button';
 	const gid = `rd-g-${gradId}`;
 	const gidOuter = `rd-go-${gradId}`;
 	const isLg = size === 'lg';
@@ -174,8 +177,8 @@ function PerkBtn({
 	const rInner = isLg ? 27.5 : 20.5;
 
 	return (
-		<button
-			type="button"
+		<Tag
+			{...(isStatic ? {} : { type: 'button' as const })}
 			className={clsx(
 				'rd-perk-btn',
 				`rd-perk-btn--${size}`,
@@ -185,7 +188,7 @@ function PerkBtn({
 				isMuted && 'rd-perk-btn--muted',
 				className
 			)}
-			onClick={onClick}
+			onClick={isStatic ? undefined : onClick}
 		>
 			<svg className="rd-perk-inner" viewBox={vb} aria-hidden>
 				<circle
@@ -225,7 +228,61 @@ function PerkBtn({
 				/>
 				<ellipse cx="50%" cy="1.5" fill="#fff" rx="4" ry="2" />
 			</svg>
-		</button>
+		</Tag>
+	);
+}
+
+// ─── Mobile rune list (vertical drawer) ──────────────────────────────────────
+
+function MobileRuneList({
+	runes,
+	selectedId,
+	gradId,
+	color,
+	isKs,
+	onSelect,
+}: {
+	runes: DdragonRune[];
+	selectedId: number | null;
+	gradId: string;
+	color: string;
+	isKs?: boolean;
+	onSelect: (id: number) => void;
+}) {
+	return (
+		<div className="rd-mobile-list">
+			{runes.map((rune) => (
+				<button
+					key={rune.id}
+					type="button"
+					className={clsx(
+						'rd-mobile-list-item',
+						selectedId === rune.id && 'rd-mobile-list-item--selected',
+						selectedId != null &&
+							rune.id !== selectedId &&
+							'rd-mobile-list-item--muted'
+					)}
+					onClick={() => onSelect(rune.id)}
+				>
+					<PerkBtn
+						gradId={gradId}
+						size={isKs ? 'md' : 'sm'}
+						rune={rune}
+						isSelected={rune.id === selectedId}
+						isMuted={selectedId != null && rune.id !== selectedId}
+						static
+					/>
+					<div className="rd-desc">
+						<div className="rd-desc-name" style={{ color }}>
+							{rune.name.toUpperCase()}
+						</div>
+						<p className="rd-desc-text rd-desc-text--full">
+							{stripRuneMarkupToText(rune.shortDesc)}
+						</p>
+					</div>
+				</button>
+			))}
+		</div>
 	);
 }
 
@@ -295,6 +352,7 @@ interface SlotRowProps {
 	color2: string;
 	onSelect: (id: number) => void;
 	onToggle: () => void;
+	isMobile?: boolean;
 }
 
 function SlotRow({
@@ -308,6 +366,7 @@ function SlotRow({
 	color2,
 	onSelect,
 	onToggle,
+	isMobile,
 }: SlotRowProps) {
 	const isKs = slotIdx === 0;
 	const sel = runes.find((r) => r.id === selectedId) ?? null;
@@ -328,10 +387,17 @@ function SlotRow({
 	);
 
 	return (
-		<div className={clsx('rd-slot', isKs && 'rd-slot--ks', isOpen && 'rd-slot--open')}>
+		<div
+			className={clsx(
+				'rd-slot',
+				isKs && 'rd-slot--ks',
+				isOpen && 'rd-slot--open',
+				isMobile && 'rd-slot--mobile'
+			)}
+		>
 			<div className="rd-slot-l">
 				<div className="rd-circle-wrap">
-					{sel && !isOpen ? (
+					{sel && !isOpen && !isMobile ? (
 						<RunePopover rune={sel} side="right" triggerClassName="flex">
 							{circleBtn}
 						</RunePopover>
@@ -344,28 +410,46 @@ function SlotRow({
 			{/* Right: drawer or description */}
 			<div className="rd-slot-r">
 				{isOpen ? (
-					<div className={clsx('rd-drawer', isKs && 'rd-drawer--ks')}>
-						<div className="rd-drawer-row">
-							{runes.map((rune) => (
-								<RunePopover key={rune.id} rune={rune} side="top">
-									<PerkBtn
-										gradId={gradId}
-										size={isKs ? 'md' : 'sm'}
-										rune={rune}
-										isSelected={rune.id === selectedId}
-										isMuted={selectedId != null && rune.id !== selectedId}
-										onClick={() => onSelect(rune.id)}
-									/>
-								</RunePopover>
-							))}
+					isMobile ? (
+						<MobileRuneList
+							runes={runes}
+							selectedId={selectedId}
+							gradId={gradId}
+							color={color}
+							isKs={isKs}
+							onSelect={onSelect}
+						/>
+					) : (
+						<div className={clsx('rd-drawer', isKs && 'rd-drawer--ks')}>
+							<div className="rd-drawer-row">
+								{runes.map((rune) => (
+									<RunePopover key={rune.id} rune={rune} side="top">
+										<PerkBtn
+											gradId={gradId}
+											size={isKs ? 'md' : 'sm'}
+											rune={rune}
+											isSelected={rune.id === selectedId}
+											isMuted={selectedId != null && rune.id !== selectedId}
+											onClick={() => onSelect(rune.id)}
+										/>
+									</RunePopover>
+								))}
+							</div>
 						</div>
-					</div>
+					)
 				) : sel ? (
 					<div className={clsx('rd-desc', isKs && 'rd-desc--ks')}>
 						<div className="rd-desc-name" style={{ color }}>
 							{sel.name.toUpperCase()}
 						</div>
-						<p className="rd-desc-text">{stripRuneMarkupToText(sel.shortDesc)}</p>
+						<p
+							className={clsx(
+								'rd-desc-text',
+								isMobile && 'rd-desc-text--full'
+							)}
+						>
+							{stripRuneMarkupToText(sel.shortDesc)}
+						</p>
 					</div>
 				) : (
 					<p className="rd-placeholder">{placeholder}</p>
@@ -393,12 +477,14 @@ function SecRuneGrid({
 	onSelect,
 	fillHeight,
 	trackHeight,
+	isMobile,
 }: {
 	secData: DdragonRunePath;
 	secPicks: SecPick[];
 	onSelect: (id: number, rowIdx: number) => void;
 	fillHeight: string;
 	trackHeight: string;
+	isMobile?: boolean;
 }) {
 	const sc = cfgFor(secData.key);
 	const rows = [1, 2, 3] as const;
@@ -431,7 +517,7 @@ function SecRuneGrid({
 					onClick={canToggleGrid ? () => setGridOpen((prev) => !prev) : undefined}
 				/>
 			);
-			return canToggleGrid ? btn : (
+			return canToggleGrid || isMobile ? btn : (
 				<RunePopover rune={rune} side="left" triggerClassName="flex">
 					{btn}
 				</RunePopover>
@@ -441,7 +527,7 @@ function SecRuneGrid({
 	};
 
 	return (
-		<div className="rd-sec-picker">
+		<div className={clsx('rd-sec-picker', isMobile && 'rd-sec-picker--mobile')}>
 			<div className="rd-sec-track-col">
 				<ProgressColumn
 					fillHeight={fillHeight}
@@ -487,7 +573,12 @@ function SecRuneGrid({
 									<div className="rd-desc-name" style={{ color: sc.color }}>
 										{rune.name.toUpperCase()}
 									</div>
-									<p className="rd-desc-text">
+									<p
+										className={clsx(
+											'rd-desc-text',
+											isMobile && 'rd-desc-text--full'
+										)}
+									>
 										{stripRuneMarkupToText(rune.shortDesc)}
 									</p>
 								</div>
@@ -534,6 +625,7 @@ export interface RuneDetailProps {
 	onPathChange: (pathKey: string) => void;
 	activePathData: DdragonRunePath | null;
 	allPaths: DdragonRunePath[];
+	isMobile?: boolean;
 }
 
 export default function RuneDetail({
@@ -541,6 +633,7 @@ export default function RuneDetail({
 	onPathChange,
 	activePathData,
 	allPaths,
+	isMobile,
 }: RuneDetailProps) {
 	const [selectedKs, setSelectedKs] = useState<number | null>(null);
 	const [selectedSlots, setSelectedSlots] = useState<(number | null)[]>([null, null, null]);
@@ -635,8 +728,8 @@ export default function RuneDetail({
 	const secTrackHeight = '186px';
 	const splashTrackHeight = '186px';
 
-	return (
-		<div className="rd-root">
+	const artLayer = (
+		<>
 			<img
 				className="rd-main-bg"
 				src={`/images/runes/${activePathData.key.toLowerCase()}.png`}
@@ -656,13 +749,6 @@ export default function RuneDetail({
 					draggable={false}
 				/>
 			)}
-
-			{/* <img
-						src={`/images/runes/icon-${cfg.shortKey}-36x36.png`}
-						alt=""
-						className="rd-construct-path-icon"
-						draggable={false}
-					/> */}
 			{selectedKs && (
 				<img
 					src={constructKsUrl(activePathData.id, selectedKs)}
@@ -671,176 +757,217 @@ export default function RuneDetail({
 					draggable={false}
 				/>
 			)}
+		</>
+	);
+
+	return (
+		<div className={clsx('rd-root', isMobile && 'rd-root--mobile')}>
+			{isMobile ? (
+				<div className="rd-mobile-art" aria-hidden>
+					{artLayer}
+				</div>
+			) : (
+				artLayer
+			)}
 			<SvgDefs pathKey={activePathData.key} />
 			{secData && <SvgDefs pathKey={secData.key} />}
 
-			{/* Back button */}
-			<button
-				type="button"
-				className="rd-close"
-				onClick={onClose}
-				aria-label="Back to path selection"
-			>
-				<Undo2 className="size-4 text-hex-gold/80" />
-			</button>
+			{!isMobile && (
+				<button
+					type="button"
+					className="rd-close"
+					onClick={onClose}
+					aria-label="Back to path selection"
+				>
+					<Undo2 className="size-4 text-hex-gold/80" />
+				</button>
+			)}
 
-			{/* ── Primary column ─────────────────────────────────────────── */}
-			<div className="rd-primary">
-				<div className="rd-primary-header">
-					<button
-						type="button"
-						onClick={() => setShowPrimaryDropdown((prev) => !prev)}
-						className="rd-path-header cursor-pointer text-left bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
-					>
-						<PathCircleBtn pathKey={activePathData.key} />
-					</button>
-					{showPrimaryDropdown ? (
-						<div className="rd-path-dropdown items-center">
-							{allPaths.map((p) => {
-								const pc = cfgFor(p.key);
-								return (
-									<button
-										key={p.key}
-										type="button"
-										className={clsx(
-											'rd-sec-path-btn',
-											activePathData.key === p.key &&
-												'rd-sec-path-btn--active'
-										)}
-										onClick={() => handlePrimaryPathSelect(p.key)}
-										title={p.name}
-									>
-										<img
-											src={`/images/runes/icon-${pc.shortKey}-36x36.png`}
-											alt={p.name}
-											draggable={false}
-										/>
-									</button>
-								);
-							})}
-						</div>
-					) : (
-						<div className="rd-path-info py-2">
-							<div className="rd-path-name" style={{ color: cfg.color }}>
-								{activePathData.name.toUpperCase()}
+			<div className={clsx(isMobile && 'rd-mobile-body')}>
+				{/* ── Primary column ─────────────────────────────────────────── */}
+				<div className="rd-primary">
+					<div className="rd-primary-header">
+						{isMobile ? (
+							<div className="rd-path-header">
+								<PathCircleBtn pathKey={activePathData.key} />
+								<div className="rd-path-info py-2">
+									<div className="rd-path-name" style={{ color: cfg.color }}>
+										{activePathData.name.toUpperCase()}
+									</div>
+									<p className="rd-path-sub">{subtitle}</p>
+								</div>
 							</div>
-							<p className="rd-path-sub">{subtitle}</p>
-						</div>
-					)}
-				</div>
+						) : (
+							<>
+								<button
+									type="button"
+									onClick={() => setShowPrimaryDropdown((prev) => !prev)}
+									className="rd-path-header cursor-pointer text-left bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+								>
+									<PathCircleBtn pathKey={activePathData.key} />
+								</button>
+								{showPrimaryDropdown ? (
+									<div className="rd-path-dropdown items-center">
+										{allPaths.map((p) => {
+											const pc = cfgFor(p.key);
+											return (
+												<button
+													key={p.key}
+													type="button"
+													className={clsx(
+														'rd-sec-path-btn',
+														activePathData.key === p.key &&
+															'rd-sec-path-btn--active'
+													)}
+													onClick={() => handlePrimaryPathSelect(p.key)}
+													title={p.name}
+												>
+													<img
+														src={`/images/runes/icon-${pc.shortKey}-36x36.png`}
+														alt={p.name}
+														draggable={false}
+													/>
+												</button>
+											);
+										})}
+									</div>
+								) : (
+									<div className="rd-path-info py-2">
+										<div className="rd-path-name" style={{ color: cfg.color }}>
+											{activePathData.name.toUpperCase()}
+										</div>
+										<p className="rd-path-sub">{subtitle}</p>
+									</div>
+								)}
+							</>
+						)}
+					</div>
 
-				<div className="rd-slots">
-					<ProgressColumn
-						fillHeight={primTrackHeight}
-						trackHeight={primTrackHeight}
-						color={cfg.color}
-					/>
+					<div className="rd-slots">
+						<ProgressColumn
+							fillHeight={primTrackHeight}
+							trackHeight={primTrackHeight}
+							color={cfg.color}
+						/>
 
-					<SlotRow
-						slotIdx={0}
-						runes={ks}
-						selectedId={selectedKs}
-						isOpen={openSlot === 0}
-						prevFilled={true}
-						gradId={cfg.gradId}
-						color={cfg.color}
-						color2={cfg.color2}
-						onSelect={handleKsSelect}
-						onToggle={() => toggleSlot(0)}
-					/>
-					{([s1, s2, s3] as DdragonRune[][]).map((sr, i) => (
 						<SlotRow
-							key={i + 1}
-							slotIdx={i + 1}
-							runes={sr}
-							selectedId={selectedSlots[i] ?? null}
-							isOpen={openSlot === i + 1}
-							prevFilled={i === 0 ? selectedKs != null : selectedSlots[i - 1] != null}
+							slotIdx={0}
+							runes={ks}
+							selectedId={selectedKs}
+							isOpen={openSlot === 0}
+							prevFilled={true}
 							gradId={cfg.gradId}
 							color={cfg.color}
 							color2={cfg.color2}
-							onSelect={(id) => handleSlotSelect(i + 1, id)}
-							onToggle={() => toggleSlot(i + 1)}
+							onSelect={handleKsSelect}
+							onToggle={() => toggleSlot(0)}
+							isMobile={isMobile}
 						/>
-					))}
-				</div>
-			</div>
-
-			{/* ── Secondary column ───────────────────────────────────────── */}
-			<div className="rd-secondary">
-				<button
-					onClick={() => setShowSecDropdown((prev) => !prev)}
-					className="rd-path-header cursor-pointer text-left w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
-				>
-					<PathCircleBtn pathKey={secData?.key} fallbackGradId={cfg.gradId} />
-					{showSecDropdown ? (
-						<div className="flex gap-2">
-							{secPaths.map((p) => {
-								const sc = cfgFor(p.key);
-								return (
-									<button
-										key={p.key}
-										type="button"
-										className={clsx(
-											'rd-sec-path-btn',
-											secPathKey === p.key && 'rd-sec-path-btn--active'
-										)}
-										onClick={(e) => {
-											e.stopPropagation();
-											setSecPathKey((prev) =>
-												prev === p.key ? null : p.key
-											);
-										}}
-										title={p.name}
-									>
-										<img
-											src={`/images/runes/icon-${sc.shortKey}-36x36.png`}
-											alt={p.name}
-											draggable={false}
-										/>
-									</button>
-								);
-							})}
-						</div>
-					) : (
-						<div className="rd-path-info">
-							<div
-								className="rd-path-name"
-								style={{ color: secData ? cfgFor(secData.key).color : cfg.color }}
-							>
-								{secData ? secData.name.toUpperCase() : 'SELECT SECONDARY'}
-							</div>
-						</div>
-					)}
-				</button>
-
-				<div className="rd-sec-div" />
-
-				{secData ? (
-					<SecRuneGrid
-						secData={secData}
-						secPicks={secPicks}
-						onSelect={handleSecSelect}
-						fillHeight={secFillHeight}
-						trackHeight={secTrackHeight}
-					/>
-				) : (
-					<div className="rd-splash-rows">
-						<ProgressColumn
-							fillHeight="90px"
-							trackHeight={splashTrackHeight}
-							color={cfg.color}
-						/>
-						{[0, 1].map((i) => (
-							<SecSplashRow
-								key={i}
-								slotIdx={i}
+						{([s1, s2, s3] as DdragonRune[][]).map((sr, i) => (
+							<SlotRow
+								key={i + 1}
+								slotIdx={i + 1}
+								runes={sr}
+								selectedId={selectedSlots[i] ?? null}
+								isOpen={openSlot === i + 1}
+								prevFilled={
+									i === 0 ? selectedKs != null : selectedSlots[i - 1] != null
+								}
 								gradId={cfg.gradId}
 								color={cfg.color}
+								color2={cfg.color2}
+								onSelect={(id) => handleSlotSelect(i + 1, id)}
+								onToggle={() => toggleSlot(i + 1)}
+								isMobile={isMobile}
 							/>
 						))}
 					</div>
-				)}
+				</div>
+
+				{/* ── Secondary column ───────────────────────────────────────── */}
+				<div className="rd-secondary">
+					<button
+						onClick={() => setShowSecDropdown((prev) => !prev)}
+						className="rd-path-header cursor-pointer text-left w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
+					>
+						<PathCircleBtn pathKey={secData?.key} fallbackGradId={cfg.gradId} />
+						{showSecDropdown ? (
+							<div className="flex gap-2 flex-wrap">
+								{secPaths.map((p) => {
+									const sc = cfgFor(p.key);
+									return (
+										<button
+											key={p.key}
+											type="button"
+											className={clsx(
+												'rd-sec-path-btn',
+												secPathKey === p.key && 'rd-sec-path-btn--active'
+											)}
+											onClick={(e) => {
+												e.stopPropagation();
+												setSecPathKey((prev) =>
+													prev === p.key ? null : p.key
+												);
+											}}
+											title={p.name}
+										>
+											<img
+												src={`/images/runes/icon-${sc.shortKey}-36x36.png`}
+												alt={p.name}
+												draggable={false}
+											/>
+										</button>
+									);
+								})}
+							</div>
+						) : (
+							<div className="rd-path-info">
+								<div
+									className="rd-path-name"
+									style={{
+										color: secData ? cfgFor(secData.key).color : cfg.color,
+									}}
+								>
+									{secData ? secData.name.toUpperCase() : 'SELECT SECONDARY'}
+								</div>
+								{isMobile && secData && (
+									<p className="rd-path-sub">
+										{PATH_SUBTITLES[secData.key] ?? ''}
+									</p>
+								)}
+							</div>
+						)}
+					</button>
+
+					<div className={clsx('rd-sec-div', isMobile && 'rd-sec-div--visible')} />
+
+					{secData ? (
+						<SecRuneGrid
+							secData={secData}
+							secPicks={secPicks}
+							onSelect={handleSecSelect}
+							fillHeight={secFillHeight}
+							trackHeight={secTrackHeight}
+							isMobile={isMobile}
+						/>
+					) : (
+						<div className="rd-splash-rows">
+							<ProgressColumn
+								fillHeight="90px"
+								trackHeight={splashTrackHeight}
+								color={cfg.color}
+							/>
+							{[0, 1].map((i) => (
+								<SecSplashRow
+									key={i}
+									slotIdx={i}
+									gradId={cfg.gradId}
+									color={cfg.color}
+								/>
+							))}
+						</div>
+					)}
+				</div>
 			</div>
 		</div>
 	);

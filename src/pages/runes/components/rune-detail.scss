@@ -6,7 +6,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    padding: 30px;
+    @apply p-8 lg:p-12;
 }
 
 .rd-main-bg {
@@ -102,7 +102,6 @@
     @apply text-sm 3xl:text-base font-bold;
     font-family: "Beaufort", "BeaufortforLOL-Medium", sans-serif;
     letter-spacing: 0.12em;
-    line-height: 1.1;
 }
 
 .rd-path-sub {
@@ -582,7 +581,7 @@
 
 .rd-sec-track-col {
     position: relative;
-    width: 80px;
+    width: 84px;
     flex-shrink: 0;
     height: 192px;
 }
@@ -708,7 +707,7 @@
 .rd-construct-img ,
 .rd-secondary-construct-img{
     max-height: 100%;
-    max-width: 100%;
+    @apply max-w-[50%] xl:max-w-full;
     object-fit: contain;
     pointer-events: none;
     user-select: none;
@@ -729,8 +728,8 @@
 
 .rd-construct-ks {
     position: absolute;
-    bottom: 25px;
-    right: -95px;
+    @apply max-w-[50%] xl:max-w-full;
+    @apply bottom-4 -right-[105px]  xl:bottom-[25px] xl:right-[-95px];
     aspect-ratio: 1;
     object-fit: contain;
     pointer-events: none;
@@ -748,4 +747,226 @@
         opacity: 1;
         transform: scale(1);
     }
+}
+
+// ── Mobile layout ─────────────────────────────────────────────────
+
+.rd-root--mobile {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 16px 12px 20px;
+
+    .rd-perk-btn:hover .rd-perk-outer {
+        opacity: 0;
+    }
+
+    .rd-perk-btn--muted:hover {
+        filter: grayscale(1) brightness(0.72);
+    }
+}
+
+.rd-mobile-art {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: clamp(220px, 58vw, 320px);
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+
+    .rd-main-bg {
+        opacity: 0.65;
+        object-position: center top;
+    }
+
+    .rd-construct-img {
+        position: absolute;
+        right: -8%;
+        top: -12%;
+        width: 72%;
+        height: auto;
+        max-height: none;
+        max-width: none;
+        aspect-ratio: 1;
+        object-fit: contain;
+        opacity: 0.55;
+    }
+
+    .rd-secondary-construct-img {
+        position: absolute;
+        right: -5%;
+        top: 8%;
+        width: 58%;
+        height: auto;
+        max-height: none;
+        max-width: none;
+        aspect-ratio: 1;
+        object-fit: contain;
+        opacity: 0.45;
+    }
+
+    .rd-construct-ks {
+        position: absolute;
+        right: 6%;
+        top: 18%;
+        width: 38%;
+        height: auto;
+        max-width: none;
+        aspect-ratio: 1;
+        object-fit: contain;
+        opacity: 0.85;
+    }
+}
+
+.rd-mobile-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: clamp(140px, 38vw, 200px);
+}
+
+.rd-root--mobile .rd-primary {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+}
+
+.rd-root--mobile .rd-secondary {
+    width: 100%;
+    min-width: 0;
+    padding-left: 0;
+    margin-top: 8px;
+    overflow: visible;
+}
+
+.rd-root--mobile .rd-slots {
+    overflow: visible;
+    padding-bottom: 8px;
+}
+
+.rd-root--mobile .rd-slot {
+    height: auto;
+    min-height: 72px;
+    max-height: none;
+    align-items: flex-start;
+    padding: 10px 0;
+
+    &--ks {
+        min-height: 88px;
+        max-height: none;
+    }
+
+    &--open {
+        padding-bottom: 4px;
+    }
+
+    &--mobile.rd-slot--open.rd-slot--ks {
+        min-height: 0;
+    }
+}
+
+.rd-root--mobile .rd-slot-l {
+    width: 72px;
+    min-width: 72px;
+    padding-top: 2px;
+}
+
+.rd-root--mobile .rd-slot-r {
+    height: auto;
+    min-height: 0;
+    padding: 0 8px 0 12px;
+    overflow: visible;
+}
+
+.rd-root--mobile .rd-flourish {
+    left: 64px;
+    right: 8px;
+}
+
+.rd-root--mobile .rd-normal-flourish {
+    left: 64px;
+    right: 8px;
+}
+
+.rd-root--mobile .rd-desc-text {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.rd-desc-text--full {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.rd-mobile-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 4px;
+}
+
+.rd-mobile-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+
+    &--muted .rd-perk-btn {
+        filter: grayscale(1) brightness(0.72);
+    }
+
+    &--selected .rd-desc-name {
+        filter: brightness(1.1);
+    }
+}
+
+.rd-sec-div--visible {
+    display: block;
+    height: 1px;
+    margin: 8px 0 4px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(171, 143, 87, 0.45),
+        transparent
+    );
+}
+
+.rd-root--mobile .rd-sec-picker {
+    overflow: visible;
+    min-height: 0;
+}
+
+.rd-root--mobile .rd-sec-summary-row {
+    height: auto;
+    min-height: 72px;
+    padding: 10px 8px 10px 12px;
+}
+
+.rd-root--mobile .rd-sec-grid-row {
+    justify-content: flex-start;
+}
+
+.rd-root--mobile .rd-progress {
+    top: -36px;
+    left: -4px;
+    width: 72px;
+}
+
+.rd-root--mobile .rd-sec-track-col {
+    width: 72px;
+}
+
+.rd-root--mobile .rd-sec-track-slot {
+    width: 72px;
 }
