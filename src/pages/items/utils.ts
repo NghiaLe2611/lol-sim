@@ -9,6 +9,7 @@ export type DdragonItemApi = {
 	from: string[];
 	into: string[];
 	hideFromAll?: boolean;
+	stats?: Record<string, number>;
 };
 
 export type DdragonItemsPayload = {
@@ -39,6 +40,7 @@ export type SrItem = {
 	rank?: string[];
 	roles: string[];
 	iconOverlay?: boolean;
+	stats?: Record<string, number>;
 };
 
 function normalizeSrItemId(id: number | string): string {
@@ -284,6 +286,7 @@ function mapSrItemFromEntry(id: string, item: DdragonItemApi): SrItem | null {
 		into: item.into ?? [],
 		tags: item.tags ?? [],
 		roles: [],
+		stats: item.stats ?? {},
 	};
 }
 

@@ -8,6 +8,7 @@ import { Coins } from 'lucide-react';
 import React from 'react';
 import { SrItem } from '../utils';
 import { useAppContext } from '@/contexts/AppContext';
+import clsx from 'clsx';
 
 const POPOVER_CONTENT_CLASS =
 	'rounded-none border-hex-gold bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
@@ -97,9 +98,16 @@ interface ItemPopoverProps {
 	item: SrItem;
 	itemsById: Record<string, SrItem>;
 	showTree?: boolean;
+	popoverClassName?: string;
 	// patchVersion: string;
 }
-const ItemPopover = ({ children, item, itemsById, showTree = true }: ItemPopoverProps) => {
+const ItemPopover = ({
+	children,
+	item,
+	itemsById,
+	showTree = true,
+	popoverClassName,
+}: ItemPopoverProps) => {
 	return (
 		<HoverPopover
 			showTree={showTree}
@@ -108,7 +116,7 @@ const ItemPopover = ({ children, item, itemsById, showTree = true }: ItemPopover
 			sideOffset={0}
 			closeDelayMs={0}
 			content={<ItemHoverContent item={item} itemsById={itemsById} showTree={showTree} />}
-			contentClassName={POPOVER_CONTENT_CLASS}
+			contentClassName={clsx(POPOVER_CONTENT_CLASS, popoverClassName)}
 		>
 			{children}
 		</HoverPopover>

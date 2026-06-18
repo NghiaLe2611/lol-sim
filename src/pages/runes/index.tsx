@@ -1,5 +1,4 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
 import { STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
@@ -16,6 +15,44 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import BuildRune from './BuildRune';
+
+const PATH_COUNT = 5;
+
+function PathGridPlaceholder() {
+	return (
+		<>
+			{Array.from({ length: PATH_COUNT }, (_, i) => (
+				<div
+					key={i}
+					className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] dark:border-[#46372a]"
+					aria-hidden
+				>
+					<Skeleton className="aspect-[3/4] w-full rounded-none border-b-2 border-[#ab8f57] dark:border-[#46372a] bg-gray-200 dark:bg-gray-700" />
+					<div className="flex justify-center py-2.5">
+						<Skeleton className="h-4 w-20" />
+					</div>
+				</div>
+			))}
+		</>
+	);
+}
+
+function PathMobileListPlaceholder() {
+	return (
+		<>
+			{Array.from({ length: PATH_COUNT }, (_, i) => (
+				<Skeleton
+					key={i}
+					className={cn(
+						'h-[72px] w-full rounded-none',
+						i < PATH_COUNT - 1 && 'border-b-2 border-[#ab8f57] dark:border-[#46372a]'
+					)}
+					aria-hidden
+				/>
+			))}
+		</>
+	);
+}
 
 function RunePathMobileRow({
 	path,
@@ -104,8 +141,7 @@ export default function RunesPage() {
 	const paths = runesQuery.data ?? [];
 	const activePath = paths.find((p) => p.key === activePathKey) ?? null;
 	const sortedPaths = [...paths].sort((a, b) => a.id - b.id);
-
-	const isLoading = runesQuery.isLoading || runesQuery.isFetching;
+	const showPathPlaceholders = paths.length === 0 && !runesQuery.isError;
 
 	const toggleExpanded = (key: string) => {
 		setExpandedKeys((prev) => {
@@ -127,54 +163,63 @@ export default function RunesPage() {
 				</p>
 			</header>
 
-			{isLoading ? (
-				<div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-					<Spinner type="default" className="size-10 text-hex-gold" />
-					<Skeleton className="h-4 w-48" />
-				</div>
-			) : runesQuery.isError ? (
+			{runesQuery.isError ? (
 				<div className="flex items-center justify-center py-12">
 					<p className="text-center text-muted-foreground">Failed to load runes.</p>
 				</div>
 			) : (
 				<>
-					<div className="hidden gap-2 lg:grid lg:grid-cols-5">
-						{sortedPaths.map((path) => {
-							const isDimmed = hoverId !== null && hoverId !== path.key;
+					<div
+						className="hidden gap-2 lg:grid lg:grid-cols-5"
+						aria-busy={showPathPlaceholders}
+					>
+						{showPathPlaceholders ? (
+							<PathGridPlaceholder />
+						) : (
+							sortedPaths.map((path) => {
+								const isDimmed = hoverId !== null && hoverId !== path.key;
 
-							return (
-								<button
-									key={path.key}
-									type="button"
-									style={{ opacity: isDimmed ? 0.5 : 1 }}
-									onClick={() => setActivePathKey(path.key)}
-									onMouseEnter={() => setHoverId(path.key)}
-									onMouseLeave={() => setHoverId(null)}
-									className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 dark:border-[#46372a]"
-								>
-									<img
-										alt={path.name}
-										className="aspect-[3/4] w-full border-b-2 border-[#ab8f57] object-cover object-top dark:border-[#46372a]"
-										loading="lazy"
-										src={runePathCardUrl(path.key)}
-									/>
-									<p className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider lg:text-sm">
-										{path.name}
-									</p>
-								</button>
-							);
-						})}
+								return (
+									<button
+										key={path.key}
+										type="button"
+										style={{ opacity: isDimmed ? 0.5 : 1 }}
+										onClick={() => setActivePathKey(path.key)}
+										onMouseEnter={() => setHoverId(path.key)}
+										onMouseLeave={() => setHoverId(null)}
+										className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 dark:border-[#46372a]"
+									>
+										<img
+											alt={path.name}
+											className="aspect-[3/4] w-full border-b-2 border-[#ab8f57] object-cover object-top dark:border-[#46372a]"
+											loading="lazy"
+											src={runePathCardUrl(path.key)}
+										/>
+										<p className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider lg:text-sm">
+											{path.name}
+										</p>
+									</button>
+								);
+							})
+						)}
 					</div>
 
-					<div className="overflow-hidden border-2 border-[#ab8f57] lg:hidden dark:border-[#46372a]">
-						{sortedPaths.map((path) => (
-							<RunePathMobileRow
-								key={path.key}
-								expanded={expandedKeys.has(path.key)}
-								onToggle={() => toggleExpanded(path.key)}
-								path={path}
-							/>
-						))}
+					<div
+						className="overflow-hidden border-2 border-[#ab8f57] lg:hidden dark:border-[#46372a]"
+						aria-busy={showPathPlaceholders}
+					>
+						{showPathPlaceholders ? (
+							<PathMobileListPlaceholder />
+						) : (
+							sortedPaths.map((path) => (
+								<RunePathMobileRow
+									key={path.key}
+									expanded={expandedKeys.has(path.key)}
+									onToggle={() => toggleExpanded(path.key)}
+									path={path}
+								/>
+							))
+						)}
 					</div>
 				</>
 			)}
