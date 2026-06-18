@@ -286,10 +286,25 @@ function MobileRuneList({
 
 // ─── Keystone Flourish separator ────────────────────────────────────────────
 
-function KsFlourish({ gradId, color, color2 }: { gradId: string; color: string; color2: string }) {
-	const gradIdLocal = `rd-fl-sep-${gradId}`;
+function KsFlourish({
+	gradId,
+	color,
+	color2,
+	inline,
+}: {
+	gradId: string;
+	color: string;
+	color2: string;
+	inline?: boolean;
+}) {
+	const gradIdLocal = `rd-fl-sep-${gradId}${inline ? '-inline' : ''}`;
 	return (
-		<svg className="rd-flourish" viewBox="0 0 286 9" preserveAspectRatio="none" aria-hidden>
+		<svg
+			className={clsx('rd-flourish my-4', inline && 'rd-flourish--inline')}
+			viewBox="0 0 286 9"
+			preserveAspectRatio="none"
+			aria-hidden
+		>
 			<defs>
 				<linearGradient id={gradIdLocal} x1="0%" y1="0%" x2="100%" y2="0%">
 					<stop stopColor={color2} stopOpacity={0} offset="0%" />
@@ -419,6 +434,14 @@ function SlotRow({
 						/>
 					) : (
 						<div className={clsx('rd-drawer', isKs && 'rd-drawer--ks')}>
+							{isKs && (
+								<KsFlourish
+									color={color}
+									color2={color2}
+									gradId={gradId}
+									inline
+								/>
+							)}
 							<div className="rd-drawer-row">
 								{runes.map((rune) => (
 									<RunePopover key={rune.id} rune={rune} side="top">
@@ -433,6 +456,14 @@ function SlotRow({
 									</RunePopover>
 								))}
 							</div>
+							{isKs && (
+								<KsFlourish
+									color={color}
+									color2={color2}
+									gradId={gradId}
+									inline
+								/>
+							)}
 						</div>
 					)
 				) : sel ? (
@@ -452,7 +483,9 @@ function SlotRow({
 			{/* Separator at bottom (except for last slot) */}
 			{slotIdx < 3 &&
 				(isKs ? (
-					<KsFlourish gradId={gradId} color={color} color2={color2} />
+					!isOpen && (
+						<KsFlourish color={color} color2={color2} gradId={gradId} />
+					)
 				) : (
 					<NormalFlourish color={color} />
 				))}
@@ -556,7 +589,7 @@ function SecRuneGrid({
 								</div>
 								{rowIdx <= 2 && (
 									<div
-                                        className={clsx("h-[1px] my-4", isMobile && 'hidden')}
+										className={clsx('h-[1px] my-4', isMobile && 'hidden')}
 										style={
 											{
 												'--rd-color': sc.color,
@@ -791,7 +824,7 @@ export default function RuneDetail({
 				</button>
 			)}
 
-			<div className={clsx(isMobile ? 'rd-mobile-body' :'flex gap-2')}>
+			<div className={clsx(isMobile ? 'rd-mobile-body' : 'flex gap-2')}>
 				{/* ── Primary column ─────────────────────────────────────────── */}
 				<div className="rd-primary">
 					<div className="rd-primary-header">
@@ -858,6 +891,7 @@ export default function RuneDetail({
 							color={cfg.color}
 						/>
 
+						{/* Ngọc siêu cấp */}
 						<SlotRow
 							slotIdx={0}
 							runes={ks}

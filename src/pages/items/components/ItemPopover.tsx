@@ -32,7 +32,7 @@ function ItemHoverContent({
 			<div className="flex gap-3 border-b border-[#bb994c] p-3 dark:border-[#5a4617]">
 				<img
 					alt=""
-					className="size-12 shrink-0 object-cover"
+					className="size-12 shrink-0 object-cover rounded-sm"
 					src={itemImgUrl(patchVersion as string, item.id)}
 				/>
 				<div className="min-w-0 flex-1">

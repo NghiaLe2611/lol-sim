@@ -547,43 +547,43 @@ export default function BuildPage() {
 			{
 				key: 'health',
 				value: calculatedStats.baseHp,
-				colorClass: 'text-green-400',
+				colorClass: 'text-green-500 dark:text-green-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'attackDamage',
 				value: calculatedStats.baseAd,
-				colorClass: 'text-orange-400',
+				colorClass: 'text-orange-500 dark:text-orange-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'attackSpeed',
 				value: calculatedStats.baseAs,
-				colorClass: 'text-yellow-400',
+				colorClass: 'text-yellow-500 dark:text-yellow-400',
 				format: (v: number) => v.toFixed(3),
 			},
 			{
 				key: 'armor',
 				value: calculatedStats.baseArmor,
-				colorClass: 'text-blue-400',
+				colorClass: 'text-blue-500 dark:text-blue-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'magicResistance',
 				value: calculatedStats.baseMr,
-				colorClass: 'text-purple-400',
+				colorClass: 'text-purple-500 dark:text-purple-400',
 				format: (v: number) => v.toFixed(1),
 			},
 			{
 				key: 'movespeed',
 				value: calculatedStats.baseMs,
-				colorClass: 'text-teal-400',
+				colorClass: 'text-teal-500 dark:text-teal-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'crit',
 				value: calculatedStats.totalCrit * 100,
-				colorClass: 'text-red-400',
+				colorClass: 'text-red-500 dark:text-red-400',
 				format: (v: number) => Math.round(v) + '%',
 			},
 		];
@@ -603,13 +603,13 @@ export default function BuildPage() {
 				{/* ─── LEFT COLUMN: Champion, Level, Stats ─────────────────── */}
 				<div className="space-y-6 shrink-0">
 					{/* Champion Selection Panel */}
-					<div className="hex-border rounded-md bg-[#040a10]">
-						<h3 className="text-xs text-hex-gold font-bold tracking-wider uppercase rounded-t-md p-3 border-b border-hex-gold/30 bg-[#07131b]">
+					<div className="hex-border rounded-md">
+						<h3 className="text-xs text-hex-gold font-bold tracking-wider uppercase rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
 							Champion Selection
 						</h3>
 						<div className="p-3 space-y-3">
 							<Input
-								className="w-full border border-hex-gold/30 bg-[#070f19] text-xs h-9"
+								className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9"
 								placeholder="Search by name..."
 								value={championSearch}
 								onChange={(e) => setChampionSearch(e.target.value)}
@@ -637,7 +637,7 @@ export default function BuildPage() {
 							</div>
 
 							{/* Champions grid list */}
-							<div className="grid grid-cols-8 lg:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto p-2 border border-hex-gold/20 rounded bg-[#070d14]">
+							<div className="grid grid-cols-8 lg:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
 								{championsQuery.isLoading ? (
 									Array.from({ length: 12 }).map((_, i) => (
 										<div
@@ -658,7 +658,7 @@ export default function BuildPage() {
 												type="button"
 												onClick={() => setSelectedChampionId(champ.id)}
 												className={clsx(
-													'flex flex-col items-center justify-center p-0.5 rounded border-2 transition-all bg-[#08111a] overflow-hidden',
+													'flex flex-col items-center justify-center p-0.5 rounded border-2 transition-all bg-gray-200 dark:bg-[#08111a] overflow-hidden',
 													isSelected
 														? 'border-hex-gold scale-100 ring-1 ring-hex-gold/40'
 														: 'border-transparent hover:border-hex-gold/30'
@@ -689,7 +689,7 @@ export default function BuildPage() {
 					</div>
 
 					{/* Level Slider Panel */}
-					<div className="bg-[#0b1319] border border-hex-gold/20 p-4 rounded-md">
+					<div className="hex-border rounded-md p-4">
 						<div className="flex justify-between items-center mb-2">
 							<span className="text-xs uppercase text-hex-gold font-bold tracking-wider">
 								Level
@@ -707,7 +707,7 @@ export default function BuildPage() {
 					</div>
 
 					{/* Base Stats Panel */}
-					<div className="bg-[#0b1319] border border-hex-gold/20 p-4 rounded-md">
+					<div className="hex-border rounded-md p-4">
 						<h4 className="text-xs uppercase text-hex-gold font-bold tracking-wider border-b border-hex-gold/10 pb-2 mb-3">
 							Base Stat (Lv {level})
 						</h4>
@@ -749,10 +749,10 @@ export default function BuildPage() {
 				{/* ─── RIGHT COLUMN: Build Slots & Items Selection ─────────── */}
 				<div className="space-y-6">
 					{/* Build Slots Panel */}
-					<div className="hex-border rounded-md bg-[#040a10]">
-						<div className="flex justify-between items-center rounded-t-md p-3 border-b border-hex-gold/30 bg-[#07131b]">
+					<div className="hex-border rounded-md">
+						<div className="flex justify-between items-center rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
 							<h3 className="text-xs text-hex-gold font-bold tracking-wider uppercase">
-								Build Slots (6 slots)
+								Build Slots
 							</h3>
 							{/* {editingSlot !== null && (
 								<span className="text-[10px] px-2 py-0.5 border border-hex-gold/30 rounded text-muted-foreground font-semibold bg-hex-gold/10">
@@ -773,10 +773,10 @@ export default function BuildPage() {
 										onContextMenu={(e) => handleContextMenu(e, index)}
 										onClick={() => setEditingSlot(index)}
 										className={clsx(
-											'relative aspect-square flex flex-col items-center justify-center border rounded-md cursor-pointer transition-all bg-[#070d14] overflow-hidden group',
+											'relative aspect-square flex flex-col items-center justify-center border rounded-md cursor-pointer transition-all bg-gray-200/60 hover:bg-gray-200 dark:bg-[#0b1319] hover:dark:bg-[#09111b] overflow-hidden group',
 											isActive
-												? 'border-hex-gold ring-1 ring-hex-gold/50 bg-[#0c202e]'
-												: 'border-hex-gold/20 hover:border-hex-gold/40 hover:bg-[#09111b]'
+												? 'border-hex-gold ring-1 ring-hex-gold/50 dark:bg-[#0c202e]'
+												: 'border-hex-gold/20 hover:border-hex-gold/40'
 										)}
 									>
 										{item ? (
@@ -790,7 +790,7 @@ export default function BuildPage() {
 														<img
 															src={itemImgUrl(patchVersion!, item.id)}
 															alt={item.name}
-															className="w-[70%] aspect-square object-cover"
+															className="aspect-square object-cover rounded-md"
 														/>
 														<span className="text-[9px] text-muted-foreground w-full text-center mt-1.5 px-1 font-medium">
 															{item.name}
@@ -803,10 +803,10 @@ export default function BuildPage() {
 														e.stopPropagation();
 														handleRemoveItem(index);
 													}}
-													className="hidden group-hover:flex absolute top-1 right-1 size-4 hover:opacity-80 items-center justify-center text-red-500 z-10 transition-colors opacity-80 group-hover:opacity-100"
+													className="hidden group-hover:flex absolute top-1.5 right-1.5 size-4 rounded-full hover:opacity-80 items-center justify-center bg-red-500/80 text-white z-10 transition-colors"
 													title="Remove item"
 												>
-													<X className="size-2.5" />
+													<X className="size-3" />
 												</button>
 											</div>
 										) : (
@@ -824,12 +824,12 @@ export default function BuildPage() {
 					</div>
 
 					{/* Item Selection list with categories and tags */}
-					<div className="hex-border rounded-md bg-[#040a10] p-4 space-y-4">
+					<div className="hex-border rounded-md p-4 space-y-4">
 						<div className="flex flex-col gap-3">
 							{/* Item search bar */}
 							<div className="relative">
 								<Input
-									className="w-full border border-hex-gold/30 bg-[#070f19] text-xs h-9 pl-9"
+									className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 pl-9"
 									placeholder="Search by item name..."
 									value={itemSearch}
 									onChange={(e) => setItemSearch(e.target.value)}
@@ -907,7 +907,7 @@ export default function BuildPage() {
 						</div>
 
 						{/* Items list grid container */}
-						<div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 2xl:grid-cols-12 gap-3 max-h-[360px] overflow-y-auto p-3 border border-hex-gold/20 rounded bg-[#070d14]">
+						<div className="grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] overflow-y-auto p-3 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
 							{itemsQuery.isLoading ? (
 								Array.from({ length: 24 }).map((_, i) => (
 									<div
@@ -930,19 +930,21 @@ export default function BuildPage() {
 										<button
 											type="button"
 											onClick={() => handleItemSelect(item.id)}
-											className="flex flex-col items-center justify-between p-2 rounded border border-hex-gold/20 bg-[#09111b] hover:bg-[#0f1b27] hover:border-hex-gold/50 transition-all text-center aspect-[5/6] min-w-0"
+											className="w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 transition-all text-center aspect-[5/6] min-w-0"
 										>
-											<img
-												src={itemImgUrl(patchVersion!, item.id)}
-												alt={item.name}
-												className="size-10 object-cover"
-											/>
-											{/* truncate */}
-											<div className="text-[10px] font-semibold text-muted-foreground w-full px-0.5">
-												{item.name}
-											</div>
-											<div className="text-[10px] text-hex-gold/80 font-bold mt-0.5">
-												{item.goldTotal}g
+											<div className="flex flex-col items-center p-2 w-full h-full">
+												<img
+													src={itemImgUrl(patchVersion!, item.id)}
+													alt={item.name}
+													className="size-10 object-cover rounded-md mb-1"
+												/>
+												{/* truncate */}
+												<div className="text-[10px] font-semibold text-muted-foreground w-full px-0.5">
+													{item.name}
+												</div>
+												<div className="text-[10px] text-hex-gold/80 font-bold mt-auto">
+													{item.goldTotal}g
+												</div>
 											</div>
 										</button>
 									</ItemPopover>

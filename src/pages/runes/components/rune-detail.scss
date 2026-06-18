@@ -381,6 +381,16 @@
     transform: translateY(50%);
     z-index: 2;
     overflow: visible;
+
+    &--inline {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+        width: 100%;
+        flex-shrink: 0;
+    }
 }
 
 .rd-normal-flourish {
@@ -462,8 +472,14 @@
     flex-wrap: wrap;
 }
 
-.rd-drawer--ks .rd-drawer-row {
+.rd-drawer--ks {
+    justify-content: center;
     gap: 10px;
+
+    .rd-drawer-row {
+        gap: 10px;
+        flex-shrink: 0;
+    }
 }
 
 // ── Selected rune description ─────────────────────────────────────
