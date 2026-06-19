@@ -99,6 +99,7 @@ interface ItemPopoverProps {
 	itemsById: Record<string, SrItem>;
 	showTree?: boolean;
 	popoverClassName?: string;
+	triggerClassName?: string;
 	// patchVersion: string;
 }
 const ItemPopover = ({
@@ -107,6 +108,7 @@ const ItemPopover = ({
 	itemsById,
 	showTree = true,
 	popoverClassName,
+	triggerClassName
 }: ItemPopoverProps) => {
 	return (
 		<HoverPopover
@@ -117,6 +119,7 @@ const ItemPopover = ({
 			closeDelayMs={0}
 			content={<ItemHoverContent item={item} itemsById={itemsById} showTree={showTree} />}
 			contentClassName={clsx(POPOVER_CONTENT_CLASS, popoverClassName)}
+			triggerClassName={triggerClassName}
 		>
 			{children}
 		</HoverPopover>

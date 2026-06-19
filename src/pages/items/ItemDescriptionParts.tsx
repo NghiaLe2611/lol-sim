@@ -7,7 +7,7 @@ export function ItemDescriptionParts({ parts }: { parts: ItemDescriptionPart[] }
 			{parts.map((part, i) => {
 				if (part.kind === 'colored') {
 					return (
-						<span key={i} className={ITEM_TAG_TEXT_CLASS[part.tag]}>
+						<span key={i} className={`${ITEM_TAG_TEXT_CLASS[part.tag]} font-semibold`}>
 							{' '}
 							{part.value}{' '}
 						</span>

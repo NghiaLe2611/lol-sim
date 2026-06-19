@@ -108,6 +108,10 @@
 		--shadow-gold: 0 0 30px -5px color-mix(in oklab, hsl(var(--hex-gold)) 60%, transparent);
 
 		--contrast: 0 0% 25%;
+		--bg-scrollbar: #ddb1495b;
+		--bg-scrollbar-hover: #daac3e96;
+		--destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
 	}
 
 	html.light {
@@ -173,6 +177,10 @@
 		--shadow-gold: 0 0 28px -6px color-mix(in oklab, hsl(var(--hex-gold)) 35%, transparent);
 
 		--contrast: 0 0% 95%;
+		--bg-scrollbar: #ddb149;
+		--bg-scrollbar-hover: #efbf4e;
+		--destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
 	}
 
 	* {
@@ -280,6 +288,58 @@
 			background-size: 160% 100%;
 		}
 	}
+}
+
+@layer utilities {
+    .custom-scrollbar {
+        overflow: auto;
+        /* padding: 0 2px; */
+
+        &::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-button {
+            display: none;
+        }
+
+        &::-webkit-scrollbar-track-piece {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+			min-height: 40px; 
+            background: var(--bg-scrollbar);
+            border-radius: 9999px;
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			&:hover{
+				background: var(--bg-scrollbar-hover);
+			}
+
+        }
+
+        &::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+
+        /* &::-webkit-scrollbar-track{
+         *     margin-left: 4px;
+         * }
+         */
+    }
+}
+
+@layer utilities {
+    .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+        width: 0;
+        height: 0;
+    }
 }
 
 .filter-icon {

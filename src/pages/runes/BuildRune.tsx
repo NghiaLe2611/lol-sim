@@ -1,6 +1,6 @@
 import { STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import RunePopover from '@/pages/runes/components/RunePopover';
 import { parseRunePaths, runePerkImgUrl, type DdragonRunePath } from '@/pages/runes/utils';
 import { getRunes } from '@/services/api';

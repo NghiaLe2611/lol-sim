@@ -23,6 +23,9 @@ export type ItemBonusMeta = {
 	/** From `shop.tags` only — champion role tags (FIGHTER, MARKSMAN, …). */
 	roles: string[];
 	iconOverlay?: boolean;
+	passives?: Record<string, any>[] | undefined;
+	stats?: Record<string, any> | undefined;
+	group?: string;
 };
 
 export type SrItem = {
@@ -40,7 +43,12 @@ export type SrItem = {
 	rank?: string[];
 	roles: string[];
 	iconOverlay?: boolean;
-	stats?: Record<string, number>;
+	/** DDragon stat modifiers from items API (FlatHPPoolMod, PercentAttackSpeedMod, …). */
+	attrs?: Record<string, number>;
+	/** Meraki bonus stats from bonus items API. */
+	stats?: Record<string, any>;
+	passives?: Record<string, any>[] | undefined;
+	group?: string;
 };
 
 function normalizeSrItemId(id: number | string): string {
@@ -70,6 +78,9 @@ export function selectBonusItemsById(raw: unknown): Record<string, ItemBonusMeta
 			rank: Array.isArray(rankRaw) ? rankRaw.map(String) : [],
 			roles,
 			iconOverlay: iconOverlay === true,
+			passives: row.passives,
+			stats: row.stats,
+			group: row.group,
 		};
 	}
 	return out;
@@ -82,9 +93,12 @@ export function applyBonusToSrItem(item: SrItem, bonus?: ItemBonusMeta): SrItem 
 
 	return {
 		...item,
+		roles: bonus.roles,
 		// tier: bonus.tier,
 		// rank: bonus.rank.length > 0 ? bonus.rank : undefined,
-		roles: bonus.roles,
+		passives: bonus.passives,
+		stats: bonus.stats,
+		group: bonus.group,
 	};
 }
 
@@ -181,7 +195,7 @@ const ITEM_TAG_TO_DDRAGON: Record<ItemTagFilter, readonly string[]> = {
 	lethality: ['ArmorPenetration'],
 	'magic pen': ['MagicPenetration'],
 	HP: ['Health'],
-	'ability haste': ['AbilityHaste'],
+	'ability haste': ['AbilityHaste', 'CooldownReduction'],
 	'movement speed': ['Boots', 'NonbootsMovement'],
 };
 
@@ -193,6 +207,74 @@ export function matchesItemTagFilter(tagFilter: string | null, tags: string[]): 
 
 	const tagSet = new Set(tags);
 	return ddragonTags.some((t) => tagSet.has(t));
+}
+
+/** UI tag label → bonus item `stats` keys (OR within each entry). */
+const ITEM_TAG_TO_BONUS_STAT: Record<ItemTagFilter, readonly string[]> = {
+	'attack damage': ['attackDamage', 'physicalDamage'],
+	'attack speed': ['attackSpeed'],
+	'critical strike': ['crit', 'criticalStrike'],
+	'on hit': ['onHit'],
+	'life steal': ['lifeSteal', 'spellVamp', 'omnivamp'],
+	'magic damage': ['abilityPower', 'magicDamage', 'spellDamage'],
+	mana: ['mana'],
+	armor: ['armor'],
+	'magic resistance': ['magicResistance'],
+	lethality: ['lethality', 'armorPenetration'],
+	'magic pen': ['magicPenetration'],
+	HP: ['health'],
+	'ability haste': ['abilityHaste', 'cooldownReduction'],
+	'movement speed': ['movespeed', 'movementSpeed'],
+};
+
+function getBonusStatMagnitude(value: unknown): number {
+	if (value == null) return 0;
+	if (typeof value === 'number') return Math.abs(value);
+	if (typeof value === 'object') {
+		const o = value as Record<string, unknown>;
+		let sum = 0;
+		for (const k of ['flat', 'percent', 'perLevel', 'percentPerLevel']) {
+			const n = o[k];
+			if (typeof n === 'number') sum += Math.abs(n);
+		}
+		return sum;
+	}
+	return 0;
+}
+
+function hasBonusStat(stats: Record<string, any>, keys: readonly string[]): boolean {
+	return keys.some((key) => getBonusStatMagnitude(stats[key]) > 0);
+}
+
+/** Match tag chip via Meraki bonus `stats` (when bonus items API is available). */
+export function matchesItemTagFilterByBonusStats(
+	tagFilter: string | null,
+	stats: Record<string, any> | undefined
+): boolean {
+	if (!tagFilter || !stats) return false;
+
+	const bonusKeys = ITEM_TAG_TO_BONUS_STAT[tagFilter as ItemTagFilter];
+	if (!bonusKeys) return false;
+
+	return hasBonusStat(stats, bonusKeys);
+}
+
+/**
+ * Tag chip filter for build/items: bonus `stats` when API works, else DDragon `tags`.
+ * Same chip labels as `ITEM_TAG_FILTERS`; fallback matches `matchesItemTagFilter`.
+ */
+export function matchesItemTagFilterForItem(
+	tagFilter: string | null,
+	item: SrItem,
+	options?: { bonusAvailable?: boolean }
+): boolean {
+	if (!tagFilter) return true;
+
+	if (options?.bonusAvailable && matchesItemTagFilterByBonusStats(tagFilter, item.stats)) {
+		return true;
+	}
+
+	return matchesItemTagFilter(tagFilter, item.tags);
 }
 
 const SR_ITEM_ID = /^\d{4}$/;
@@ -286,7 +368,7 @@ function mapSrItemFromEntry(id: string, item: DdragonItemApi): SrItem | null {
 		into: item.into ?? [],
 		tags: item.tags ?? [],
 		roles: [],
-		stats: item.stats ?? {},
+		attrs: item.stats ?? {},
 	};
 }
 
@@ -408,4 +490,50 @@ export function parseItemDescription(description: string): {
 		statLines: parseItemStatLines(description),
 		passives: parseItemPassives(description),
 	};
+}
+
+// Filter build items
+export function isBuildableItem(item: SrItem): boolean {
+	return (
+		item.goldTotal > 0 &&
+		!item.tags?.includes('Vision') &&
+		['Consumable', 'Lane'].every((string) => !item.tags?.includes(string))
+	);
+}
+
+// Filter items by their main category using DDragon shop tags for the Build page
+export function matchesBuildCategory(category: string, itemTags: string[]): boolean {
+	if (category === 'all') return true;
+	const tagSet = new Set(itemTags);
+	if (category === 'attack') {
+		return (
+			tagSet.has('Damage') ||
+			tagSet.has('AttackSpeed') ||
+			tagSet.has('CriticalStrike') ||
+			tagSet.has('ArmorPenetration')
+		);
+	}
+	if (category === 'magic') {
+		return tagSet.has('SpellDamage') || tagSet.has('MagicPenetration') || tagSet.has('Mana');
+	}
+	if (category === 'defense') {
+		return (
+			tagSet.has('Armor') ||
+			tagSet.has('SpellBlock') ||
+			tagSet.has('Health') ||
+			tagSet.has('HealthRegen')
+		);
+	}
+	if (category === 'support') {
+		return (
+			tagSet.has('Support') ||
+			tagSet.has('GoldInflow') ||
+			tagSet.has('Aura') ||
+			tagSet.has('Active')
+		);
+	}
+	if (category === 'boots') {
+		return tagSet.has('Boots');
+	}
+	return true;
 }

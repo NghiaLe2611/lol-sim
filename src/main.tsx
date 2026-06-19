@@ -11,6 +11,7 @@ import './i18n';
 
 import '@/styles/main.scss';
 import { TooltipProvider } from './components/ui/tooltip';
+import { Toaster } from './components/ui/toaster';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function renderApp() {
 					<ThemeProvider>
 						<BrowserRouter>
 							<TooltipProvider delayDuration={0}>
+								<Toaster />
 								<App />
 							</TooltipProvider>
 						</BrowserRouter>

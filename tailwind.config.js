@@ -64,6 +64,22 @@ export default {
 				'hex-blue': 'var(--hex-blue)',
 				'hex-blue-glow': 'var(--hex-blue-glow)',
 				'hex-bg-deep': 'var(--hex-bg-deep)',
+				success: {
+                    DEFAULT: '#16a34a',
+                    hover: '#15803d',
+                    active: '#166534',
+                    disabled: '#86efac',
+                },
+                warning: {
+                    DEFAULT: '#d6a304',
+                    hover: '#ca8a04',
+                    active: '#d97706',
+                    disabled: '#fcd34d',
+                },
+                destructive: {
+                    DEFAULT: 'hsl(var(--destructive))',
+                    foreground: 'hsl(var(--destructive-foreground))',
+                },
 			},
 			boxShadow: {
 				hex: 'var(--shadow-hex)',

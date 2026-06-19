@@ -8,7 +8,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { links } from '@/constants/common';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/useMobile';
 import { useTheme } from '@/providers/theme-provider';
 import { Menu, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ import VersionTag from './VersionTag';
 const headerClassName =
 	'border-border/60 bg-background/70 sticky top-0 z-40 border-b shadow-[0_4px_6px_-1px_rgba(83,83,83,0.1)] backdrop-blur-md bg-sky-100/5 dark:shadow-[0_4px_6px_-1px_#0a2738]';
 const sidebarClassName =
-	'border-border/60 bg-sky-100 dark:bg-background inset-x-auto inset-y-0 left-0 top-0 bottom-0 mt-0 h-full w-[min(100%,280px)] max-w-[85vw] rounded-none border-0 border-r shadow-[4px_0_6px_-1px_rgba(83,83,83,0.1)] dark:shadow-[4px_0_6px_-1px_#0a2738] [&>div:first-child]:hidden';
+	'border-border/60 bg-sky-100 dark:bg-background inset-x-auto inset-y-0 left-0 top-0 bottom-0 mt-0 h-full w-[min(100%,280px)] max-w-[85vw] !rounded-none border-0 border-r shadow-[4px_0_6px_-1px_rgba(83,83,83,0.1)] dark:shadow-[4px_0_6px_-1px_#0a2738] [&>div:first-child]:hidden';
 
 function MobileHeader() {
 	const path = useLocation().pathname;
@@ -61,8 +61,8 @@ function MobileHeader() {
 			>
 				<DrawerContent className={sidebarClassName}>
 					<DrawerTitle className="sr-only">Menu</DrawerTitle>
-					<div className="flex h-full flex-col gap-6 px-6 py-6">
-						<Link className="flex items-center gap-4" onClick={closeSidebar} to="/">
+					<div className="flex h-full flex-col gap-6 py-4 sm:py-6">
+						<Link className="flex items-center gap-4 px-4 pb-4 border-b border-border" onClick={closeSidebar} to="/">
 							<img src="/images/logo.svg" alt="LOL Builder" className="w-8" />
 							<span className="display gold-text-flow text-xl font-bold">
 								{t('brand')}
@@ -94,7 +94,7 @@ function MobileHeader() {
 							})}
 						</ul>
 
-						<div className="mt-auto flex flex-col gap-4">
+						<div className="mt-auto flex flex-col gap-2 sm:gap-4 p-4">
 							<div className="flex items-center gap-2">
 								<span className="text-sm">Language:</span>{' '}
 								<Select

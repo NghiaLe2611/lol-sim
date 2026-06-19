@@ -20,8 +20,11 @@ import {
 	parseDdragonItemMap,
 	parseDdragonItems,
 	selectBonusItemsById,
+	isBuildableItem,
+	matchesBuildCategory,
+	ITEM_TAG_FILTERS,
+	matchesItemTagFilterForItem,
 	type DdragonItemsPayload,
-	type SrItem,
 } from '@/pages/items/utils';
 import { itemImgUrl, STALE_MS } from '@/constants/common';
 import ItemPopover from '@/pages/items/components/ItemPopover';
@@ -29,6 +32,8 @@ import './level-slider.scss';
 import { type ChampionListRow } from '@/types/champions';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { bonusStatAbbreviation } from '@/pages/champion-detail/utils';
+import { useCustomToast } from '@/hooks/useCustomToast';
+import { capitalizeText } from '@/utils/common';
 
 // Category definition matching standard LoL items
 type ItemCategory = 'all' | 'attack' | 'magic' | 'defense' | 'support' | 'boots';
@@ -53,103 +58,6 @@ const LANE_FILTERS: { id: ChampLaneFilter; label: string; mappedKey: string }[] 
 	{ id: 'ADC', label: 'ADC', mappedKey: 'AD' },
 	{ id: 'SP', label: 'SP', mappedKey: 'Support' },
 ];
-
-/**
- * Filter items by their main category using DDragon shop tags
- */
-const matchesCategory = (category: ItemCategory, itemTags: string[]) => {
-	if (category === 'all') return true;
-	const tagSet = new Set(itemTags);
-	if (category === 'attack') {
-		return (
-			tagSet.has('Damage') ||
-			tagSet.has('AttackSpeed') ||
-			tagSet.has('CriticalStrike') ||
-			tagSet.has('ArmorPenetration')
-		);
-	}
-	if (category === 'magic') {
-		return tagSet.has('SpellDamage') || tagSet.has('MagicPenetration') || tagSet.has('Mana');
-	}
-	if (category === 'defense') {
-		return (
-			tagSet.has('Armor') ||
-			tagSet.has('SpellBlock') ||
-			tagSet.has('Health') ||
-			tagSet.has('HealthRegen')
-		);
-	}
-	if (category === 'support') {
-		return (
-			tagSet.has('Support') ||
-			tagSet.has('GoldInflow') ||
-			tagSet.has('Aura') ||
-			tagSet.has('Active')
-		);
-	}
-	if (category === 'boots') {
-		return tagSet.has('Boots');
-	}
-	return true;
-};
-
-/**
- * Filter items by custom sub tag chips
- */
-const matchesSubFilter = (subFilter: string | null, item: SrItem) => {
-	if (!subFilter) return true;
-	const desc = item.description?.toLowerCase() || '';
-	const tagSet = new Set(item.tags || []);
-
-	switch (subFilter) {
-		case 'attack speed':
-			return tagSet.has('AttackSpeed') || desc.includes('attack speed');
-		case 'critical':
-			return tagSet.has('CriticalStrike') || desc.includes('critical strike');
-		case 'Life Steel':
-			return tagSet.has('LifeSteal') || tagSet.has('SpellVamp') || desc.includes('lifesteal');
-		case 'HP':
-			return tagSet.has('Health') || desc.includes('health');
-		case 'physical defense':
-			return tagSet.has('Armor') || desc.includes('armor');
-		case 'Magic Defense':
-			return (
-				tagSet.has('SpellBlock') ||
-				tagSet.has('MagicResist') ||
-				desc.includes('magic resist')
-			);
-		case 'Mana':
-			return tagSet.has('Mana') || desc.includes('mana');
-		case 'Movement speed':
-			return (
-				tagSet.has('Boots') ||
-				tagSet.has('NonbootsMovement') ||
-				desc.includes('movement speed')
-			);
-		case 'Spellblade':
-			return desc.includes('spellblade');
-		case 'shield':
-			return desc.includes('shield') || desc.includes('absorb');
-		case 'slow':
-			return tagSet.has('Slow') || desc.includes('slow');
-		case 'Haste':
-			return (
-				tagSet.has('AbilityHaste') ||
-				desc.includes('ability haste') ||
-				desc.includes('cooldown reduction')
-			);
-		case 'penetrate':
-			return (
-				tagSet.has('ArmorPenetration') ||
-				tagSet.has('MagicPenetration') ||
-				desc.includes('penetration')
-			);
-		case 'omnibump':
-			return desc.includes('omnivamp');
-		default:
-			return true;
-	}
-};
 
 const stats = [
 	'health',
@@ -180,6 +88,8 @@ export default function BuildPage() {
 	const [itemSearch, setItemSearch] = useState('');
 	const [activeCategory, setActiveCategory] = useState<ItemCategory>('all');
 	const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
+
+	const { showToast } = useCustomToast();
 
 	// ─── React Query Hooks ─────────────────────────────────────────
 
@@ -239,6 +149,10 @@ export default function BuildPage() {
 		return bonusItemsQuery.data ?? {};
 	}, [bonusItemsQuery.data]);
 
+	const hasBonusItems = Boolean(
+		bonusItemsQuery.isSuccess && Object.keys(bonusItemsById).length > 0
+	);
+
 	const srItems = useMemo(() => {
 		const itemsList = itemsQuery.data?.items ?? [];
 		return applyBonusToSrItems(itemsList, bonusItemsById);
@@ -288,17 +202,21 @@ export default function BuildPage() {
 	}, [championsQuery.data, selectedChampionId]);
 
 	const currentChampBonus = championBonusDetailQuery.data;
-	console.log(123, currentChampBonus);
+	// console.log('champion', currentChampBonus);
 
 	// Dynamically compute counts for item categories
 	const itemCategoryCounts = useMemo(() => {
+		const buildableItems = srItems.filter(isBuildableItem);
 		return {
-			all: srItems.length,
-			attack: srItems.filter((item) => matchesCategory('attack', item.tags)).length,
-			magic: srItems.filter((item) => matchesCategory('magic', item.tags)).length,
-			defense: srItems.filter((item) => matchesCategory('defense', item.tags)).length,
-			support: srItems.filter((item) => matchesCategory('support', item.tags)).length,
-			boots: srItems.filter((item) => matchesCategory('boots', item.tags)).length,
+			all: buildableItems.length,
+			attack: buildableItems.filter((item) => matchesBuildCategory('attack', item.tags))
+				.length,
+			magic: buildableItems.filter((item) => matchesBuildCategory('magic', item.tags)).length,
+			defense: buildableItems.filter((item) => matchesBuildCategory('defense', item.tags))
+				.length,
+			support: buildableItems.filter((item) => matchesBuildCategory('support', item.tags))
+				.length,
+			boots: buildableItems.filter((item) => matchesBuildCategory('boots', item.tags)).length,
 		};
 	}, [srItems]);
 
@@ -306,10 +224,14 @@ export default function BuildPage() {
 	const filteredItems = useMemo(() => {
 		const q = itemSearch.trim().toLowerCase();
 
-		let list = srItems.filter((item) => matchesCategory(activeCategory, item.tags));
+		let list = srItems.filter(isBuildableItem);
+
+		list = list.filter((item) => matchesBuildCategory(activeCategory, item.tags));
 
 		if (activeSubFilter) {
-			list = list.filter((item) => matchesSubFilter(activeSubFilter, item));
+			list = list.filter((item) =>
+				matchesItemTagFilterForItem(activeSubFilter, item, { bonusAvailable: hasBonusItems })
+			);
 		}
 
 		if (q) {
@@ -319,11 +241,12 @@ export default function BuildPage() {
 					(item.plaintext && item.plaintext.toLowerCase().includes(q))
 			);
 		}
-		return list.filter((item) => item.goldTotal > 0);
-	}, [srItems, itemSearch, activeCategory, activeSubFilter]);
 
-	// ─── Stat Calculations ─────────────────────────────────────────
+		return list;
+	}, [srItems, itemSearch, activeCategory, activeSubFilter, hasBonusItems]);
+	console.log(123, filteredItems);
 
+	// Stats calculations
 	const calculatedStats = useMemo(() => {
 		const lv = level - 1;
 		const factor = lv * (0.7025 + 0.0175 * lv); // Riot's official per-level factor
@@ -370,7 +293,8 @@ export default function BuildPage() {
 				}
 			}
 			if (s.criticalStrikeDamageModifier) {
-				const flatVal = s.criticalStrikeDamageModifier.flat ?? s.criticalStrikeDamageModifier;
+				const flatVal =
+					s.criticalStrikeDamageModifier.flat ?? s.criticalStrikeDamageModifier;
 				if (typeof flatVal === 'number') {
 					baseCritDamageModifier = flatVal;
 				}
@@ -414,7 +338,7 @@ export default function BuildPage() {
 				hasInfinityEdge = true;
 			}
 
-			const s = item.stats || {};
+			const s = item.attrs || {};
 			const hp = s.FlatHPPoolMod ?? 0;
 			const ad = s.FlatPhysicalDamageMod ?? 0;
 			const ap = s.FlatMagicDamageMod ?? 0;
@@ -446,7 +370,7 @@ export default function BuildPage() {
 
 		if (hasInfinityEdge) {
 			// Infinity Edge adds 40% (0.40) crit damage in modern LoL patches
-			itemCritDamage += 0.40;
+			itemCritDamage += 0.4;
 		}
 
 		// 3. Final outputs
@@ -504,11 +428,33 @@ export default function BuildPage() {
 		};
 	}, [currentChampBonus, currentChampDdr, level, build, itemsById]);
 
-	// ─── Callbacks ─────────────────────────────────────────────────
-
-	// Click item below to add to editing slot
+	// Add item to build slot
 	const handleItemSelect = (itemId: string) => {
 		if (editingSlot === null) return;
+
+		// Check group restriction
+		const selectedItem = itemsById[itemId];
+		if (selectedItem?.group) {
+			// Find if there's any other slot already containing an item from the same group
+			const hasSameGroup = build.some((otherItemId, index) => {
+				// Allow replacing the item in the current editing slot
+				if (index === editingSlot) return false;
+				if (!otherItemId) return false;
+
+				const otherItem = itemsById[otherItemId];
+				return otherItem && otherItem.group === selectedItem.group;
+			});
+
+			if (hasSameGroup) {
+				// Only 1 item of this group is allowed
+				showToast({
+					message: `Limited to 1 ${selectedItem.group.toUpperCase()} item.`,
+					severity: 'error',
+				});
+				return;
+			}
+		}
+
 		setBuild((prev) => {
 			const next = [...prev];
 			next[editingSlot] = itemId;
@@ -590,18 +536,46 @@ export default function BuildPage() {
 	}, [calculatedStats, level]);
 
 	return (
-		<div className="mx-auto w-full max-w-container px-6 py-12">
-			<header className="mb-8">
-				<h1 className="display gold-text text-4xl">BUILD CALCULATOR</h1>
-				<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
-					Pick a champion, set your level, allocate skill points and equip items.
-				</p>
+		<div className="mx-auto w-full max-w-container px-6 py-12 relative">
+			<header className="flex items-center justify-between mb-8">
+				<div>
+					<h1 className="display gold-text text-4xl">BUILD CALCULATOR</h1>
+					<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
+						Pick a champion, set your level, allocate skill points and equip items.
+					</p>
+				</div>
+				{/* Mobile */}
+				{selectedChampionId ? (
+					<div className="text-center xl:hidden flex flex-col items-center shrink-0 ml-4">
+						<img
+							src={getChampImgUrl(selectedChampionId)}
+							alt={(currentChampBonus?.name as string) || 'champion'}
+							className="w-10 h-10 rounded-full mx-auto"
+						/>
+						<span className="text-xs font-bold mt-1">{selectedChampionId}</span>
+					</div>
+				) : null}
 			</header>
 
+			{selectedChampionId ? (
+				<div className="absolute top-12 3xl:top-0 bottom-12 w-20 pointer-events-none hidden xl:block z-[10] right-6">
+					<div className="sticky top-24 pointer-events-auto text-center flex flex-col items-center">
+						<img
+							src={getChampImgUrl(selectedChampionId)}
+							alt={(currentChampBonus?.name as string) || 'champion'}
+							className="mb-1 w-12 h-12 3xl:w-20 3xl:h-20 rounded-full mx-auto border-2 border-hex-gold shadow-gold bg-[#040a10]"
+						/>
+						<span className="text-xs font-bold text-hex-gold px-2 py-0.5 block truncate max-w-full">
+							{selectedChampionId}
+						</span>
+					</div>
+				</div>
+			) : null}
+
 			{/* Main Layout Grid */}
-			<div className="grid gap-6 grid-cols-1 lg:grid-cols-[320px_1fr]">
-				{/* ─── LEFT COLUMN: Champion, Level, Stats ─────────────────── */}
-				<div className="space-y-6 shrink-0">
+			<div className="grid gap-3 xl:gap-6 grid-cols-1 lg:grid-cols-[320px_1fr]">
+				{/* Left column */}
+				<div className="space-y-3 xl:space-y-6 shrink-0">
 					{/* Champion Selection Panel */}
 					<div className="hex-border rounded-md">
 						<h3 className="text-xs text-hex-gold font-bold tracking-wider uppercase rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
@@ -637,12 +611,12 @@ export default function BuildPage() {
 							</div>
 
 							{/* Champions grid list */}
-							<div className="grid grid-cols-8 lg:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
+							<div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-2 max-h-[300px] custom-scrollbar p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
 								{championsQuery.isLoading ? (
 									Array.from({ length: 12 }).map((_, i) => (
 										<div
 											key={i}
-											className="aspect-square bg-gray-900 rounded animate-pulse border border-hex-gold/10"
+											className="aspect-square bg-gray-200 dark:bg-gray-900 rounded animate-pulse border border-hex-gold/10"
 										/>
 									))
 								) : filteredChampions.length === 0 ? (
@@ -660,7 +634,7 @@ export default function BuildPage() {
 												className={clsx(
 													'flex flex-col items-center justify-center p-0.5 rounded border-2 transition-all bg-gray-200 dark:bg-[#08111a] overflow-hidden',
 													isSelected
-														? 'border-hex-gold scale-100 ring-1 ring-hex-gold/40'
+														? 'border-hex-gold ring-1 ring-hex-gold/40'
 														: 'border-transparent hover:border-hex-gold/30'
 												)}
 												title={champ.name}
@@ -668,7 +642,7 @@ export default function BuildPage() {
 												<img
 													src={getChampImgUrl(champ.id)}
 													alt={champ.name}
-													className="w-full aspect-square object-cover"
+													className="w-full aspect-square object-cover hover:scale-105"
 												/>
 												<span
 													className={clsx(
@@ -688,66 +662,66 @@ export default function BuildPage() {
 						</div>
 					</div>
 
-					{/* Level Slider Panel */}
-					<div className="hex-border rounded-md p-4">
-						<div className="flex justify-between items-center mb-2">
-							<span className="text-xs uppercase text-hex-gold font-bold tracking-wider">
-								Level
-							</span>
-							<span className="text-sm text-hex-gold font-bold">Lv {level}</span>
+					<div className="hex-border rounded-md p-4 space-y-6">
+						{/* Level Slider Panel */}
+						<div>
+							<div className="flex justify-between items-center mb-2">
+								<span className="text-xs uppercase text-hex-gold font-bold tracking-wider">
+									Level
+								</span>
+								<span className="text-sm text-hex-gold font-bold">Lv {level}</span>
+							</div>
+							<Slider
+								value={[level]}
+								onValueChange={(val) => setLevel(val[0])}
+								min={1}
+								max={18}
+								step={1}
+								className="build-level-slider py-2"
+							/>
 						</div>
-						<Slider
-							value={[level]}
-							onValueChange={(val) => setLevel(val[0])}
-							min={1}
-							max={18}
-							step={1}
-							className="build-level-slider py-2"
-						/>
-					</div>
-
-					{/* Base Stats Panel */}
-					<div className="hex-border rounded-md p-4">
-						<h4 className="text-xs uppercase text-hex-gold font-bold tracking-wider border-b border-hex-gold/10 pb-2 mb-3">
-							Base Stat (Lv {level})
-						</h4>
-						<div className="space-y-2 text-xs">
-							{statsToShow.map((item) => {
-								const { short, label } =
-									item.key === 'level'
-										? { short: 'Lv', label: 'Level' }
-										: bonusStatAbbreviation(item.key);
-								return (
-									<div
-										key={item.key}
-										className={clsx(
-											'flex justify-between items-center py-1 border-b border-hex-gold/5 last:border-0',
-											item.key === 'level' &&
-												'border-t border-hex-gold/10 mt-2 pt-2'
-										)}
-									>
-										<Tooltip delayDuration={0}>
-											<TooltipTrigger asChild>
-												<span className="text-muted-foreground hover:cursor-help ">
-													{short}
-												</span>
-											</TooltipTrigger>
-											<TooltipContent className="pointer-events-none select-none bg-yellow-700 text-xs text-white dark:bg-[#624e1e] border border-hex-gold/30">
-												{label}
-											</TooltipContent>
-										</Tooltip>
-										<span className={cn('font-semibold', item.colorClass)}>
-											{item.format(item.value)}
-										</span>
-									</div>
-								);
-							})}
+						{/* Base Stats Panel */}
+						<div>
+							<h4 className="text-xs uppercase text-hex-gold font-bold tracking-wider border-b border-hex-gold/10 pb-2 mb-3">
+								Base Stat (Lv {level})
+							</h4>
+							<div className="space-y-2 text-xs">
+								{statsToShow.map((item) => {
+									const { short, label } =
+										item.key === 'level'
+											? { short: 'Lv', label: 'Level' }
+											: bonusStatAbbreviation(item.key);
+									return (
+										<div
+											key={item.key}
+											className={clsx(
+												'flex justify-between items-center py-1 border-b border-hex-gold/5 last:border-0',
+												item.key === 'level' &&
+													'border-t border-hex-gold/10 mt-2 pt-2'
+											)}
+										>
+											<Tooltip delayDuration={0}>
+												<TooltipTrigger asChild>
+													<span className="text-muted-foreground hover:cursor-help ">
+														{short}
+													</span>
+												</TooltipTrigger>
+												<TooltipContent className="pointer-events-none select-none bg-yellow-700 text-xs text-white dark:bg-[#624e1e] border border-hex-gold/30">
+													{label}
+												</TooltipContent>
+											</Tooltip>
+											<span className={cn('font-semibold', item.colorClass)}>
+												{item.format(item.value)}
+											</span>
+										</div>
+									);
+								})}
+							</div>
 						</div>
 					</div>
 				</div>
-
-				{/* ─── RIGHT COLUMN: Build Slots & Items Selection ─────────── */}
-				<div className="space-y-6">
+				{/* Right column */}
+				<div className="space-y-3 xl:space-y-6">
 					{/* Build Slots Panel */}
 					<div className="hex-border rounded-md">
 						<div className="flex justify-between items-center rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
@@ -762,7 +736,7 @@ export default function BuildPage() {
 						</div>
 
 						{/* Slots Row Grid */}
-						<div className="grid grid-cols-2 md:grid-cols-6 gap-3 p-4">
+						<div className="grid grid-cols-3 sm:grid-cols-6 gap-3 p-4">
 							{build.map((itemId, index) => {
 								const item = itemId ? itemsById[itemId] : null;
 								const isActive = editingSlot === index;
@@ -785,14 +759,15 @@ export default function BuildPage() {
 													item={item}
 													itemsById={itemsById}
 													showTree={false}
+													triggerClassName="w-full h-full"
 												>
-													<div className="w-full h-full p-2 relative flex flex-col items-center justify-center">
+													<div className="w-full h-full relative flex flex-col items-center justify-center">
 														<img
 															src={itemImgUrl(patchVersion!, item.id)}
 															alt={item.name}
-															className="aspect-square object-cover rounded-md"
+															className="aspect-square object-cover rounded-md mb-1.5 max-w-12 2xl:max-w-[initial]"
 														/>
-														<span className="text-[9px] text-muted-foreground w-full text-center mt-1.5 px-1 font-medium">
+														<span className="text-xs text-muted-foreground w-full text-center font-medium px-2">
 															{item.name}
 														</span>
 													</div>
@@ -825,9 +800,9 @@ export default function BuildPage() {
 
 					{/* Item Selection list with categories and tags */}
 					<div className="hex-border rounded-md p-4 space-y-4">
-						<div className="flex flex-col gap-3">
+						<div className="flex flex-col">
 							{/* Item search bar */}
-							<div className="relative">
+							<div className="relative mb-2">
 								<Input
 									className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 pl-9"
 									placeholder="Search by item name..."
@@ -838,7 +813,7 @@ export default function BuildPage() {
 							</div>
 
 							{/* Main category filter row */}
-							<div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-hex-gold/10 pb-2">
+							<div className="flex flex-wrap items-center gap-2 border-b border-hex-gold/20 mb-2">
 								{ITEM_CATEGORIES.map((cat) => {
 									const count = itemCategoryCounts[cat.id];
 									const isActive = activeCategory === cat.id;
@@ -851,7 +826,7 @@ export default function BuildPage() {
 											}}
 											type="button"
 											className={clsx(
-												'px-3 py-1 text-xs border-b-2 font-medium transition-all hover:opacity-80',
+												'p-1 text-xs border-b-2 font-medium transition-all hover:opacity-80',
 												isActive
 													? 'border-hex-gold text-hex-gold font-semibold'
 													: 'border-transparent text-muted-foreground'
@@ -863,24 +838,9 @@ export default function BuildPage() {
 								})}
 							</div>
 
-							{/* Sub-tag filters */}
+							{/* Sub-tag filters — same chips as items page */}
 							<div className="flex flex-wrap gap-1.5 p-1">
-								{[
-									'attack speed',
-									'critical',
-									'Life Steel',
-									'HP',
-									'physical defense',
-									'Magic Defense',
-									'Mana',
-									'Movement speed',
-									'Spellblade',
-									'shield',
-									'slow',
-									'Haste',
-									'penetrate',
-									'omnibump',
-								].map((tagChip) => {
+								{ITEM_TAG_FILTERS.map((tagChip) => {
 									const isActive = activeSubFilter === tagChip;
 									return (
 										<button
@@ -899,7 +859,7 @@ export default function BuildPage() {
 												}
 											)}
 										>
-											{tagChip}
+											{capitalizeText(tagChip)}
 										</button>
 									);
 								})}
@@ -907,12 +867,12 @@ export default function BuildPage() {
 						</div>
 
 						{/* Items list grid container */}
-						<div className="grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] overflow-y-auto p-3 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
+						<div className="grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] custom-scrollbar p-3 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
 							{itemsQuery.isLoading ? (
 								Array.from({ length: 24 }).map((_, i) => (
 									<div
 										key={i}
-										className="aspect-[4/5] bg-gray-900 rounded animate-pulse border border-hex-gold/10"
+										className="aspect-[4/5] bg-gray-200 dark:bg-gray-900 rounded animate-pulse border border-hex-gold/10"
 									/>
 								))
 							) : filteredItems.length === 0 ? (
@@ -933,16 +893,19 @@ export default function BuildPage() {
 											className="w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 transition-all text-center aspect-[5/6] min-w-0"
 										>
 											<div className="flex flex-col items-center p-2 w-full h-full">
-												<img
-													src={itemImgUrl(patchVersion!, item.id)}
-													alt={item.name}
-													className="size-10 object-cover rounded-md mb-1"
-												/>
-												{/* truncate */}
-												<div className="text-[10px] font-semibold text-muted-foreground w-full px-0.5">
-													{item.name}
+												{/* lg:block */}
+												<div className="flex-1 flex flex-col items-center justify-center">
+													<img
+														src={itemImgUrl(patchVersion!, item.id)}
+														alt={item.name}
+														className="size-10 object-cover rounded-md mb-1 mx-auto hover:scale-110"
+													/>
+													{/* truncate */}
+													<div className="text-[10px] font-semibold text-muted-foreground w-full px-0.5">
+														{item.name}
+													</div>
 												</div>
-												<div className="text-[10px] text-hex-gold/80 font-bold mt-auto">
+												<div className="text-[10px] text-hex-gold/80 font-bold">
 													{item.goldTotal}g
 												</div>
 											</div>
