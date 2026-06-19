@@ -583,7 +583,7 @@ export default function BuildPage() {
 						</h3>
 						<div className="p-3 space-y-3">
 							<Input
-								className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9"
+								className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 transition-none"
 								placeholder="Search by name..."
 								value={championSearch}
 								onChange={(e) => setChampionSearch(e.target.value)}
@@ -599,7 +599,7 @@ export default function BuildPage() {
 										}}
 										type="button"
 										className={clsx(
-											'text-[10px] py-1 border rounded-sm font-bold transition-all text-center uppercase',
+											'text-[10px] py-1 border rounded-sm font-bold text-center uppercase',
 											activeLane === filter.id
 												? 'bg-hex-gold/25 border-hex-gold text-hex-gold font-bold'
 												: 'border-hex-gold/20 text-muted-foreground bg-transparent hover:border-hex-gold/30 hover:text-gray-300'
@@ -632,7 +632,7 @@ export default function BuildPage() {
 												type="button"
 												onClick={() => setSelectedChampionId(champ.id)}
 												className={clsx(
-													'flex flex-col items-center justify-center p-0.5 rounded border-2 transition-all bg-gray-200 dark:bg-[#08111a] overflow-hidden',
+													'flex flex-col items-center justify-center p-0.5 rounded border-2 bg-gray-200 dark:bg-[#08111a] overflow-hidden',
 													isSelected
 														? 'border-hex-gold ring-1 ring-hex-gold/40'
 														: 'border-transparent hover:border-hex-gold/30'
@@ -747,7 +747,7 @@ export default function BuildPage() {
 										onContextMenu={(e) => handleContextMenu(e, index)}
 										onClick={() => setEditingSlot(index)}
 										className={clsx(
-											'relative aspect-square flex flex-col items-center justify-center border rounded-md cursor-pointer transition-all bg-gray-200/60 hover:bg-gray-200 dark:bg-[#0b1319] hover:dark:bg-[#09111b] overflow-hidden group',
+											'relative aspect-square flex flex-col items-center justify-center border rounded-md cursor-pointer bg-gray-200/60 hover:bg-gray-200 dark:bg-[#0b1319] hover:dark:bg-[#09111b] overflow-hidden group',
 											isActive
 												? 'border-hex-gold ring-1 ring-hex-gold/50 dark:bg-[#0c202e]'
 												: 'border-hex-gold/20 hover:border-hex-gold/40'
@@ -804,7 +804,7 @@ export default function BuildPage() {
 							{/* Item search bar */}
 							<div className="relative mb-2">
 								<Input
-									className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 pl-9"
+									className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 pl-9 transition-none"
 									placeholder="Search by item name..."
 									value={itemSearch}
 									onChange={(e) => setItemSearch(e.target.value)}
@@ -826,7 +826,7 @@ export default function BuildPage() {
 											}}
 											type="button"
 											className={clsx(
-												'p-1 text-xs border-b-2 font-medium transition-all hover:opacity-80',
+												'p-1 text-xs border-b-2 font-medium hover:opacity-80',
 												isActive
 													? 'border-hex-gold text-hex-gold font-semibold'
 													: 'border-transparent text-muted-foreground'
@@ -890,7 +890,7 @@ export default function BuildPage() {
 										<button
 											type="button"
 											onClick={() => handleItemSelect(item.id)}
-											className="w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 transition-all text-center aspect-[5/6] min-w-0"
+											className="w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 text-center aspect-[5/6] min-w-0"
 										>
 											<div className="flex flex-col items-center p-2 w-full h-full">
 												{/* lg:block */}
