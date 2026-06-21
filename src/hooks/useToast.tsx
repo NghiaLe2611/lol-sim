@@ -13,6 +13,8 @@ type ToasterToast = ToastProps & {
 	action?: ToastActionElement;
 	showCloseButton?: boolean;
 	clickToClose?: boolean;
+	/** When set, only one open toast with this key is allowed at a time. */
+	dedupeKey?: string;
 };
 
 const actionTypes = {
@@ -139,7 +141,24 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, 'id'>;
 
-function toast({ ...props }: Toast) {
+function toast({ dedupeKey, ...props }: Toast) {
+	if (dedupeKey) {
+		const existing = memoryState.toasts.find(
+			(t) => t.dedupeKey === dedupeKey && t.open !== false
+		);
+		if (existing) {
+			return {
+				id: existing.id,
+				dismiss: () => dispatch({ type: 'DISMISS_TOAST', toastId: existing.id }),
+				update: (updateProps: ToasterToast) =>
+					dispatch({
+						type: 'UPDATE_TOAST',
+						toast: { ...updateProps, id: existing.id },
+					}),
+			};
+		}
+	}
+
 	const id = genId();
 
 	const update = (props: ToasterToast) =>
@@ -153,6 +172,7 @@ function toast({ ...props }: Toast) {
 		type: 'ADD_TOAST',
 		toast: {
 			...props,
+			dedupeKey,
 			id,
 			open: true,
 			onOpenChange: (open) => {

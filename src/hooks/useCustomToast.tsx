@@ -14,6 +14,8 @@ interface UseCustomToastProps {
     position?: ToastPosition;
     translateKey?: string;
     translateValues?: Record<string, any>;
+    /** Only one open toast with this key at a time (e.g. repeated validation errors). */
+    dedupeKey?: string;
 }
 const CustomToast = ({ message }: { message?: string; }) => {
     return <div className='whitespace-pre-line'>{message}</div>;
@@ -32,6 +34,7 @@ export const useCustomToast = () => {
         position = 'top-right',
         translateKey,
         translateValues,
+        dedupeKey,
     }: UseCustomToastProps) => {
         const variantMap: Record<ToastSeverity, CustomVariant> = {
             success: 'success',
@@ -54,6 +57,7 @@ export const useCustomToast = () => {
             duration,
             action,
             position,
+            dedupeKey,
         });
     };
 

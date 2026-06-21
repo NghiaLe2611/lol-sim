@@ -71,12 +71,12 @@ export function selectBonusItemsById(raw: unknown): Record<string, ItemBonusMeta
 		const tierRaw = (row as { tier?: unknown }).tier;
 		const iconOverlay = (row as { iconOverlay?: unknown }).iconOverlay;
 
-		const roles = Array.isArray(shop?.tags) ? shop.tags.map((t) => String(t)) : [];
+		const roles = Array.isArray(shop?.tags) ? shop?.tags.map((t) => String(t)) : [];
 
 		out[id] = {
 			tier: typeof tierRaw === 'number' ? tierRaw : undefined,
 			rank: Array.isArray(rankRaw) ? rankRaw.map(String) : [],
-			roles,
+			roles: roles ?? [],
 			iconOverlay: iconOverlay === true,
 			passives: row.passives,
 			stats: row.stats,
@@ -161,6 +161,21 @@ export function matchesItemCategoryFilter(category: ItemCategoryFilter, tags: st
 
 	return false;
 }
+
+// ddragon stats
+export const ITEM_STATS_KEY = [
+	'FlatSpellBlockMod',
+	'FlatHPPoolMod',
+	'FlatMPPoolMod',
+	'FlatMagicDamageMod',
+	'PercentMovementSpeedMod',
+	'FlatMovementSpeedMod',
+	'FlatArmorMod',
+	'FlatPhysicalDamageMod',
+	'PercentAttackSpeedMod',
+	'PercentLifeStealMod',
+	'FlatCritChanceMod',
+];
 
 export const ITEM_TAG_FILTERS = [
 	'attack damage',

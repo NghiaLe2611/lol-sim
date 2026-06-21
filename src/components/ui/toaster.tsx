@@ -20,6 +20,7 @@ export function Toaster() {
 				description,
 				action,
 				showCloseButton = true,
+				dedupeKey: _dedupeKey,
 				...props
 			}) {
 				return (

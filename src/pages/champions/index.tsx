@@ -256,11 +256,11 @@ function ChampionsTableView({
 export default function ChampionsPage() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const { patchVersion: version } = useAppContext();
-	const { data, isPending, isError } = useQuery({
-		queryKey: ['champions'],
+	const { patchVersion: version, isPatchReady } = useAppContext();
+	const { data, isPending, isFetching, isError } = useQuery({
+		queryKey: ['champions', version],
 		queryFn: () => getChampions(version!),
-		enabled: Boolean(version),
+		enabled: isPatchReady,
 		staleTime: STALE_MS,
 		gcTime: STALE_MS,
 	});
@@ -335,8 +335,9 @@ export default function ChampionsPage() {
 		return sortChampions(matched, sort, bonusReleaseDates, bonusPositionsAvailable);
 	}, [list, search, roleFilter, bonusPositionsAvailable, sort, bonusReleaseDates]);
 
-	const patchAndListLoading = !isError && (!version || Boolean(version && isPending));
-	const showChampionGrid = Boolean(version) && !isPending && !isError && data;
+	const patchAndListLoading =
+		!isError && (!isPatchReady || isPending || (isFetching && data === undefined));
+	const showChampionGrid = isPatchReady && !isPending && !isError && Boolean(data);
 
 	const gridContent = useMemo(() => {
 		if (!version) return null;

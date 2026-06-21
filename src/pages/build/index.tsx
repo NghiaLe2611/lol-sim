@@ -189,6 +189,12 @@ export default function BuildPage() {
 		return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 	}, [championsQuery.data, championSearch, activeLane, bonusPositionsMap, bonusQuery.data]);
 
+	const championsGridLoading =
+		!championsQuery.isError &&
+		(!isPatchReady ||
+			championsQuery.isPending ||
+			(championsQuery.isFetching && championsQuery.data === undefined));
+
 	// Automatically select the first champion on load
 	useEffect(() => {
 		if (filteredChampions.length > 0 && !selectedChampionId) {
@@ -230,7 +236,9 @@ export default function BuildPage() {
 
 		if (activeSubFilter) {
 			list = list.filter((item) =>
-				matchesItemTagFilterForItem(activeSubFilter, item, { bonusAvailable: hasBonusItems })
+				matchesItemTagFilterForItem(activeSubFilter, item, {
+					bonusAvailable: hasBonusItems,
+				})
 			);
 		}
 
@@ -244,7 +252,13 @@ export default function BuildPage() {
 
 		return list;
 	}, [srItems, itemSearch, activeCategory, activeSubFilter, hasBonusItems]);
-	console.log(123, filteredItems);
+	console.log(111, filteredItems);
+    
+	const itemsGridLoading =
+		!itemsQuery.isError &&
+		(!isPatchReady ||
+			itemsQuery.isPending ||
+			(itemsQuery.isFetching && itemsQuery.data === undefined));
 
 	// Stats calculations
 	const calculatedStats = useMemo(() => {
@@ -450,6 +464,7 @@ export default function BuildPage() {
 				showToast({
 					message: `Limited to 1 ${selectedItem.group.toUpperCase()} item.`,
 					severity: 'error',
+					dedupeKey: `item-group-${selectedItem.group}`,
 				});
 				return;
 			}
@@ -611,53 +626,55 @@ export default function BuildPage() {
 							</div>
 
 							{/* Champions grid list */}
-							<div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-2 max-h-[300px] custom-scrollbar p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
-								{championsQuery.isLoading ? (
-									Array.from({ length: 12 }).map((_, i) => (
-										<div
-											key={i}
-											className="aspect-square bg-gray-200 dark:bg-gray-900 rounded animate-pulse border border-hex-gold/10"
-										/>
-									))
-								) : filteredChampions.length === 0 ? (
-									<div className="col-span-4 text-center py-8 text-xs text-muted-foreground">
-										No champions found
-									</div>
-								) : (
-									filteredChampions.map((champ) => {
-										const isSelected = selectedChampionId === champ.id;
-										return (
-											<button
-												key={champ.id}
-												type="button"
-												onClick={() => setSelectedChampionId(champ.id)}
-												className={clsx(
-													'flex flex-col items-center justify-center p-0.5 rounded border-2 bg-gray-200 dark:bg-[#08111a] overflow-hidden',
-													isSelected
-														? 'border-hex-gold ring-1 ring-hex-gold/40'
-														: 'border-transparent hover:border-hex-gold/30'
-												)}
-												title={champ.name}
-											>
-												<img
-													src={getChampImgUrl(champ.id)}
-													alt={champ.name}
-													className="w-full aspect-square object-cover hover:scale-105"
-												/>
-												<span
+							<div className="h-[300px] custom-scrollbar">
+								<div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-2 p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
+									{championsGridLoading ? (
+										Array.from({ length: 16 }).map((_, i) => (
+											<div
+												key={i}
+												className="aspect-square bg-gray-200 dark:bg-gray-900 rounded animate-pulse border border-hex-gold/10"
+											/>
+										))
+									) : filteredChampions.length === 0 ? (
+										<div className="col-span-full text-center py-8 text-xs text-muted-foreground">
+											No champions found
+										</div>
+									) : (
+										filteredChampions.map((champ) => {
+											const isSelected = selectedChampionId === champ.id;
+											return (
+												<button
+													key={champ.id}
+													type="button"
+													onClick={() => setSelectedChampionId(champ.id)}
 													className={clsx(
-														'text-[9px] mt-1 truncate w-full text-center px-0.5',
+														'flex flex-col items-center justify-center p-0.5 rounded border-2 bg-gray-200 dark:bg-[#08111a] overflow-hidden',
 														isSelected
-															? 'text-hex-gold'
-															: 'text-muted-foreground'
+															? 'border-hex-gold ring-1 ring-hex-gold/40'
+															: 'border-transparent hover:border-hex-gold/30'
 													)}
+													title={champ.name}
 												>
-													{champ.name}
-												</span>
-											</button>
-										);
-									})
-								)}
+													<img
+														src={getChampImgUrl(champ.id)}
+														alt={champ.name}
+														className="w-full aspect-square object-cover hover:scale-105"
+													/>
+													<span
+														className={clsx(
+															'text-[9px] mt-1 truncate w-full text-center px-0.5',
+															isSelected
+																? 'text-hex-gold'
+																: 'text-muted-foreground'
+														)}
+													>
+														{champ.name}
+													</span>
+												</button>
+											);
+										})
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -867,8 +884,13 @@ export default function BuildPage() {
 						</div>
 
 						{/* Items list grid container */}
-						<div className="grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] custom-scrollbar p-3 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
-							{itemsQuery.isLoading ? (
+						<div
+							className={clsx(
+								'grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] border border-hex-gold/20 rounded dark:bg-[#0b1319] custom-scrollbar',
+								itemsGridLoading && '!overflow-y-hidden'
+							)}
+						>
+							{itemsGridLoading ? (
 								Array.from({ length: 24 }).map((_, i) => (
 									<div
 										key={i}
@@ -876,7 +898,7 @@ export default function BuildPage() {
 									/>
 								))
 							) : filteredItems.length === 0 ? (
-								<div className="col-span-8 text-center py-12 text-xs text-muted-foreground">
+								<div className="col-span-full text-center py-12 text-xs text-muted-foreground">
 									No items found matching the filters
 								</div>
 							) : (
