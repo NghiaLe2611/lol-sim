@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { STALE_MS, splashChampionImg } from '@/constants/common';
@@ -18,7 +17,6 @@ import {
 	isBonusNumericStat,
 	laneTagsFromPositions,
 	roleTokenToBadge,
-	shouldShowBonusStatKey,
 } from '@/pages/champion-detail/utils';
 // import AbilityVideoDialog from '@/pages/champion-detail/AbilityVideoDialog';
 import HoverPopover from '@/components/HoverPopover';
@@ -55,6 +53,21 @@ export type { ChampionDetailApi } from '@/types/champions';
 
 const ABILITY_SLOTS = ['P', 'Q', 'W', 'E', 'R'] as const;
 const ATTRIBUTE_RADAR_MAX = 3;
+
+/** Bonus stat keys shown in champion detail stat grid (display order). */
+export const BONUS_STAT_GRID_KEYS = [
+	'health',
+	'healthRegen',
+	'mana',
+	'manaRegen',
+	'armor',
+	'magicResistance',
+	'attackDamage',
+	'attackSpeed',
+	'attackSpeedRatio',
+	'criticalStrikeDamage',
+	'movespeed',
+] as const;
 
 /** First five API attribute ratings → pentagon radar (icons in `public/images/icons/attrs`). */
 const ATTRIBUTE_RADAR_DEF = [
@@ -289,32 +302,6 @@ function AttributesRadarChart({ ratings }: { ratings?: BonusAttributeRatings }) 
 
 export function detectAttackRangeType(attackRange: number): 'Ranged' | 'Melee' {
 	return attackRange > 200 ? 'Ranged' : 'Melee';
-}
-
-const STAT_GRID_PRIORITY: readonly string[] = [
-	'health',
-	'healthRegen',
-	'mana',
-	'manaRegen',
-	'armor',
-	'magicResistance',
-	'attackDamage',
-	'attackSpeed',
-	'attackSpeedRatio',
-	'movespeed',
-	'attackRange',
-	'attackCastTime',
-	'attackTotalTime',
-	'attackDelayOffset',
-	'criticalStrikeDamage',
-	'gameplayRadius',
-];
-
-function sortStatKeys(keys: string[]): string[] {
-	const rank = new Map(STAT_GRID_PRIORITY.map((k, i) => [k, i]));
-	return [...keys].sort(
-		(a, b) => (rank.get(a) ?? 1e6) - (rank.get(b) ?? 1e6) || a.localeCompare(b)
-	);
 }
 
 function HighlightedAbilityText({ children: text }: { children: string }): ReactNode {
@@ -627,11 +614,10 @@ function BonusAbilityCard({
 
 function BonusStatGrid({ stats }: { stats: BonusChampionDetail['stats'] }) {
 	if (!stats) return null;
-	const keys = sortStatKeys(Object.keys(stats).filter((k) => shouldShowBonusStatKey(k)));
 
 	return (
 		<div className="grid gap-x-10 sm:grid-cols-2">
-			{keys.map((key) => {
+			{BONUS_STAT_GRID_KEYS.map((key) => {
 				const blob = stats[key];
 				if (!isBonusNumericStat(blob)) return null;
 				const { flat = 0, perLevel = 0, percent = 0, percentPerLevel = 0 } = blob;

@@ -27,7 +27,7 @@ export default function BonusStatGridCell({
 		extras.push(`${perLevelPct >= 0 ? '+' : ''}${perLevelPct}%/lvl`);
 
 	return (
-		<div className="border-border/40 flex flex-wrap justify-between gap-x-2 gap-y-0.5 border-b py-2 text-xs 2xl:text-sm">
+		<div className="border-b border-hex-gold/20 flex flex-wrap justify-between gap-x-2 gap-y-0.5 py-2 2xl:py-3 text-xs 2xl:text-sm">
 			<Tooltip delayDuration={0}>
 				<TooltipTrigger asChild>
 					<span className="text-muted-foreground hover:cursor-help">{short}</span>

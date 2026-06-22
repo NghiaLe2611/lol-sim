@@ -25,6 +25,7 @@ import {
 	ITEM_TAG_FILTERS,
 	matchesItemTagFilterForItem,
 	type DdragonItemsPayload,
+	type SrItem,
 } from '@/pages/items/utils';
 import { itemImgUrl, STALE_MS } from '@/constants/common';
 import ItemPopover from '@/pages/items/components/ItemPopover';
@@ -34,6 +35,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { bonusStatAbbreviation } from '@/pages/champion-detail/utils';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { capitalizeText } from '@/utils/common';
+import {
+	accumulateItemStatsFromBuild,
+	applyItemStatsToChampion,
+	type ChampionBaseStats,
+} from '@/pages/build/item-stats';
 
 // Category definition matching standard LoL items
 type ItemCategory = 'all' | 'attack' | 'magic' | 'defense' | 'support' | 'boots';
@@ -57,16 +63,6 @@ const LANE_FILTERS: { id: ChampLaneFilter; label: string; mappedKey: string }[] 
 	{ id: 'MID', label: 'MID', mappedKey: 'Mid' },
 	{ id: 'ADC', label: 'ADC', mappedKey: 'AD' },
 	{ id: 'SP', label: 'SP', mappedKey: 'Support' },
-];
-
-const stats = [
-	'health',
-	'attackDamage',
-	'armor',
-	'magicResistance',
-	'attackSpeed',
-	'movespeed',
-	'crit',
 ];
 
 export default function BuildPage() {
@@ -252,8 +248,8 @@ export default function BuildPage() {
 
 		return list;
 	}, [srItems, itemSearch, activeCategory, activeSubFilter, hasBonusItems]);
-	console.log(111, filteredItems);
-    
+	console.log({ filteredItems });
+
 	const itemsGridLoading =
 		!itemsQuery.isError &&
 		(!isPatchReady ||
@@ -265,76 +261,77 @@ export default function BuildPage() {
 		const lv = level - 1;
 		const factor = lv * (0.7025 + 0.0175 * lv); // Riot's official per-level factor
 
-		// 1. Calculate base stats at selected level
+		// 1. Champion base stats at selected level
 		let baseHp = 0;
+		let baseMana = 0;
 		let baseAd = 0;
 		let baseArmor = 0;
 		let baseMr = 0;
-		let baseAs = 0.625;
+		let baseAsRatio = 0.625;
 		let baseAsGrowth = 0;
 		let baseMs = 330;
-		let baseCritDamage = 1.75; // Default League of Legends base critical strike damage is 175% (1.75)
-		let baseCritDamageModifier = 1.0;
+		let baseCritPct = 0;
+		let critDamageBonus = 0;
 
-		// Use Meraki details if available, fallback to DDragon
 		if (currentChampBonus && currentChampBonus.stats) {
 			const s = currentChampBonus.stats as any;
 			baseHp = s.health?.flat ?? 0;
-			const hpGrowth = s.health?.perLevel ?? 0;
-			baseHp += hpGrowth * factor;
+			baseHp += (s.health?.perLevel ?? 0) * factor;
+
+			baseMana = s.mana?.flat ?? 0;
+			baseMana += (s.mana?.perLevel ?? 0) * factor;
 
 			baseAd = s.attackDamage?.flat ?? 0;
-			const adGrowth = s.attackDamage?.perLevel ?? 0;
-			baseAd += adGrowth * factor;
+			baseAd += (s.attackDamage?.perLevel ?? 0) * factor;
 
 			baseArmor = s.armor?.flat ?? 0;
-			const armorGrowth = s.armor?.perLevel ?? 0;
-			baseArmor += armorGrowth * factor;
+			baseArmor += (s.armor?.perLevel ?? 0) * factor;
 
 			baseMr = s.magicResistance?.flat ?? 0;
-			const mrGrowth = s.magicResistance?.perLevel ?? 0;
-			baseMr += mrGrowth * factor;
+			baseMr += (s.magicResistance?.perLevel ?? 0) * factor;
 
-			baseAs = s.attackSpeed?.flat ?? 0.625;
+			baseAsRatio = s.attackSpeed?.flat ?? 0.625;
 			baseAsGrowth = s.attackSpeed?.perLevel ?? s.attackSpeed?.percentPerLevel ?? 0;
 
 			baseMs = s.movespeed?.flat ?? 330;
 
+			baseCritPct = s.criticalStrikeChance?.percent ?? s.criticalStrikeChance?.flat ?? 0;
+
 			if (s.criticalStrikeDamage) {
 				const flatVal = s.criticalStrikeDamage.flat ?? s.criticalStrikeDamage;
 				if (typeof flatVal === 'number') {
-					baseCritDamage = flatVal > 10 ? flatVal / 100 : flatVal;
-				}
-			}
-			if (s.criticalStrikeDamageModifier) {
-				const flatVal =
-					s.criticalStrikeDamageModifier.flat ?? s.criticalStrikeDamageModifier;
-				if (typeof flatVal === 'number') {
-					baseCritDamageModifier = flatVal;
+					const dmg = flatVal > 10 ? flatVal / 100 : flatVal;
+					critDamageBonus = dmg - 1.75;
 				}
 			}
 		} else if (currentChampDdr && currentChampDdr.stats) {
 			const s = currentChampDdr.stats;
 			baseHp = (s.hp ?? 0) + (s.hpperlevel ?? 0) * factor;
+			baseMana = (s.mp ?? 0) + (s.mpperlevel ?? 0) * factor;
 			baseAd = (s.attackdamage ?? 0) + (s.attackdamageperlevel ?? 0) * factor;
 			baseArmor = (s.armor ?? 0) + (s.armorperlevel ?? 0) * factor;
 			baseMr = (s.spellblock ?? 0) + (s.spellblockperlevel ?? 0) * factor;
-			baseAs = s.attackspeed ?? 0.625;
+			baseAsRatio = s.attackspeed ?? 0.625;
 			baseAsGrowth = s.attackspeedperlevel ?? 0;
 			baseMs = s.movespeed ?? 330;
 		}
 
-		// 2. Accumulate equipped item stats
-		let itemHp = 0;
-		let itemAd = 0;
-		let itemAp = 0;
-		let itemArmor = 0;
-		let itemMr = 0;
-		let itemAsPct = 0;
-		let itemMsFlat = 0;
-		let itemMsPct = 0;
-		let itemCrit = 0;
-		let itemCritDamage = 0;
+		const levelBonusAsPct = baseAsGrowth * factor;
+		const asAtLevel = baseAsRatio * (1 + levelBonusAsPct / 100);
+
+		const championBase: ChampionBaseStats = {
+			hp: baseHp,
+			mana: baseMana,
+			ad: baseAd,
+			armor: baseArmor,
+			mr: baseMr,
+			as: asAtLevel,
+			ms: baseMs,
+			critPct: baseCritPct,
+		};
+
+		// 2. Collect equipped items + cost
+		const equippedItems: SrItem[] = [];
 		let totalCost = 0;
 		let itemCount = 0;
 		let hasInfinityEdge = false;
@@ -343,103 +340,40 @@ export default function BuildPage() {
 			if (!itemId) return;
 			const item = itemsById[itemId];
 			if (!item) return;
-
+			equippedItems.push(item);
 			totalCost += item.goldTotal;
 			itemCount++;
-
-			// Infinity Edge check (can be string 'infinity-edge' or DDragon ID '3031')
 			if (item.id === 'infinity-edge' || item.id === '3031') {
 				hasInfinityEdge = true;
-			}
-
-			const s = item.attrs || {};
-			const hp = s.FlatHPPoolMod ?? 0;
-			const ad = s.FlatPhysicalDamageMod ?? 0;
-			const ap = s.FlatMagicDamageMod ?? 0;
-			const armor = s.FlatArmorMod ?? 0;
-			const mr = s.FlatSpellBlockMod ?? 0;
-			const as = s.PercentAttackSpeedMod ? s.PercentAttackSpeedMod * 100 : 0;
-			const msFlat = s.FlatMovementSpeedMod ?? 0;
-			const msPct = s.PercentMovementSpeedMod ? s.PercentMovementSpeedMod * 100 : 0;
-			const crit = s.FlatCritChanceMod ? s.FlatCritChanceMod * 100 : 0;
-
-			itemHp += hp;
-			itemAd += ad;
-			itemAp += ap;
-			itemArmor += armor;
-			itemMr += mr;
-			itemAsPct += as;
-			itemMsFlat += msFlat;
-			itemMsPct += msPct;
-			itemCrit += crit;
-
-			// Support any item stats if they define FlatCritDamageMod or PercentCritDamageMod
-			if ((s as any).FlatCritDamageMod) {
-				itemCritDamage += (s as any).FlatCritDamageMod;
-			}
-			if ((s as any).PercentCritDamageMod) {
-				itemCritDamage += (s as any).PercentCritDamageMod;
 			}
 		});
 
 		if (hasInfinityEdge) {
-			// Infinity Edge adds 40% (0.40) crit damage in modern LoL patches
-			itemCritDamage += 0.4;
+			critDamageBonus += 0.4;
 		}
 
-		// 3. Final outputs
-		const totalHp = baseHp + itemHp;
-		const totalAd = baseAd + itemAd;
-		const totalAp = itemAp;
-		const totalArmor = baseArmor + itemArmor;
-		const totalMr = baseMr + itemMr;
+		// 3. Parse item stats (bonus API) and apply onto champion base
+		const itemStats = accumulateItemStatsFromBuild(equippedItems);
+		const computed = applyItemStatsToChampion(championBase, itemStats, { critDamageBonus });
 
-		// Attack Speed formula in League: Base AS * (1 + Base Level-up % bonus + Item AS %)
-		const levelBonusAsPct = baseAsGrowth * factor;
-		const totalBonusAsPct = levelBonusAsPct + itemAsPct;
-		const totalAs = baseAs * (1 + totalBonusAsPct / 100);
+		// Legacy attrs crit damage fallback for DPS when bonus stats omit it
+		equippedItems.forEach((item) => {
+			const attrs = item.attrs || {};
+			if ((attrs as any).FlatCritDamageMod) {
+				computed.totalCritDamage += (attrs as any).FlatCritDamageMod;
+			}
+			if ((attrs as any).PercentCritDamageMod) {
+				computed.totalCritDamage += (attrs as any).PercentCritDamageMod;
+			}
+		});
 
-		// Movement Speed formula: (Base MS + item flat MS) * (1 + item % MS)
-		const totalMs = (baseMs + itemMsFlat) * (1 + itemMsPct / 100);
+		const critChance = computed.totalCritPct / 100;
+		computed.dps =
+			computed.totalAd * computed.totalAs * (1 + critChance * (computed.totalCritDamage - 1));
+		computed.totalCost = totalCost;
+		computed.itemCount = itemCount;
 
-		const totalCrit = itemCrit / 100;
-
-		// Critical strike damage calculation
-		const baseCritDamageTotal = baseCritDamage * baseCritDamageModifier;
-		const totalCritDamage = baseCritDamageTotal + itemCritDamage;
-
-		// Summary calculations
-		const effectiveHpPhys = totalHp * (1 + totalArmor / 100);
-		const effectiveHpMagic = totalHp * (1 + totalMr / 100);
-
-		// DPS: AD * AS * (1 + CritChance * (CritDamage - 1.0))
-		const dps = totalAd * totalAs * (1 + totalCrit * (totalCritDamage - 1.0));
-
-		return {
-			baseHp,
-			baseAd,
-			baseArmor,
-			baseMr,
-			baseAs: baseAs * (1 + levelBonusAsPct / 100),
-			baseMs,
-			baseCritDamage: baseCritDamageTotal,
-			totalHp,
-			totalAd,
-			totalAp,
-			totalArmor,
-			totalMr,
-			totalAs,
-			totalMs,
-			totalCrit,
-			totalCritDamage,
-			itemAd,
-			itemAp,
-			effectiveHpPhys,
-			effectiveHpMagic,
-			dps,
-			totalCost,
-			itemCount,
-		};
+		return computed;
 	}, [currentChampBonus, currentChampDdr, level, build, itemsById]);
 
 	// Add item to build slot
@@ -504,51 +438,80 @@ export default function BuildPage() {
 
 	const statsToShow = useMemo(() => {
 		return [
-			// { key: 'level', value: level, colorClass: 'text-hex-gold', format: (v: number) => v.toString() },
 			{
 				key: 'health',
-				value: calculatedStats.baseHp,
+				value: calculatedStats.totalHp,
 				colorClass: 'text-green-500 dark:text-green-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
+				key: 'mana',
+				value: calculatedStats.totalMana,
+				colorClass: 'text-sky-500 dark:text-sky-400',
+				format: (v: number) => Math.round(v).toString(),
+			},
+			{
 				key: 'attackDamage',
-				value: calculatedStats.baseAd,
+				value: calculatedStats.totalAd,
 				colorClass: 'text-orange-500 dark:text-orange-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
+				key: 'abilityPower',
+				value: calculatedStats.totalAp,
+				colorClass: 'text-fuchsia-500 dark:text-fuchsia-400',
+				format: (v: number) => Math.round(v).toString(),
+			},
+			{
 				key: 'attackSpeed',
-				value: calculatedStats.baseAs,
+				value: calculatedStats.totalAs,
 				colorClass: 'text-yellow-500 dark:text-yellow-400',
 				format: (v: number) => v.toFixed(3),
 			},
 			{
 				key: 'armor',
-				value: calculatedStats.baseArmor,
+				value: calculatedStats.totalArmor,
 				colorClass: 'text-blue-500 dark:text-blue-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'magicResistance',
-				value: calculatedStats.baseMr,
+				value: calculatedStats.totalMr,
 				colorClass: 'text-purple-500 dark:text-purple-400',
 				format: (v: number) => v.toFixed(1),
 			},
 			{
 				key: 'movespeed',
-				value: calculatedStats.baseMs,
+				value: calculatedStats.totalMs,
 				colorClass: 'text-teal-500 dark:text-teal-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
-				key: 'crit',
-				value: calculatedStats.totalCrit * 100,
+				key: 'criticalStrikeChance',
+				value: calculatedStats.totalCritPct,
 				colorClass: 'text-red-500 dark:text-red-400',
 				format: (v: number) => Math.round(v) + '%',
 			},
+			{
+				key: 'abilityHaste',
+				value: calculatedStats.totalAbilityHaste,
+				colorClass: 'text-indigo-500 dark:text-indigo-400',
+				format: (v: number) => Math.round(v).toString(),
+			},
+			{
+				key: 'lethality',
+				value: calculatedStats.totalLethality,
+				colorClass: 'text-rose-500 dark:text-rose-400',
+				format: (v: number) => Math.round(v).toString(),
+			},
+			{
+				key: 'omnivamp',
+				value: calculatedStats.totalOmnivampPct,
+				colorClass: 'text-pink-500 dark:text-pink-400',
+				format: (v: number) => Math.round(v) + '%',
+			},
 		];
-	}, [calculatedStats, level]);
+	}, [calculatedStats]);
 
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12 relative">
