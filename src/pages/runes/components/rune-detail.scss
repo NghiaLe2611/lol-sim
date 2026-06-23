@@ -606,7 +606,7 @@
     position: absolute;
     left: 0;
     width: 80px;
-    height: 96px;
+    height: 126px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -616,7 +616,7 @@
         top: 0;
     }
     &[data-slot="1"] {
-        top: 96px;
+        top: 126px;
     }
 }
 
@@ -625,6 +625,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
+    padding-top: 10px;
 }
 
 .rd-sec-summary {
@@ -662,7 +663,7 @@
 .rd-splash-row {
     display: flex;
     align-items: center;
-    height: 96px;
+    height: 126px;
     flex-shrink: 0;
     position: relative;
 }

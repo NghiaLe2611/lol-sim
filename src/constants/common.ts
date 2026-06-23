@@ -8,6 +8,7 @@ export const links = [
 ];
 
 export const apiUrl = 'https://ddragon.leagueoflegends.com';
+export const rawCommunityUrl = 'https://raw.communitydragon.org';
 
 export const STALE_MS = 10 * 60 * 1000;
 

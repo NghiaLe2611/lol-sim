@@ -1,4 +1,4 @@
-import { apiUrl } from '@/constants/common';
+import { apiUrl, rawCommunityUrl } from '@/constants/common';
 
 function getBonusApiBase(): string {
 	const base = import.meta.env.VITE_API_URL as string | undefined;
@@ -132,6 +132,48 @@ async function getRunes(version: string) {
 	}
 }
 
+function getPerks(items: Record<string, any>[]) {
+	if (!items || items.length === 0) return [];
+
+	const firstItem = items[0];
+
+	if (!firstItem.slots || !Array.isArray(firstItem.slots)) {
+		return [];
+	}
+
+	const perkSet = new Set();
+
+	for (const slot of firstItem.slots) {
+		if (slot.type === 'kStatMod' && Array.isArray(slot.perks)) {
+			for (const perk of slot.perks) {
+				if (typeof perk === 'number') {
+					perkSet.add(perk);
+				}
+			}
+		}
+	}
+
+	return Array.from(perkSet).sort((a: any, b: any) => a - b);
+}
+
+// Runes shard
+async function getRuneShards() {
+	// `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json`
+	const url = `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		const perks = getPerks(data.styles);
+		// const result = data.filter((item: Record<string, any>) => String(item.id).startsWith('5'));
+		return perks;
+	} catch (error) {
+		throw error;
+	}
+}
+
 // Get summoner spell list
 async function getSummonerSpells(version: string) {
 	// https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/summoner-spells.json
@@ -192,6 +234,7 @@ export {
 	getItems,
 	getBonusItems,
 	getRunes,
+	getRuneShards,
 	getSummonerSpells,
 	getVersions,
 };

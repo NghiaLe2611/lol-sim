@@ -10,7 +10,7 @@ import {
 	stripRuneMarkupToText,
 	type DdragonRunePath,
 } from '@/pages/runes/utils';
-import { getRunes } from '@/services/api';
+import { getRunes, getRuneShards } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
@@ -137,6 +137,17 @@ export default function RunesPage() {
 		gcTime: STALE_MS,
 		select: (raw: DdragonRunePath[]) => parseRunePaths(raw),
 	});
+
+	const runeShardsQuery = useQuery({
+		queryKey: ['rune-shards'],
+		queryFn: () => getRuneShards(),
+		enabled: isPatchReady,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
+	const runeShards = runeShardsQuery.data ?? [];
+	console.log({ runeShards });
 
 	const paths = runesQuery.data ?? [];
 	const activePath = paths.find((p) => p.key === activePathKey) ?? null;

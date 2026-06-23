@@ -764,10 +764,10 @@ export default function RuneDetail({
 	const primTrackHeight = '412px';
 
 	const selectedCount = secPicks.length;
-	const secFillHeights = ['0px', '90px', '186px'];
+	const secFillHeights = ['0px', '120px', '216px'];
 	const secFillHeight = secFillHeights[selectedCount] || '0px';
-	const secTrackHeight = '186px';
-	const splashTrackHeight = '186px';
+	const secTrackHeight = '216px';
+	const splashTrackHeight = '216px';
 
 	const artLayer = (
 		<>
