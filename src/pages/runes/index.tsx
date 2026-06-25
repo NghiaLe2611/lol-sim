@@ -147,7 +147,6 @@ export default function RunesPage() {
 	});
 
 	const runeShards = runeShardsQuery.data ?? [];
-	console.log({ runeShards });
 
 	const paths = runesQuery.data ?? [];
 	const activePath = paths.find((p) => p.key === activePathKey) ?? null;
@@ -241,7 +240,7 @@ export default function RunesPage() {
 				<h2 className="display gold-text mb-8 text-center text-4xl uppercase 4xl:mt-12">
 					Create Your Playstyle
 				</h2>
-				<BuildRune />
+				<BuildRune runeShards={runeShards} />
 			</div>
 		</div>
 	);

@@ -168,19 +168,24 @@
     border-radius: 50%;
     overflow: visible;
     @apply bg-gray-50 dark:bg-[#252525];
+    border: 2px solid var(--rd-perk-c1);
+    box-shadow: 0 0 6px var(--rd-perk-c1);
+
+    width: 24px;
+    height: 24px;
 
     &--lg {
-        width: 72px;
-        height: 72px;
+        width: 28px;
+        height: 28px;
     }
-    &--md {
-        width: 58px;
-        height: 58px;
-    }
-    &--sm {
-        width: 52px;
-        height: 52px;
-    }
+    // &--md {
+    //     width: 58px;
+    //     height: 58px;
+    // }
+    // &--sm {
+    //     width: 52px;
+    //     height: 52px;
+    // }
 
     .rd-perk-spinner {
         display: none;
@@ -191,7 +196,7 @@
     }
 
     &--selected {
-        .rd-perk-inner circle {
+        .rd-perk-inner {
             filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
         }
     }
@@ -229,11 +234,21 @@
 
 .rd-perk-inner {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    opacity: 0.8;
     pointer-events: none;
     z-index: 1;
+}
+
+.rd-slot-l{
+    .rd-perk-inner{
+        background: radial-gradient(circle, var(--rd-perk-c1) 0%, var(--rd-perk-c2) 100%);
+    }
 }
 
 .rd-perk-icon {
@@ -251,7 +266,7 @@
     .rd-perk-icon {
         width: 100%;
         height: 100%;
-        transform: scale(1.5);
+        transform: scale(1.2);
     }
 }
 
@@ -295,6 +310,10 @@
     justify-content: center;
     pointer-events: none;
     z-index: 0;
+
+    &--standalone {
+        top: 0;
+    }
 }
 
 .rd-progress-border {
@@ -425,10 +444,10 @@
     position: relative;
     overflow: visible;
 
-    &--ks {
-        height: 130px;
-        max-height: 130px;
-    }
+    // &--ks {
+    //     height: 130px;
+    //     max-height: 130px;
+    // }
 }
 
 .rd-slot-l {
@@ -463,6 +482,14 @@
     gap: 6px;
     width: 100%;
     height: 100%;
+    .rd-perk-btn {
+        width: 48px;
+        height: 48px;
+        &--md {
+            width: 52px;
+            height: 52px;
+        }
+    }
 }
 
 .rd-drawer-row {
@@ -474,7 +501,7 @@
 
 .rd-drawer--ks {
     justify-content: center;
-    gap: 10px;
+    gap: 16px;
 
     .rd-drawer-row {
         gap: 10px;
@@ -488,11 +515,11 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    align-self: flex-start;
+    // align-self: flex-start;
     // padding-top: 24px;
 
     // &--ks {
-    //     padding-top: 32px;
+    //     padding-top: 24px;
     // }
 }
 
@@ -511,6 +538,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    display: none !important;
 }
 
 .rd-placeholder {
@@ -522,8 +550,8 @@
 // ── Secondary column ──────────────────────────────────────────────
 
 .rd-secondary {
-    width: 300px;
-    min-width: 300px;
+    width: 340px;
+    min-width: 340px;
     display: flex;
     flex-direction: column;
     // border-right: 1px solid rgba(70, 55, 42, 0.55);
@@ -543,13 +571,13 @@
 }
 
 .rd-sec-path-btn {
-    width: 36px;
-    height: 36px;
-    border: 1px solid transparent;
+    width: 42px;
+    height: 42px;
+    border: 2px solid transparent;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0);
     cursor: pointer;
-    padding: 3px;
+    padding: 8px;
     opacity: 0.5;
     transition:
         opacity 0.2s,
@@ -592,14 +620,14 @@
     display: flex;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    // overflow: hidden;
 }
 
 .rd-sec-track-col {
     position: relative;
     width: 84px;
     flex-shrink: 0;
-    height: 192px;
+    height: 246px;
 }
 
 .rd-sec-track-slot {
@@ -618,6 +646,11 @@
     &[data-slot="1"] {
         top: 126px;
     }
+
+    .rd-perk-btn {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 .rd-sec-grid {
@@ -625,7 +658,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    padding-top: 10px;
+    padding-top: 18px;
 }
 
 .rd-sec-summary {
@@ -636,17 +669,82 @@
 }
 
 .rd-sec-summary-row {
-    height: 96px;
+    height: 126px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    padding: 24px 8px 0 12px;
+    // padding: 24px 8px 0 12px;
 }
 
 .rd-sec-grid-row {
     // height: 96px;
     flex-shrink: 0;
-    @apply flex items-center gap-4;
+    @apply flex items-center gap-10;
+    .rd-perk-btn {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+.rd-shard-picker {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.rd-shard-track-col {
+    position: relative;
+    width: 84px;
+    flex-shrink: 0;
+    height: 200px;
+}
+
+.rd-shard-track-slot {
+    position: absolute;
+    left: 0;
+    width: 80px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+
+    &[data-slot="0"] {
+        top: 0;
+    }
+    &[data-slot="1"] {
+        top: 72px;
+    }
+    &[data-slot="2"] {
+        top: 144px;
+    }
+
+    .rd-perk-btn {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.rd-shard-grid {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+}
+
+.rd-shard-grid-row {
+    flex-shrink: 0;
+    @apply flex items-center gap-10;
+
+    .rd-perk-btn {
+        width: 32px;
+        height: 32px;
+    }
 }
 
 // SPLASH placeholders
@@ -818,7 +916,7 @@
         position: absolute;
         right: -7%;
         top: -12%;
-        width:70%;
+        width: 70%;
         height: auto;
         max-width: none;
         aspect-ratio: 1;
@@ -839,18 +937,20 @@
         height: 70px;
     }
     .rd-perk-btn {
-        &--lg {
-            width: 68px;
-            height: 68px;
-        }
-        &--md {
-            width: 50px;
-            height: 50px;
-        }
-        &--sm {
-            width: 44px;
-            height: 44px;
-        }
+        width: 24px;
+        height: 24px;
+        // &--lg {
+        //     width: 68px;
+        //     height: 68px;
+        // }
+        // &--md {
+        //     width: 50px;
+        //     height: 50px;
+        // }
+        // &--sm {
+        //     width: 44px;
+        //     height: 44px;
+        // }
     }
 }
 
@@ -996,4 +1096,25 @@
     &[data-slot="1"] {
         top: 70px;
     }
+}
+
+.rd-root--mobile .rd-shard-track-col {
+    width: 72px;
+}
+
+.rd-root--mobile .rd-shard-track-slot {
+    width: 72px;
+
+    &[data-slot="1"] {
+        top: 72px;
+    }
+
+    &[data-slot="2"] {
+        top: 144px;
+    }
+}
+
+.rd-root--mobile .rd-shard-grid-row {
+    justify-content: flex-start;
+    gap: 1.25rem;
 }

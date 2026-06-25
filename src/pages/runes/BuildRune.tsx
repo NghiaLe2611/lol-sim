@@ -9,6 +9,7 @@ import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import './build-rune.scss';
 import RuneDetail from './components/RuneDetail';
+import type { RuneShardPerk } from '@/services/api';
 
 // Subtitle maps matching the preseason design
 const PATH_SUBTITLES: Record<string, { body: string; footer: string }> = {
@@ -43,7 +44,7 @@ const KEY_MAP: Record<string, string> = {
 	Inspiration: 'i',
 };
 
-export default function BuildRune() {
+export default function BuildRune({ runeShards = [] }: { runeShards?: RuneShardPerk[] }) {
 	const isMobile = useIsMobile();
 	const { patchVersion, isPatchReady } = useAppContext();
 	const [activePath, setActivePath] = useState<string | null>(null);
@@ -123,6 +124,7 @@ export default function BuildRune() {
 							onPathChange={setActivePath}
 							activePathData={activePathData}
 							allPaths={sortedPaths}
+							runeShards={runeShards}
 						/>
 					</div>
 				)}
@@ -145,6 +147,7 @@ export default function BuildRune() {
 					onPathChange={setActivePath}
 					activePathData={activePathData ?? null}
 					allPaths={sortedPaths}
+					runeShards={runeShards}
 				/>
 			</div>
 

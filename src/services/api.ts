@@ -132,43 +132,68 @@ async function getRunes(version: string) {
 	}
 }
 
-function getPerks(items: Record<string, any>[]) {
-	if (!items || items.length === 0) return [];
+function getStatModSlotPerks(items: Record<string, unknown>[]): number[][] {
+	if (!items?.length) return [];
 
-	const firstItem = items[0];
+	const firstItem = items[0] as { slots?: { type?: string; perks?: unknown[] }[] };
+	if (!firstItem.slots?.length) return [];
 
-	if (!firstItem.slots || !Array.isArray(firstItem.slots)) {
-		return [];
-	}
-
-	const perkSet = new Set();
+	const groups: number[][] = [];
 
 	for (const slot of firstItem.slots) {
 		if (slot.type === 'kStatMod' && Array.isArray(slot.perks)) {
-			for (const perk of slot.perks) {
-				if (typeof perk === 'number') {
-					perkSet.add(perk);
-				}
-			}
+			groups.push(slot.perks.filter((p): p is number => typeof p === 'number'));
 		}
 	}
 
-	return Array.from(perkSet).sort((a: any, b: any) => a - b);
+	return groups;
 }
 
-// Runes shard
-async function getRuneShards() {
-	// `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json`
-	const url = `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json`;
+export type RuneShardPerk = {
+	id: number;
+	name: string;
+	majorChangePatchVersion: string;
+	tooltip: string;
+	shortDesc: string;
+	longDesc: string;
+	recommendationDescriptor: string;
+	iconPath: string;
+	endOfGameStatDescs: unknown[];
+	recommendationDescriptorAttributes: Record<string, unknown>;
+};
+
+// Runes shard — stat mod perks resolved from perkstyles + perks catalog
+async function getRuneShards(): Promise<RuneShardPerk[]> {
+	const stylesUrl = `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json`;
+	const perksUrl = `${rawCommunityUrl}/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json`;
+
 	try {
-		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
+		const [stylesRes, perksRes] = await Promise.all([fetch(stylesUrl), fetch(perksUrl)]);
+
+		if (!stylesRes.ok) {
+			throw new Error(`HTTP error! status: ${stylesRes.status}`);
 		}
-		const data = await response.json();
-		const perks = getPerks(data.styles);
-		// const result = data.filter((item: Record<string, any>) => String(item.id).startsWith('5'));
-		return perks;
+		if (!perksRes.ok) {
+			throw new Error(`HTTP error! status: ${perksRes.status}`);
+		}
+
+		const stylesData = (await stylesRes.json()) as { styles?: Record<string, unknown>[] };
+		const perksData = await perksRes.json();
+
+		const slotPerkIds = getStatModSlotPerks(stylesData.styles ?? []);
+		const perksList = Array.isArray(perksData) ? perksData : [];
+
+		const byId = new Map<number, RuneShardPerk>();
+		for (const row of perksList) {
+			if (row && typeof row === 'object' && typeof (row as RuneShardPerk).id === 'number') {
+				byId.set((row as RuneShardPerk).id, row as RuneShardPerk);
+			}
+		}
+
+		return slotPerkIds
+			.flat()
+			.map((id) => byId.get(id))
+			.filter((perk): perk is RuneShardPerk => perk != null);
 	} catch (error) {
 		throw error;
 	}

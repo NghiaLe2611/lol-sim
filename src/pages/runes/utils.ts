@@ -34,6 +34,14 @@ export function normalizePerkIconPath(icon: string): string {
 	return icon.replace(/^perk-images\/Styles\//i, 'perk-images/styles/').toLowerCase();
 }
 
+const CDRAGON_STATMOD_BASE =
+	'https://raw.communitydragon.org/latest/game/assets/perks/statmods';
+
+export function runeShardImgUrl(iconPath: string): string {
+	const filename = iconPath.split('/').pop()?.toLowerCase() ?? '';
+	return `${CDRAGON_STATMOD_BASE}/${filename}`;
+}
+
 export function runePerkImgUrl(icon: string): string {
 	return `${CDRAGON_PERK_IMAGES_BASE}/${normalizePerkIconPath(icon)}`;
 }
