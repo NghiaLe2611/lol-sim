@@ -346,7 +346,10 @@ function ProgressColumn({
 			style={{ height: trackHeight }}
 			aria-hidden
 		>
-			<div className="rd-progress-border">
+			<div
+				className="rd-progress-border"
+				style={{ '--rd-color': color } as React.CSSProperties}
+			>
 				<div className="rd-progress-outer">
 					<div className="rd-progress-fill" style={{ height: fillHeight }}>
 						<div
@@ -542,17 +545,28 @@ function SecRuneGrid({
 					return (
 						<div key={rowIdx}>
 							<div className="rd-sec-grid-row">
-								{rowRunes.map((rune) => (
-									<PerkBtn
-										key={rune.id}
-										gradId={sc.gradId}
-										size="sm"
-										rune={rune}
-										isSelected={rune.id === selectedId}
-										isMuted={selectedId != null && rune.id !== selectedId}
-										onClick={() => onSelect(rune.id, rowIdx)}
-									/>
-								))}
+								{rowRunes.map((rune) => {
+									const btn = (
+										<PerkBtn
+											gradId={sc.gradId}
+											size="sm"
+											rune={rune}
+											isSelected={rune.id === selectedId}
+											isMuted={selectedId != null && rune.id !== selectedId}
+											onClick={() => onSelect(rune.id, rowIdx)}
+										/>
+									);
+
+									if (isMobile) {
+										return <div key={rune.id}>{btn}</div>;
+									}
+
+									return (
+										<RunePopover key={rune.id} rune={rune} side="left">
+											{btn}
+										</RunePopover>
+									);
+								})}
 							</div>
 							{rowIdx <= 2 && (
 								<div
@@ -872,13 +886,13 @@ export default function RuneDetail({
 	if (primLevel === 3 && selectedSlots[2] != null) primLevel = 4;
 	// const primHeights = [107, 220, 316, 364, 412];
 	// const primHeight = `${primHeights[primLevel]}px`;
-	const primTrackHeight = '392px';
+	const primTrackHeight = '342px';
 
 	const selectedCount = secPicks.length;
-	const secFillHeights = ['0px', '120px', '240px'];
+	const secFillHeights = ['0px', '74px', '200px'];
 	const secFillHeight = secFillHeights[selectedCount] || '0px';
-	const secTrackHeight = '240px';
-	const splashTrackHeight = '240px';
+	const secTrackHeight = '200px';
+	const splashTrackHeight = '200px';
 
 	const artLayer = (
 		<>
@@ -1106,7 +1120,7 @@ export default function RuneDetail({
 					) : (
 						<div className="rd-splash-rows">
 							<ProgressColumn
-								fillHeight="90px"
+								fillHeight="70px"
 								trackHeight={splashTrackHeight}
 								color={cfg.color}
 							/>
@@ -1125,7 +1139,8 @@ export default function RuneDetail({
 						<RuneShardGrid
 							shards={runeShards}
 							gradId={cfg.gradId}
-							color="#c8aa6e"
+							// color="#c8aa6e"
+							color={cfg.color}
 							isMobile={isMobile}
 						/>
 					)}

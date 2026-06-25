@@ -24,7 +24,7 @@ function SummonerSpellIcon({
 
 	return (
 		<div
-			className="shrink-0 border border-[#8a7344]/80 bg-black/25 transition-all duration-200 hover:scale-105 hover:cursor-pointer"
+			className="rounded-sm shrink-0 border border-[#8a7344]/80 bg-black/25 transition-all duration-200 hover:scale-105 hover:cursor-pointer"
 			style={{
 				width: image.w,
 				height: image.h,
