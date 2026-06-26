@@ -38,7 +38,9 @@ import { capitalizeText } from '@/utils/common';
 import {
 	accumulateItemStatsFromBuild,
 	applyItemStatsToChampion,
+	BuildComputedStats,
 	type ChampionBaseStats,
+	type ItemBonusStatBlock,
 } from '@/pages/build/item-stats';
 
 // Category definition matching standard LoL items
@@ -65,6 +67,49 @@ const LANE_FILTERS: { id: ChampLaneFilter; label: string; mappedKey: string }[] 
 	{ id: 'SP', label: 'SP', mappedKey: 'Support' },
 ];
 
+const overviewChampionStats = [
+	{
+		key: 'attackDamage',
+		icon: 'scalead',
+		value: 'totalAd',
+	},
+	{
+		key: 'abilityPower',
+		icon: 'scaleap',
+		value: 'totalAp',
+	},
+	{
+		key: 'armor',
+		icon: 'scalearmor',
+		value: 'totalArmor',
+	},
+	{
+		key: 'magicResistance',
+		icon: 'scalemr',
+		value: 'totalMr',
+	},
+	{
+		key: 'attackSpeed',
+		icon: 'scaleas',
+		value: 'totalAs',
+	},
+	{
+		key: 'abilityHaste',
+		icon: 'scalecooldown',
+		value: 'totalAbilityHaste',
+	},
+	{
+		key: 'criticalStrikeChance',
+		icon: 'scalecrit',
+		value: 'totalCritPct',
+	},
+	{
+		key: 'movespeed',
+		icon: 'scalems',
+		value: 'totalMs',
+	},
+];
+
 export default function BuildPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
 
@@ -86,8 +131,6 @@ export default function BuildPage() {
 	const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
 
 	const { showToast } = useCustomToast();
-
-	// ─── React Query Hooks ─────────────────────────────────────────
 
 	// Fetch Champions list
 	const championsQuery = useQuery({
@@ -134,8 +177,6 @@ export default function BuildPage() {
 		gcTime: STALE_MS,
 		select: selectBonusItemsById,
 	});
-
-	// ─── Derived memos ─────────────────────────────────────────────
 
 	const bonusPositionsMap = useMemo(() => {
 		return selectBonusPositionsOnly(bonusQuery.data);
@@ -271,10 +312,10 @@ export default function BuildPage() {
 		let baseAsGrowth = 0;
 		let baseMs = 330;
 		let baseCritPct = 0;
-		let critDamageBonus = 0;
+		let baseCritDamagePct = 175;
 
 		if (currentChampBonus && currentChampBonus.stats) {
-			const s = currentChampBonus.stats as any;
+			const s = currentChampBonus.stats as Record<string, ItemBonusStatBlock | undefined>;
 			baseHp = s.health?.flat ?? 0;
 			baseHp += (s.health?.perLevel ?? 0) * factor;
 
@@ -297,12 +338,10 @@ export default function BuildPage() {
 
 			baseCritPct = s.criticalStrikeChance?.percent ?? s.criticalStrikeChance?.flat ?? 0;
 
-			if (s.criticalStrikeDamage) {
-				const flatVal = s.criticalStrikeDamage.flat ?? s.criticalStrikeDamage;
-				if (typeof flatVal === 'number') {
-					const dmg = flatVal > 10 ? flatVal / 100 : flatVal;
-					critDamageBonus = dmg - 1.75;
-				}
+			const critDmgBlock = s.criticalStrikeDamage;
+			if (critDmgBlock && typeof critDmgBlock === 'object' && 'flat' in critDmgBlock) {
+				const flatVal = critDmgBlock.flat ?? 175;
+				baseCritDamagePct = flatVal > 10 ? flatVal : flatVal * 100;
 			}
 		} else if (currentChampDdr && currentChampDdr.stats) {
 			const s = currentChampDdr.stats;
@@ -328,13 +367,13 @@ export default function BuildPage() {
 			as: asAtLevel,
 			ms: baseMs,
 			critPct: baseCritPct,
+			critDamagePct: baseCritDamagePct,
 		};
 
 		// 2. Collect equipped items + cost
 		const equippedItems: SrItem[] = [];
 		let totalCost = 0;
 		let itemCount = 0;
-		let hasInfinityEdge = false;
 
 		build.forEach((itemId) => {
 			if (!itemId) return;
@@ -343,29 +382,11 @@ export default function BuildPage() {
 			equippedItems.push(item);
 			totalCost += item.goldTotal;
 			itemCount++;
-			if (item.id === 'infinity-edge' || item.id === '3031') {
-				hasInfinityEdge = true;
-			}
 		});
-
-		if (hasInfinityEdge) {
-			critDamageBonus += 0.4;
-		}
 
 		// 3. Parse item stats (bonus API) and apply onto champion base
 		const itemStats = accumulateItemStatsFromBuild(equippedItems);
-		const computed = applyItemStatsToChampion(championBase, itemStats, { critDamageBonus });
-
-		// Legacy attrs crit damage fallback for DPS when bonus stats omit it
-		equippedItems.forEach((item) => {
-			const attrs = item.attrs || {};
-			if ((attrs as any).FlatCritDamageMod) {
-				computed.totalCritDamage += (attrs as any).FlatCritDamageMod;
-			}
-			if ((attrs as any).PercentCritDamageMod) {
-				computed.totalCritDamage += (attrs as any).PercentCritDamageMod;
-			}
-		});
+		const computed = applyItemStatsToChampion(championBase, itemStats);
 
 		const critChance = computed.totalCritPct / 100;
 		computed.dps =
@@ -436,6 +457,8 @@ export default function BuildPage() {
 		return `https://ddragon.leagueoflegends.com/cdn/${patchVersion || '14.23.1'}/img/champion/${champId}.png`;
 	};
 
+	console.log(123, calculatedStats);
+
 	const statsToShow = useMemo(() => {
 		return [
 			{
@@ -493,6 +516,12 @@ export default function BuildPage() {
 				format: (v: number) => Math.round(v) + '%',
 			},
 			{
+				key: 'criticalStrikeDamage',
+				value: calculatedStats.totalCritDamagePct,
+				colorClass: 'text-pink-500 dark:text-pink-600',
+				format: (v: number) => Math.round(v) + '%',
+			},
+			{
 				key: 'abilityHaste',
 				value: calculatedStats.totalAbilityHaste,
 				colorClass: 'text-indigo-500 dark:text-indigo-400',
@@ -523,7 +552,7 @@ export default function BuildPage() {
 					</p>
 				</div>
 				{/* Mobile */}
-				{selectedChampionId ? (
+				{/* {selectedChampionId ? (
 					<div className="text-center xl:hidden flex flex-col items-center shrink-0 ml-4">
 						<img
 							src={getChampImgUrl(selectedChampionId)}
@@ -532,10 +561,10 @@ export default function BuildPage() {
 						/>
 						<span className="text-xs font-bold mt-1">{selectedChampionId}</span>
 					</div>
-				) : null}
+				) : null} */}
 			</header>
 
-			{selectedChampionId ? (
+			{/* {selectedChampionId ? (
 				<div className="absolute top-12 3xl:top-0 bottom-12 w-20 pointer-events-none hidden xl:block z-[10] right-6">
 					<div className="sticky top-24 pointer-events-auto text-center flex flex-col items-center">
 						<img
@@ -548,10 +577,42 @@ export default function BuildPage() {
 						</span>
 					</div>
 				</div>
-			) : null}
+			) : null} */}
 
 			{/* Main Layout Grid */}
 			<div className="grid gap-3 xl:gap-6 grid-cols-1 lg:grid-cols-[320px_1fr]">
+				{/* Overview */}
+				<div className="col-span-full flex items-center gap-4">
+					<div className="inline-flex items-center gap-2">
+						<img
+							src={getChampImgUrl(selectedChampionId || '')}
+							alt={(currentChampBonus?.name as string) || 'champion'}
+							className="mb-1 w-12 h-12 3xl:w-20 3xl:h-20 rounded-full mx-auto border-2 border-hex-gold shadow-gold bg-[#040a10]"
+						/>
+						{/* <span className="text-xs 3xl:text-sm font-bold text-hex-gold px-2 py-0.5 block truncate max-w-full">
+							{selectedChampionId}
+						</span> */}
+					</div>
+					{/* corner-top-shape: scoop; */}
+					<div className="inline-grid grid-cols-2 gap-y-2 gap-x-6 hex-border border-2 p-4">
+						{overviewChampionStats.map((stat) => (
+							<div key={stat.key} className="flex items-center gap-2">
+								<img
+									src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/ux/fonts/texticons/lol/statsicon/${stat.icon}.png`}
+									alt={stat.key}
+									className="w-4 h-4"
+								/>
+
+								<span className="text-xs font-semibold 4xl:text-sm text-hext-gold">
+									{calculatedStats[
+										stat.value as keyof BuildComputedStats
+									]?.toString()}
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+
 				{/* Left column */}
 				<div className="space-y-3 xl:space-y-6 shrink-0">
 					{/* Champion Selection Panel */}
@@ -849,7 +910,7 @@ export default function BuildPage() {
 						{/* Items list grid container */}
 						<div
 							className={clsx(
-								'grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] border border-hex-gold/20 rounded dark:bg-[#0b1319] custom-scrollbar',
+								'p-3 grid grid-cols-3 md:grid-cols-6 2xl:grid-cols-10 gap-3 max-h-[360px] border border-hex-gold/20 rounded dark:bg-[#0b1319] custom-scrollbar',
 								itemsGridLoading && '!overflow-y-hidden'
 							)}
 						>
@@ -875,7 +936,12 @@ export default function BuildPage() {
 										<button
 											type="button"
 											onClick={() => handleItemSelect(item.id)}
-											className="w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 text-center aspect-[5/6] min-w-0"
+											className={clsx(
+												'w-full grid border border-hex-gold/20 bg-gray-200/60 hover:bg-gray-200 dark:bg-[#09111b] hover:dark:bg-[#0f1b27] hover:border-hex-gold/50 text-center aspect-[5/6] min-w-0',
+												build.includes(item.id)
+													? '!bg-hex-gold/20 dark:!bg-hex-gold/10'
+													: ''
+											)}
 										>
 											<div className="flex flex-col items-center p-2 w-full h-full">
 												{/* lg:block */}

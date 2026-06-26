@@ -19,6 +19,7 @@
     z-index: 0;
     opacity: 0.8;
     pointer-events: none;
+    @apply light:brightness-[150%];
 }
 
 // Back / close button
@@ -105,7 +106,7 @@
 }
 
 .rd-path-sub {
-    @apply text-[9px] 2xl:text-xs text-muted-foreground;
+    @apply text-[9px] 2xl:text-xs text-white/60 dark:text-muted-foreground;
     opacity: 0.8;
     line-height: 1.3;
 }
@@ -167,7 +168,7 @@
     flex-shrink: 0;
     border-radius: 50%;
     overflow: visible;
-    @apply bg-gray-50 dark:bg-[#252525];
+    @apply bg-neutral-800;
     border: 2px solid var(--rd-perk-c1);
     box-shadow: 0 0 4px var(--rd-perk-c1);
 
@@ -218,6 +219,23 @@
     }
 }
 
+.rd-slot-r,
+.rd-sec-grid-row,
+.rd-shard-row-options {
+    .rd-perk-btn:after {
+        content: "";
+        position: absolute;
+        width: 130%;
+        height: 130%;
+        border-radius: 50%;
+        box-shadow: 0 0 4px var(--rd-perk-c1);
+        display: none;
+    }
+    .rd-perk-btn:hover:after {
+        display: block;
+    }
+}
+
 .rd-perk-outer {
     position: absolute;
     inset: 0;
@@ -249,7 +267,8 @@
 .rd-sec-track-slot,
 .rd-shard-track-slot {
     .rd-perk-inner {
-        background: radial-gradient(circle, var(--rd-perk-c1) 0%, var(--rd-perk-c2) 100%);
+        // background: radial-gradient(circle, var(--rd-perk-c1) 0%, var(--rd-perk-c2) 100%);
+        background: radial-gradient(circle, var(--rd-perk-c1) 0%, rgb(from var(--rd-perk-c1) r g b / 20%) 80%);
     }
 }
 
@@ -268,7 +287,7 @@
     .rd-perk-icon {
         width: 100%;
         height: 100%;
-        transform: scale(1.2);
+        transform: scale(1.8);
     }
 }
 
@@ -489,10 +508,10 @@
     .rd-perk-btn {
         width: 48px;
         height: 48px;
-        &--md {
-            width: 52px;
-            height: 52px;
-        }
+        // &--md {
+        //     width: 52px;
+        //     height: 52px;
+        // }
     }
 }
 
@@ -505,7 +524,7 @@
     @apply gap-4;
 
     .rd-drawer-row {
-       @apply gap-4;
+        @apply gap-4;
         flex-shrink: 0;
     }
 }
@@ -543,7 +562,7 @@
 }
 
 .rd-placeholder {
-    @apply text-[9px] 2xl:text-xs text-muted-foreground;
+    @apply text-[9px] 2xl:text-xs text-white/60 dark:text-muted-foreground;
     opacity: 0.8;
     line-height: 1.4;
 }
@@ -619,8 +638,8 @@
     position: relative;
     z-index: 1;
     display: flex;
-    // flex: 1;
     min-height: 0;
+    // flex: 1;
     // overflow: hidden;
 }
 
@@ -691,42 +710,39 @@
     position: relative;
     z-index: 1;
     display: flex;
-    // align-items: center;
+    flex-direction: column;
     flex-shrink: 0;
-    margin-top: 20px;
-    overflow: hidden;
-    height: 200px;
+    margin-top: 40px;
 }
 
-.rd-shard-track-col {
-    position: relative;
-    width: 84px;
-    flex-shrink: 0;
-    // height: 200px;
-}
-
-.rd-shard-track-slot {
+.rd-shard-progress {
     position: absolute;
+    top: 0;
+    bottom: 0;
     left: 0;
     width: 80px;
-    height: 56px;
+    pointer-events: none;
+    z-index: 0;
+
+    .rd-progress {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+}
+
+.rd-shard-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+}
+
+.rd-shard-row-track {
+    width: 80px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
-
-    &[data-slot="0"] {
-        // top: 0;
-        top: -10px;
-    }
-    &[data-slot="1"] {
-        // top: 72px;
-        top: 54px;
-    }
-    &[data-slot="2"] {
-        // top: 144px;
-        top: 118px;
-    }
 
     .rd-perk-btn {
         width: 24px;
@@ -734,17 +750,13 @@
     }
 }
 
-.rd-shard-grid {
+.rd-shard-row-options {
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
-    padding-top: 0;
-}
-
-.rd-shard-grid-row {
-    flex-shrink: 0;
-    @apply flex items-center justify-center gap-10;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
 
     .rd-perk-btn {
         width: 32px;
@@ -758,9 +770,9 @@
     z-index: 1;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    // flex: 1;
     overflow: hidden;
-    padding-bottom: 12px;
+    // padding-bottom: 12px;
 }
 
 .rd-splash-row {
@@ -1103,23 +1115,15 @@
     }
 }
 
-.rd-root--mobile .rd-shard-track-col {
+.rd-root--mobile .rd-shard-progress {
     width: 72px;
 }
 
-.rd-root--mobile .rd-shard-track-slot {
+.rd-root--mobile .rd-shard-row-track {
     width: 72px;
-
-    &[data-slot="1"] {
-        top: 72px;
-    }
-
-    &[data-slot="2"] {
-        top: 144px;
-    }
 }
 
-.rd-root--mobile .rd-shard-grid-row {
+.rd-root--mobile .rd-shard-row-options {
     justify-content: flex-start;
     gap: 1.25rem;
 }

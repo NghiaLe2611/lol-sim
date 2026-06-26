@@ -206,9 +206,7 @@ function PerkBtn({
 			onClick={isStatic ? undefined : onClick}
 		>
 			<div className="rd-perk-inner" aria-hidden />
-			{imgSrc && (
-				<img className="rd-perk-icon" src={imgSrc} alt={imgAlt} draggable={false} />
-			)}
+			{imgSrc && <img className="rd-perk-icon" src={imgSrc} alt={imgAlt} draggable={false} />}
 			<svg className="rd-perk-outer" viewBox={vb} aria-hidden>
 				<circle
 					cx={cx}
@@ -422,7 +420,7 @@ function SlotRow({
 			<div className="rd-slot-l">
 				<div className="rd-circle-wrap">
 					{sel && !isOpen && !isMobile ? (
-						<RunePopover rune={sel} side="right" triggerClassName="flex">
+						<RunePopover rune={sel} side="top" triggerClassName="flex">
 							{circleBtn}
 						</RunePopover>
 					) : (
@@ -516,7 +514,7 @@ function SecRuneGrid({
 			return isMobile ? (
 				btn
 			) : (
-				<RunePopover rune={rune} side="left" triggerClassName="flex">
+				<RunePopover rune={rune} side="top" triggerClassName="flex">
 					{btn}
 				</RunePopover>
 			);
@@ -562,7 +560,7 @@ function SecRuneGrid({
 									}
 
 									return (
-										<RunePopover key={rune.id} rune={rune} side="left">
+										<RunePopover key={rune.id} rune={rune} side="top">
 											{btn}
 										</RunePopover>
 									);
@@ -570,7 +568,7 @@ function SecRuneGrid({
 							</div>
 							{rowIdx <= 2 && (
 								<div
-									className={clsx('h-[1px] my-4', isMobile && 'hidden')}
+									className={clsx('h-[1px] my-[22px]', isMobile && 'hidden')}
 									style={
 										{
 											'--rd-color': sc.color,
@@ -615,11 +613,15 @@ function RuneShardGrid({
 	gradId,
 	color,
 	isMobile,
+	shardPicks,
+	onShardPicksChange,
 }: {
 	shards: RuneShardPerk[];
 	gradId: string;
 	color: string;
 	isMobile?: boolean;
+	shardPicks: (number | null)[];
+	onShardPicksChange: (picks: (number | null)[]) => void;
 }) {
 	const rows = useMemo(() => {
 		const chunked: RuneShardPerk[][] = [];
@@ -629,38 +631,35 @@ function RuneShardGrid({
 		return chunked;
 	}, [shards]);
 
-	const [shardPicks, setShardPicks] = useState<(number | null)[]>(() =>
-		Array.from({ length: rows.length }, () => null)
-	);
-
-	useEffect(() => {
-		setShardPicks(Array.from({ length: rows.length }, () => null));
-	}, [rows.length]);
-
-	const shardTrackHeight = '136px';
-
 	const handleSelect = (rowIdx: number, colIdx: number) => {
-		setShardPicks((prev) => {
-			const next = [...prev];
-			next[rowIdx] = prev[rowIdx] === colIdx ? null : colIdx;
-			return next;
-		});
+		const next = [...shardPicks];
+		next[rowIdx] = shardPicks[rowIdx] === colIdx ? null : colIdx;
+		onShardPicksChange(next);
 	};
 
-	const trackBtn = (shard: RuneShardPerk | undefined) => {
-		if (!shard) return <PerkBtn gradId={gradId} size="sm" />;
+	const shardBtn = (
+		shard: RuneShardPerk,
+		props: {
+			isSelected?: boolean;
+			isMuted?: boolean;
+			onClick?: () => void;
+		}
+	) => {
 		const btn = (
 			<PerkBtn
 				gradId={gradId}
 				size="sm"
 				iconSrc={runeShardImgUrl(shard.iconPath)}
 				iconAlt={shard.name}
-				isSelected
+				isSelected={props.isSelected}
+				isMuted={props.isMuted}
+				onClick={props.onClick}
 			/>
 		);
-		return isMobile ? (
-			btn
-		) : (
+
+		if (isMobile) return btn;
+
+		return (
 			<HoverPopover
 				align="center"
 				side="left"
@@ -679,74 +678,54 @@ function RuneShardGrid({
 
 	return (
 		<div className={clsx('rd-shard-picker', isMobile && 'rd-shard-picker--mobile')}>
-			<div className="rd-shard-track-col">
+			<div className="rd-shard-progress">
 				<ProgressColumn
-					fillHeight={shardTrackHeight}
-					trackHeight={shardTrackHeight}
+					fillHeight="100%"
+					trackHeight="90%"
 					color={color}
 					connectTop={false}
 				/>
-				{rows.map((row, rowIdx) => {
-					const colIdx = shardPicks[rowIdx];
-					const selected = colIdx != null ? row[colIdx] : undefined;
-					return (
-						<div key={rowIdx} className="rd-shard-track-slot" data-slot={rowIdx}>
-							{trackBtn(selected)}
-						</div>
-					);
-				})}
 			</div>
-			<div className="rd-shard-grid">
+			<div className="grid gap-y-6 4xl:gap-y-8">
 				{rows.map((row, rowIdx) => {
 					const selectedCol = shardPicks[rowIdx];
+					const selected = selectedCol != null ? row[selectedCol] : undefined;
+
 					return (
 						<div key={rowIdx}>
-							<div className="rd-shard-grid-row">
-								{row.map((shard, colIdx) => {
-									const btn = (
-										<PerkBtn
-											gradId={gradId}
-											size="sm"
-											iconSrc={runeShardImgUrl(shard.iconPath)}
-											iconAlt={shard.name}
-											isSelected={selectedCol === colIdx}
-											isMuted={selectedCol == null || selectedCol !== colIdx}
-											onClick={() => handleSelect(rowIdx, colIdx)}
-										/>
-									);
-
-									if (isMobile) {
-										return <div key={`${rowIdx}-${colIdx}`}>{btn}</div>;
-									}
-
-									return (
-										<HoverPopover
-											key={`${rowIdx}-${colIdx}`}
-											align="center"
-											side="left"
-											sideOffset={8}
-											closeDelayMs={0}
-											triggerClassName="flex"
-											content={<ShardHoverContent shard={shard} />}
-											contentClassName="rounded-none border-hex-gold/50 bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100"
-										>
-											{btn}
-										</HoverPopover>
-									);
-								})}
+							<div className="rd-shard-row">
+								<div className="rd-shard-row-track">
+									{selected ? (
+										shardBtn(selected, { isSelected: true })
+									) : (
+										<PerkBtn gradId={gradId} size="sm" />
+									)}
+								</div>
+								<div className="rd-shard-row-options">
+									{row.map((shard, colIdx) => (
+										<div key={`${rowIdx}-${colIdx}`}>
+											{shardBtn(shard, {
+												isSelected: selectedCol === colIdx,
+												isMuted:
+													selectedCol == null || selectedCol !== colIdx,
+												onClick: () => handleSelect(rowIdx, colIdx),
+											})}
+										</div>
+									))}
+								</div>
 							</div>
-							{rowIdx < rows.length - 1 && (
-								<div
-									className={clsx('h-[1px] my-4', isMobile && 'hidden')}
-									style={
-										{
-											'--rd-color': color,
-											background:
-												'linear-gradient(90deg, transparent, var(--rd-color), transparent)',
-										} as React.CSSProperties
-									}
-								/>
-							)}
+							{/* {rowIdx < rows.length - 1 && (
+							<div
+								className={clsx('h-[1px] my-4', isMobile && 'hidden')}
+								style={
+									{
+										'--rd-color': color,
+										background:
+											'linear-gradient(90deg, transparent, var(--rd-color), transparent)',
+									} as React.CSSProperties
+								}
+							/>
+						)} */}
 						</div>
 					);
 				})}
@@ -809,6 +788,28 @@ export default function RuneDetail({
 	const [showSecDropdown, setShowSecDropdown] = useState<boolean>(false);
 	const [showPrimaryDropdown, setShowPrimaryDropdown] = useState<boolean>(false);
 
+	const shardRows = useMemo(() => {
+		const chunked: RuneShardPerk[][] = [];
+		for (let i = 0; i < runeShards.length; i += 3) {
+			chunked.push(runeShards.slice(i, i + 3));
+		}
+		return chunked;
+	}, [runeShards]);
+
+	const [shardPicks, setShardPicks] = useState<(number | null)[]>([]);
+
+	const secData = activePathData
+		? (allPaths.find((p) => p.key === secPathKey) ?? null)
+		: null;
+	const ks = activePathData?.slots[0]?.runes ?? [];
+	const s1 = activePathData?.slots[1]?.runes ?? [];
+	const s2 = activePathData?.slots[2]?.runes ?? [];
+	const s3 = activePathData?.slots[3]?.runes ?? [];
+
+	useEffect(() => {
+		setShardPicks(Array.from({ length: shardRows.length }, () => null));
+	}, [shardRows.length]);
+
 	useEffect(() => {
 		setSecPicks([]);
 	}, [secPathKey]);
@@ -819,17 +820,65 @@ export default function RuneDetail({
 		}
 	}, [secPicks]);
 
+	useEffect(() => {
+		if (!activePathData) return;
+
+		const primaryComplete =
+			selectedKs != null && selectedSlots.every((slot) => slot != null);
+		const secondaryComplete = secData != null && secPicks.length === 2;
+		const shardsComplete =
+			shardRows.length > 0 && shardPicks.every((pick) => pick != null);
+
+		if (!primaryComplete || !secondaryComplete || !shardsComplete) return;
+
+		const findPrimaryRune = (slotRunes: DdragonRune[], id: number | null) =>
+			id == null ? null : (slotRunes.find((r) => r.id === id) ?? null);
+
+		const ngocPhu = [...secPicks]
+			.sort((a, b) => a.rowIdx - b.rowIdx)
+			.map((pick) =>
+				secData!.slots[pick.rowIdx]?.runes.find((r) => r.id === pick.runeId)
+			)
+			.filter((rune): rune is DdragonRune => rune != null);
+
+		const ngocBoTro = shardRows
+			.map((row, rowIdx) => {
+				const colIdx = shardPicks[rowIdx];
+				return colIdx != null ? (row[colIdx] ?? null) : null;
+			})
+			.filter((shard): shard is RuneShardPerk => shard != null);
+
+		console.log({
+			bangNgocChinh: activePathData,
+			ngocSieucap: findPrimaryRune(ks, selectedKs),
+			ngocChinh: [
+				findPrimaryRune(s1, selectedSlots[0] ?? null),
+				findPrimaryRune(s2, selectedSlots[1] ?? null),
+				findPrimaryRune(s3, selectedSlots[2] ?? null),
+			],
+			bangNgocPhu: secData,
+			ngocPhu,
+			runeShards: ngocBoTro,
+		});
+	}, [
+		activePathData,
+		selectedKs,
+		selectedSlots,
+		secData,
+		secPicks,
+		shardPicks,
+		shardRows,
+		ks,
+		s1,
+		s2,
+		s3,
+	]);
+
 	if (!activePathData) return null;
 
 	const cfg = cfgFor(activePathData.key);
 	const subtitle = PATH_SUBTITLES[activePathData.key] ?? '';
 	const secPaths = allPaths.filter((p) => p.key !== activePathData.key);
-	const secData = allPaths.find((p) => p.key === secPathKey) ?? null;
-
-	const ks = activePathData.slots[0]?.runes ?? [];
-	const s1 = activePathData.slots[1]?.runes ?? [];
-	const s2 = activePathData.slots[2]?.runes ?? [];
-	const s3 = activePathData.slots[3]?.runes ?? [];
 
 	const handleKsSelect = (id: number) => {
 		setSelectedKs(id);
@@ -1053,7 +1102,7 @@ export default function RuneDetail({
 
 				{/* ── Secondary column ───────────────────────────────────────── */}
 				<div className="rd-secondary">
-					<button
+					<div
 						onClick={() => setShowSecDropdown((prev) => !prev)}
 						className="rd-path-header cursor-pointer text-left w-full bg-transparent border-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60"
 					>
@@ -1104,7 +1153,7 @@ export default function RuneDetail({
 								)}
 							</div>
 						)}
-					</button>
+					</div>
 
 					{/* <div className={clsx('rd-sec-div', isMobile && 'rd-sec-div--visible')} /> */}
 
@@ -1142,6 +1191,8 @@ export default function RuneDetail({
 							// color="#c8aa6e"
 							color={cfg.color}
 							isMobile={isMobile}
+							shardPicks={shardPicks}
+							onShardPicksChange={setShardPicks}
 						/>
 					)}
 				</div>

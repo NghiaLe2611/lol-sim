@@ -3,7 +3,7 @@ import { runePerkImgUrl, stripRuneMarkupToText, type DdragonRune } from '@/pages
 import type { ReactNode } from 'react';
 
 const POPOVER_CONTENT_CLASS =
-	'rounded-none border-hex-gold/50 bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
+	'rounded-none border-2 border-hex-gold/50 bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
 
 function RuneHoverContent({ rune }: { rune: DdragonRune }) {
 	const longText = stripRuneMarkupToText(rune.longDesc);
@@ -45,7 +45,6 @@ const RunePopover = ({
 			align="center"
 			side={side}
 			sideOffset={8}
-			closeDelayMs={0}
 			triggerClassName={triggerClassName}
 			content={<RuneHoverContent rune={rune} />}
 			contentClassName={POPOVER_CONTENT_CLASS}

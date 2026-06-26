@@ -28,6 +28,8 @@ export type ChampionBaseStats = {
 	ms: number;
 	/** Critical strike chance 0–100. */
 	critPct: number;
+	/** Critical strike damage in percent (default 175). */
+	critDamagePct: number;
 };
 
 export type BuildComputedStats = {
@@ -51,7 +53,10 @@ export type BuildComputedStats = {
 	totalAbilityHaste: number;
 	totalLethality: number;
 	totalOmnivampPct: number;
+	/** Critical strike damage multiplier (e.g. 2.05 = 205%). */
 	totalCritDamage: number;
+	/** Critical strike damage as percent for display (e.g. 205). */
+	totalCritDamagePct: number;
 	effectiveHpPhys: number;
 	effectiveHpMagic: number;
 	dps: number;
@@ -119,6 +124,9 @@ export function parseItemAttrs(attrs: Record<string, number> | undefined): Accum
 	if (attrs.FlatMovementSpeedMod) add('movespeed', attrs.FlatMovementSpeedMod);
 	if (attrs.PercentMovementSpeedMod) add('movespeed', 0, attrs.PercentMovementSpeedMod * 100);
 	if (attrs.FlatCritChanceMod) add('criticalStrikeChance', 0, attrs.FlatCritChanceMod * 100);
+	if (attrs.FlatCritDamageMod) add('criticalStrikeDamage', attrs.FlatCritDamageMod * 100, 0);
+	if (attrs.PercentCritDamageMod)
+		add('criticalStrikeDamage', 0, attrs.PercentCritDamageMod * 100);
 
 	return out;
 }
@@ -155,8 +163,7 @@ function statTotals(acc: AccumulatedItemStats, key: string): FlatPercentTotals {
  */
 export function applyItemStatsToChampion(
 	base: ChampionBaseStats,
-	items: AccumulatedItemStats,
-	options?: { critDamageBonus?: number }
+	items: AccumulatedItemStats
 ): BuildComputedStats {
 	const hp = statTotals(items, 'health');
 	const mana = statTotals(items, 'mana');
@@ -167,6 +174,7 @@ export function applyItemStatsToChampion(
 	const asItem = statTotals(items, 'attackSpeed');
 	const ms = statTotals(items, 'movespeed');
 	const crit = statTotals(items, 'criticalStrikeChance');
+	const critDmg = statTotals(items, 'criticalStrikeDamage');
 	const ah = statTotals(items, 'abilityHaste');
 	const leth = statTotals(items, 'lethality');
 	const omni = statTotals(items, 'omnivamp');
@@ -191,8 +199,9 @@ export function applyItemStatsToChampion(
 	const totalLethality = leth.flat + leth.percent;
 	const totalOmnivampPct = omni.percent + omni.flat;
 
-	const critDamageBonus = options?.critDamageBonus ?? 0;
-	const totalCritDamage = 1.75 + critDamageBonus;
+	const totalCritDamagePct =
+		base.critDamagePct + critDmg.flat + critDmg.percent;
+	const totalCritDamage = totalCritDamagePct / 100;
 	const critChance = totalCritPct / 100;
 
 	const effectiveHpPhys = totalHp * (1 + totalArmor / 100);
@@ -221,6 +230,7 @@ export function applyItemStatsToChampion(
 		totalLethality,
 		totalOmnivampPct,
 		totalCritDamage,
+		totalCritDamagePct,
 		effectiveHpPhys,
 		effectiveHpMagic,
 		dps,

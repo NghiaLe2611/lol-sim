@@ -116,7 +116,6 @@ const ItemPopover = ({
 			align="center"
 			side="top"
 			sideOffset={0}
-			closeDelayMs={0}
 			content={<ItemHoverContent item={item} itemsById={itemsById} showTree={showTree} />}
 			contentClassName={clsx(POPOVER_CONTENT_CLASS, popoverClassName)}
 			triggerClassName={triggerClassName}

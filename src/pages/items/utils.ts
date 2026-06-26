@@ -383,6 +383,7 @@ function mapSrItemFromEntry(id: string, item: DdragonItemApi): SrItem | null {
 		into: item.into ?? [],
 		tags: item.tags ?? [],
 		roles: [],
+		group: item?.tags?.includes('Boots') ? 'Boots' : undefined, // add group Boots to ddragon items
 		attrs: item.stats ?? {},
 	};
 }
