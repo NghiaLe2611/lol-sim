@@ -320,12 +320,10 @@
 }
 
 .rd-progress-border {
-    position: relative;
-    width: 14px;
+    @apply flex justify-center relative;
+    width: 8px;
     height: 100%;
-    display: flex;
-    justify-content: center;
-
+    box-shadow: 0px 0px 4px 2px var(--rd-color);
     &::before,
     &::after {
         content: "";
@@ -335,6 +333,8 @@
         width: 1px;
         // background: rgba(171, 143, 87, 0.4);
         background: var(--rd-color);
+        opacity: 0.2;
+        display: none;
     }
     &::before {
         left: 0;
@@ -345,7 +345,7 @@
 }
 
 .rd-progress-outer {
-    width: 6px;
+    width: 4px;
     height: 100%;
     background: #1e2328;
     box-shadow: inset 0 0 3px #000;
@@ -619,7 +619,7 @@
     position: relative;
     z-index: 1;
     display: flex;
-    flex: 1;
+    // flex: 1;
     min-height: 0;
     // overflow: hidden;
 }
@@ -691,17 +691,18 @@
     position: relative;
     z-index: 1;
     display: flex;
-    align-items: center;
+    // align-items: center;
     flex-shrink: 0;
     margin-top: 20px;
     overflow: hidden;
+    height: 200px;
 }
 
 .rd-shard-track-col {
     position: relative;
     width: 84px;
     flex-shrink: 0;
-    height: 200px;
+    // height: 200px;
 }
 
 .rd-shard-track-slot {
@@ -715,13 +716,16 @@
     z-index: 2;
 
     &[data-slot="0"] {
-        top: 0;
+        // top: 0;
+        top: -10px;
     }
     &[data-slot="1"] {
-        top: 72px;
+        // top: 72px;
+        top: 54px;
     }
     &[data-slot="2"] {
-        top: 144px;
+        // top: 144px;
+        top: 118px;
     }
 
     .rd-perk-btn {

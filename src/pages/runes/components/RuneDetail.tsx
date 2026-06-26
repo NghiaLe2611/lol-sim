@@ -637,7 +637,7 @@ function RuneShardGrid({
 		setShardPicks(Array.from({ length: rows.length }, () => null));
 	}, [rows.length]);
 
-	const shardTrackHeight = '160px';
+	const shardTrackHeight = '136px';
 
 	const handleSelect = (rowIdx: number, colIdx: number) => {
 		setShardPicks((prev) => {
