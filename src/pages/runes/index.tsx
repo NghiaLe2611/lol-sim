@@ -27,7 +27,11 @@ function PathGridPlaceholder() {
 					className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] dark:border-[#46372a]"
 					aria-hidden
 				>
-					<Skeleton className="aspect-[3/4] w-full rounded-none border-b-2 border-[#ab8f57] dark:border-[#46372a] bg-gray-200 dark:bg-gray-700" />
+					{/* <Skeleton className="aspect-[3/4] w-full rounded-none border-b-2 border-[#ab8f57] dark:border-[#46372a] bg-gray-200 dark:bg-gray-700" /> */}
+					<div className="relative aspect-[3/4] w-full shrink-0 border-b-2 border-[#ab8f57] dark:border-[#46372a]">
+						<Skeleton className="absolute inset-0 rounded-none bg-gray-200 dark:bg-gray-700" />
+					</div>
+
 					<div className="flex justify-center py-2.5">
 						<Skeleton className="h-4 w-20" />
 					</div>
@@ -199,12 +203,16 @@ export default function RunesPage() {
 										onMouseLeave={() => setHoverId(null)}
 										className="flex min-w-0 flex-col overflow-hidden border-2 border-[#ab8f57] opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hex-gold/60 dark:border-[#46372a]"
 									>
-										<img
-											alt={path.name}
-											className="aspect-[3/4] w-full border-b-2 border-[#ab8f57] object-cover object-top dark:border-[#46372a]"
-											loading="lazy"
-											src={runePathCardUrl(path.key)}
-										/>
+										<div className="relative aspect-[3/4] w-full shrink-0 border-b-2 border-[#ab8f57] dark:border-[#46372a]">
+											<img
+												alt={path.name}
+												width={300}
+												height={400}
+												className="absolute inset-0 h-full w-full object-cover object-top"
+												loading="lazy"
+												src={runePathCardUrl(path.key)}
+											/>
+										</div>
 										<p className="py-2.5 text-center text-xs font-semibold uppercase tracking-wider lg:text-sm">
 											{path.name}
 										</p>
