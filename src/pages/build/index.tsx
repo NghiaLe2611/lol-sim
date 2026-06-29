@@ -7,7 +7,7 @@ import {
 	getItems,
 } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -32,7 +32,7 @@ import ItemPopover from '@/pages/items/components/ItemPopover';
 import './level-slider.scss';
 import { type ChampionListRow } from '@/types/champions';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { bonusStatAbbreviation } from '@/pages/champion-detail/utils';
+import { bonusStatAbbreviation, type BonusChampionDetail } from '@/pages/champion-detail/utils';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { capitalizeText } from '@/utils/common';
 import {
@@ -42,6 +42,43 @@ import {
 	type ChampionBaseStats,
 	type ItemBonusStatBlock,
 } from '@/pages/build/item-stats';
+import {
+	EMPTY_SKILL_LEVELS,
+	SKILL_KEYS,
+	canLevelSkill,
+	clampSkillLevels,
+	dotCountForSkill,
+	levelUpSkill,
+	type SkillKey,
+	type SkillLevels,
+} from '@/pages/build/skill-levels';
+import './build.scss';
+import SkillPopover from './SkillPopover';
+
+type HudResourceBarKind = 'mana' | 'energy' | 'shield';
+
+function resolveHudResourceBarKind(
+	bonusResource?: string | null,
+	ddragonPartype?: string | null
+): HudResourceBarKind {
+	const raw = (bonusResource ?? ddragonPartype ?? 'MANA').trim();
+	const normalized = raw.replace(/_/g, ' ').toLowerCase();
+
+	if (normalized === 'mana') return 'mana';
+	if (normalized === 'energy') return 'energy';
+	return 'shield';
+}
+
+function hudResourceBarClass(kind: HudResourceBarKind): string {
+	switch (kind) {
+		case 'mana':
+			return 'mana-bar';
+		case 'energy':
+			return 'energy-bar';
+		default:
+			return 'shield-bar';
+	}
+}
 
 // Category definition matching standard LoL items
 type ItemCategory = 'all' | 'attack' | 'magic' | 'defense' | 'support' | 'boots';
@@ -67,48 +104,19 @@ const LANE_FILTERS: { id: ChampLaneFilter; label: string; mappedKey: string }[] 
 	{ id: 'SP', label: 'SP', mappedKey: 'Support' },
 ];
 
-const overviewChampionStats = [
-	{
-		key: 'attackDamage',
-		icon: 'scalead',
-		value: 'totalAd',
-	},
-	{
-		key: 'abilityPower',
-		icon: 'scaleap',
-		value: 'totalAp',
-	},
-	{
-		key: 'armor',
-		icon: 'scalearmor',
-		value: 'totalArmor',
-	},
-	{
-		key: 'magicResistance',
-		icon: 'scalemr',
-		value: 'totalMr',
-	},
-	{
-		key: 'attackSpeed',
-		icon: 'scaleas',
-		value: 'totalAs',
-	},
-	{
-		key: 'abilityHaste',
-		icon: 'scalecooldown',
-		value: 'totalAbilityHaste',
-	},
-	{
-		key: 'criticalStrikeChance',
-		icon: 'scalecrit',
-		value: 'totalCritPct',
-	},
-	{
-		key: 'movespeed',
-		icon: 'scalems',
-		value: 'totalMs',
-	},
-];
+const OVERVIEW_STAT_KEYS = [
+	'attackDamage',
+	'abilityPower',
+	'armor',
+	'magicResistance',
+	'attackSpeed',
+	'abilityHaste',
+	'criticalStrikeChance',
+	'movespeed',
+] as const;
+
+const STAT_ICON_BASE =
+	'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/ux/fonts/texticons/lol/statsicon';
 
 export default function BuildPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
@@ -120,6 +128,7 @@ export default function BuildPage() {
 
 	// Slider states
 	const [level, setLevel] = useState<number>(1);
+	const [skillLevels, setSkillLevels] = useState<SkillLevels>(EMPTY_SKILL_LEVELS);
 
 	// Build slots states
 	const [build, setBuild] = useState<(string | null)[]>(Array(6).fill(null));
@@ -150,7 +159,7 @@ export default function BuildPage() {
 	// Fetch Champion detail for selected champion (from DDragon and Meraki)
 	const championBonusDetailQuery = useQuery({
 		queryKey: ['championBonusDetail', selectedChampionId],
-		queryFn: () => getBonusChampionDetail(selectedChampionId!),
+		queryFn: () => getBonusChampionDetail(selectedChampionId!) as Promise<BonusChampionDetail>,
 		enabled: Boolean(selectedChampionId),
 		staleTime: STALE_MS,
 		gcTime: STALE_MS,
@@ -239,13 +248,37 @@ export default function BuildPage() {
 		}
 	}, [filteredChampions, selectedChampionId]);
 
+	useEffect(() => {
+		setSkillLevels(EMPTY_SKILL_LEVELS);
+	}, [selectedChampionId]);
+
+	useEffect(() => {
+		setSkillLevels((prev) => clampSkillLevels(prev, level));
+	}, [level]);
+
 	const currentChampDdr = useMemo(() => {
 		if (!selectedChampionId) return null;
 		return (championsQuery.data?.data || {})[selectedChampionId];
 	}, [championsQuery.data, selectedChampionId]);
 
 	const currentChampBonus = championBonusDetailQuery.data;
-	// console.log('champion', currentChampBonus);
+
+	const handleSkillLevelUp = (skill: SkillKey) => {
+		setSkillLevels((prev) => levelUpSkill(skill, prev, level));
+	};
+
+	const resourceBarClass = useMemo(
+		() =>
+			hudResourceBarClass(
+				resolveHudResourceBarKind(
+					currentChampBonus?.resource ?? null,
+					typeof (currentChampDdr as { partype?: string } | null)?.partype === 'string'
+						? (currentChampDdr as { partype: string }).partype
+						: null
+				)
+			),
+		[currentChampBonus?.resource, currentChampDdr]
+	);
 
 	// Dynamically compute counts for item categories
 	const itemCategoryCounts = useMemo(() => {
@@ -457,8 +490,6 @@ export default function BuildPage() {
 		return `https://ddragon.leagueoflegends.com/cdn/${patchVersion || '14.23.1'}/img/champion/${champId}.png`;
 	};
 
-	console.log(123, calculatedStats);
-
 	const statsToShow = useMemo(() => {
 		return [
 			{
@@ -476,42 +507,49 @@ export default function BuildPage() {
 			{
 				key: 'attackDamage',
 				value: calculatedStats.totalAd,
+				icon: 'scalead',
 				colorClass: 'text-orange-500 dark:text-orange-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'abilityPower',
 				value: calculatedStats.totalAp,
+				icon: 'scaleap',
 				colorClass: 'text-fuchsia-500 dark:text-fuchsia-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'attackSpeed',
 				value: calculatedStats.totalAs,
+				icon: 'scaleas',
 				colorClass: 'text-yellow-500 dark:text-yellow-400',
 				format: (v: number) => v.toFixed(3),
 			},
 			{
 				key: 'armor',
 				value: calculatedStats.totalArmor,
+				icon: 'scalearmor',
 				colorClass: 'text-blue-500 dark:text-blue-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'magicResistance',
 				value: calculatedStats.totalMr,
+				icon: 'scalemr',
 				colorClass: 'text-purple-500 dark:text-purple-400',
 				format: (v: number) => v.toFixed(1),
 			},
 			{
 				key: 'movespeed',
 				value: calculatedStats.totalMs,
+				icon: 'scalems',
 				colorClass: 'text-teal-500 dark:text-teal-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
 				key: 'criticalStrikeChance',
 				value: calculatedStats.totalCritPct,
+				icon: 'scalecrit',
 				colorClass: 'text-red-500 dark:text-red-400',
 				format: (v: number) => Math.round(v) + '%',
 			},
@@ -524,6 +562,7 @@ export default function BuildPage() {
 			{
 				key: 'abilityHaste',
 				value: calculatedStats.totalAbilityHaste,
+				icon: 'scalecooldown',
 				colorClass: 'text-indigo-500 dark:text-indigo-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
@@ -542,9 +581,24 @@ export default function BuildPage() {
 		];
 	}, [calculatedStats]);
 
+	const statsByKey = useMemo(
+		() => Object.fromEntries(statsToShow.map((stat) => [stat.key, stat])),
+		[statsToShow]
+	);
+
+	const abilityData = useCallback(
+		(skill: string) => {
+			if (!currentChampBonus) return null;
+			return (currentChampBonus.abilities as Record<string, { name?: string }[]>)?.[
+				skill
+			]?.[0];
+		},
+		[currentChampBonus]
+	);
+
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12 relative">
-			<header className="flex items-center justify-between mb-8">
+			<header className="flex items-center justify-between mb-16">
 				<div>
 					<h1 className="display gold-text text-4xl">BUILD CALCULATOR</h1>
 					<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
@@ -582,34 +636,185 @@ export default function BuildPage() {
 			{/* Main Layout Grid */}
 			<div className="grid gap-3 xl:gap-6 grid-cols-1 lg:grid-cols-[320px_1fr]">
 				{/* Overview */}
-				<div className="col-span-full flex items-center gap-4">
-					<div className="inline-flex items-center gap-2">
-						<img
-							src={getChampImgUrl(selectedChampionId || '')}
-							alt={(currentChampBonus?.name as string) || 'champion'}
-							className="mb-1 w-12 h-12 3xl:w-20 3xl:h-20 rounded-full mx-auto border-2 border-hex-gold shadow-gold bg-[#040a10]"
-						/>
-						{/* <span className="text-xs 3xl:text-sm font-bold text-hex-gold px-2 py-0.5 block truncate max-w-full">
-							{selectedChampionId}
-						</span> */}
-					</div>
+				<div className="col-span-full flex items-center">
 					{/* corner-top-shape: scoop; */}
-					<div className="inline-grid grid-cols-2 gap-y-2 gap-x-6 hex-border border-2 p-4">
-						{overviewChampionStats.map((stat) => (
-							<div key={stat.key} className="flex items-center gap-2">
-								<img
-									src={`https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/ux/fonts/texticons/lol/statsicon/${stat.icon}.png`}
-									alt={stat.key}
-									className="w-4 h-4"
-								/>
+					{/* Stats */}
+					<div className="stats-box">
+						{OVERVIEW_STAT_KEYS.map((key) => {
+							const stat = statsByKey[key];
+							if (!stat?.icon) return null;
 
-								<span className="text-xs font-semibold 4xl:text-sm text-hext-gold">
-									{calculatedStats[
-										stat.value as keyof BuildComputedStats
-									]?.toString()}
-								</span>
+							return (
+								<div key={key} className="flex items-center gap-2">
+									<img
+										src={`${STAT_ICON_BASE}/${stat.icon}.png`}
+										alt={key}
+										className="w-4 h-4"
+									/>
+									<span className="text-xs font-medium 4xl:text-sm text-hext-gold">
+										{stat.format(stat.value)}
+									</span>
+								</div>
+							);
+						})}
+					</div>
+					{/* Skills */}
+					<div className="hud-frame skill-frame">
+						<div className="outer-frame absolute -left-20 top-1/2 -translate-y-1/2">
+							<div className="trapezoid"></div>
+							<div className="inner-frame relative">
+								{selectedChampionId && (
+									<img
+										src={getChampImgUrl(selectedChampionId || '')}
+										alt={(selectedChampionId as string) || 'champion'}
+										className="rounded-full border-2 border-hex-gold/50 mx-auto absolute top-0 left-0 aspect-square object-contain hover:opacity-80"
+									/>
+								)}
 							</div>
-						))}
+							<div className="lv-frame">{level}</div>
+						</div>
+						<div
+							className={clsx('flex flex-wrap gap-2 z-10 relative', {
+								'opacity-80': championBonusDetailQuery.isFetching,
+							})}
+						>
+							<div className="w-10 h-10 border-2 dark:border-yellow-100">
+								<SkillPopover
+									champion={selectedChampionId ?? null}
+									item={abilityData('P')}
+									skill={'P'}
+								>
+									<img
+										alt={`${selectedChampionId}-Q`}
+										src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
+									/>
+								</SkillPopover>
+							</div>
+							<div className="flex-1 grid grid-cols-4 gap-2">
+								{SKILL_KEYS.map((skill) => {
+									const rank = skillLevels[skill];
+									const canUp = canLevelSkill(skill, skillLevels, level);
+									const dotCount = dotCountForSkill(skill);
+
+									return (
+										<div key={skill} className="flex flex-col relative">
+											<div className="aspect-square border-2 dark:border-yellow-100 mb-1">
+												<SkillPopover
+													champion={selectedChampionId ?? null}
+													item={abilityData(skill)}
+													skill={skill}
+													skillLv={rank}
+													triggerClassName="h-full w-full"
+												>
+													<img
+														alt={`${selectedChampionId}-${skill}`}
+														src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
+														className={cn(
+															'w-full h-full object-cover',
+															rank === 0 && 'grayscale opacity-70'
+														)}
+													/>
+												</SkillPopover>
+												{canUp ? (
+													<button
+														type="button"
+														className="transition-all active:translate-y-0.5 absolute -top-[90%] left-0 w-full aspect-square bg-transparent cursor-pointer outline-none grayscale-[50%] hover:grayscale-0"
+														onClick={() => handleSkillLevelUp(skill)}
+														title={`Level up ${skill}`}
+														aria-label={`Level up ${skill}`}
+													>
+														<img
+															src="/images/icons/skillup.svg"
+															alt=""
+															className="w-full h-full pointer-events-none"
+														/>
+													</button>
+												) : null}
+											</div>
+											{skill === 'R' ? (
+												<div className="flex justify-center gap-0.5">
+													{Array.from({ length: dotCount }).map(
+														(_, index) => (
+															<div
+																key={index}
+																className={cn(
+																	'w-2 h-2 rounded-full',
+																	index < rank
+																		? 'bg-hex-gold/80'
+																		: 'bg-gray-300 dark:bg-gray-700'
+																)}
+															/>
+														)
+													)}
+												</div>
+											) : (
+												<div className="grid grid-cols-5 gap-0.5">
+													{Array.from({ length: dotCount }).map(
+														(_, index) => (
+															<div
+																key={index}
+																className={cn(
+																	'w-2 h-2 rounded-full',
+																	index < rank
+																		? 'bg-hex-gold/80'
+																		: 'bg-gray-300 dark:bg-gray-700'
+																)}
+															/>
+														)
+													)}
+												</div>
+											)}
+										</div>
+									);
+								})}
+							</div>
+							<div className="w-full flex flex-col gap-1">
+								<div className="hud-bar health-bar">
+									{Math.round(calculatedStats.totalHp)}/
+									{Math.round(calculatedStats.totalHp)}
+								</div>
+								<div className={cn('hud-bar', resourceBarClass)}>
+									{calculatedStats.totalMana > 0 ? (
+										<>
+											{Math.round(calculatedStats.totalMana)}/
+											{Math.round(calculatedStats.totalMana)}
+										</>
+									) : null}
+								</div>
+							</div>
+						</div>
+					</div>
+					{/* Items */}
+					<div className="hud-frame items-frame">
+						<div className="grid grid-cols-3 gap-1 w-full">
+							{build.map((itemId, index) => {
+								const item = itemId ? itemsById[itemId] : null;
+								return (
+									<div
+										key={index}
+										className="aspect-square border-2 border-hex-gold/40 z-[3] p-1"
+										onContextMenu={(e) => handleContextMenu(e, index)}
+									>
+										{item ? (
+											<ItemPopover
+												item={item}
+												itemsById={itemsById}
+												showTree={false}
+												triggerClassName="w-full h-full"
+											>
+												<div className="w-full h-full relative flex flex-col items-center justify-center">
+													<img
+														src={itemImgUrl(patchVersion!, item.id)}
+														alt={item.name}
+														className="w-full h-full object-cover"
+													/>
+												</div>
+											</ItemPopover>
+										) : null}
+									</div>
+								);
+							})}
+						</div>
 					</div>
 				</div>
 
@@ -765,15 +970,22 @@ export default function BuildPage() {
 				<div className="space-y-3 xl:space-y-6">
 					{/* Build Slots Panel */}
 					<div className="hex-border rounded-md">
-						<div className="flex justify-between items-center rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
+						<div className="w-full flex justify-between items-center rounded-t-md p-3 border-b border-hex-gold/30 bg-neutral-200 dark:bg-[#07131b]">
 							<h3 className="text-xs text-hex-gold font-bold tracking-wider uppercase">
 								Build Slots
-							</h3>
-							{/* {editingSlot !== null && (
+								{/* {editingSlot !== null && (
 								<span className="text-[10px] px-2 py-0.5 border border-hex-gold/30 rounded text-muted-foreground font-semibold bg-hex-gold/10">
 									EDITING SLOT {editingSlot + 1}
 								</span>
 							)} */}
+							</h3>
+							{build.some((item) => item !== null) ? (
+								<span className="text-xs text-hex-gold font-semibold">
+									Total: {calculatedStats.totalCost.toLocaleString()}g
+								</span>
+							) : (
+								''
+							)}
 						</div>
 
 						{/* Slots Row Grid */}

@@ -1,0 +1,129 @@
+.outer-frame {
+    @apply relative rounded-full flex items-center justify-center p-1 bg-gray-200 dark:bg-neutral-900;
+    width: 120px;
+    height: 120px;
+}
+
+.outer-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 5px;
+    background: linear-gradient(to right, #917228, #bd9435);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.inner-frame {
+    @apply border-[4px] border-gray-300 dark:border-gray-800 rounded-full;
+    width: 95%;
+    height: 95%;
+}
+
+.trapezoid {
+    @apply absolute top-1 -translate-x-1/2 left-1/2 z-10;
+    width: 50px;
+    height: 20px;
+
+    &:before {
+        content: "";
+        // backround-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 200' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='50,20 100,180 300,180 350,20' stroke='%23917228' stroke-width='20' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 200' preserveAspectRatio='none' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 50,20 L 100,180 Q 200,150 300,180 L 350,20' stroke='%23917228' stroke-width='20' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        @apply absolute top-0 left-0 w-full h-full;
+    }
+
+    &:after {
+        content: "";
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 252.59 162.31'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%23917228;stroke:%23232323;stroke-miterlimit:10;stroke-width:2px;%7D%3C/style%3E%3C/defs%3E%3Ctitle%3EAsset 1%3C/title%3E%3Cg id='Layer_2' data-name='Layer 2'%3E%3Cg id='Layer_1-2' data-name='Layer 1'%3E%3Cpath class='cls-1' d='M1.29,1,43,161q83.34-30,166.67,0L251.29,1Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-size: 80% 80%;
+        background-repeat: no-repeat;
+        background-position: center;
+        @apply absolute top-[-8px] left-0 w-full h-full;
+    }
+}
+
+.stats-box {
+    @apply inline-grid grid-cols-2 gap-y-1 gap-x-6 hex-border border-2 p-2;
+    @apply bg-gray-200 dark:bg-[#0c1c18];
+    min-width: 180px;
+}
+
+.hud-frame {
+    position: relative;
+    height: 100%;
+    @apply bg-gray-200 dark:bg-[#0c1c18];
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    corner-top-shape: scoop;
+    @apply border-2 border-hex-gold/50;
+    &:before {
+        content: "";
+        @apply bg-gray-200 dark:bg-[#0c1c18];
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        corner-top-shape: scoop;
+        width: 95%;
+        height: 95%;
+        @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 dark:border-[#193a32];
+    }
+}
+
+.lv-frame {
+    @apply absolute bottom-1 right-4 bg-neutral-900;
+    @apply flex items-center justify-center rounded-full font-semibold text-xs aspect-square w-8 border-2 border-hex-gold/50;
+    &:before{
+        content: "";
+        @apply rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] h-[85%];
+        @apply border-2 border-hex-gold/40;
+    }
+}
+
+.skill-frame {
+    width: 350px;
+    @apply py-4 pl-12 pr-8 ml-16;
+    z-index: 2;
+}
+
+.items-frame{
+    width: 200px;
+    margin-left: -16px;
+    @apply p-4 px-6 flex items-center justify-center;
+}
+
+.hud-bar {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    @apply w-full h-4 text-white text-xs text-center font-semibold;
+}
+
+.health-bar {
+    background-image: url("/images/hud-health.png");
+}
+
+.mana-bar {
+    background-image: url("/images/hud-mana.png");
+}
+
+.energy-bar {
+    background-image: url("/images/hud-energy.png");
+}
+
+.rage-bar {
+    background-image: url("/images/hud-rage.png");
+}
+
+.shield-bar {
+    background-image: url("/images/hud-shield.png");
+}

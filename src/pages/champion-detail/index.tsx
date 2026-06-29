@@ -436,19 +436,21 @@ function titleForAbilityVideo(spell: BonusAbility, slot: (typeof ABILITY_SLOTS)[
 	return trimmed || slot;
 }
 
+interface BonusAbilityEffectsBodyProps {
+	slot: (typeof ABILITY_SLOTS)[number];
+	spell: BonusAbility;
+	spellSegmentKey: string;
+	videoCaption: string;
+	videoUrl: string;
+}
+
 function BonusAbilityEffectsBody({
 	slot,
 	spell,
 	spellSegmentKey,
 	videoCaption,
 	videoUrl,
-}: {
-	slot: (typeof ABILITY_SLOTS)[number];
-	spell: BonusAbility;
-	spellSegmentKey: string;
-	videoCaption: string;
-	videoUrl: string;
-}) {
+}: BonusAbilityEffectsBodyProps) {
 	return spell.effects?.map((eff, ei) => {
 		const effectIconSrc =
 			typeof eff.icon === 'string' && eff.icon.trim().length > 0 ? eff.icon.trim() : null;
@@ -531,7 +533,7 @@ function BonusAbilityEffectsBody({
 	});
 }
 
-function BonusAbilityCard({
+export function BonusAbilityCard({
 	slot,
 	spells,
 	championResource,
@@ -550,6 +552,8 @@ function BonusAbilityCard({
 	const primary = spells[0];
 
 	if (!spells.length) return null;
+
+	// return <div>{slot} - hehehehe</div>
 
 	return (
 		<article className="to-muted/40 mb-10 rounded-xl border border-border bg-gradient-to-b from-background p-5 last:mb-0">
