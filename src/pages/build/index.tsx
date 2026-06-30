@@ -667,7 +667,7 @@ export default function BuildPage() {
 									<img
 										src={getChampImgUrl(selectedChampionId || '')}
 										alt={(selectedChampionId as string) || 'champion'}
-										className="rounded-full border-2 border-hex-gold/50 mx-auto absolute top-0 left-0 aspect-square object-contain hover:opacity-80"
+										className="rounded-full border-2 border-hex-gold/50 mx-auto absolute top-0 left-0 aspect-square object-contain hover:opacity-80 hover:scale-105"
 									/>
 								)}
 							</div>
@@ -715,6 +715,7 @@ export default function BuildPage() {
 														)}
 													/>
 												</SkillPopover>
+												{/* '!grayscale pointer-events-none': !canUp, */}
 												{canUp ? (
 													<button
 														type="button"

@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "preview": "vite preview",
+    "widget": "npx --yes serve html -l 3333",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

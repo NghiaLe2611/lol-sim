@@ -53,7 +53,11 @@ const SkillContent = ({ champion, item, skill, skillLv }: SkillContentProps) => 
 					</div>
 				</div>
 				<div>
-					<p>Cooldown: {coolDown}s</p>
+					{
+						coolDown && (
+							<p>Cooldown: {coolDown}s</p>
+						)
+					}
 					<p>{item.cost ? cost : 'No cost'}</p>
 				</div>
 			</div>
