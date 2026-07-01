@@ -1,10 +1,9 @@
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { itemImgUrl } from '@/constants/common';
-import { cn } from '@/lib/utils';
 import { ItemDescriptionParts } from '@/pages/items/ItemDescriptionParts';
-import { ItemTreeHorizontalRecursive, ItemTreeVerticalRecursive } from '@/pages/items/ItemTree';
+import { ItemTreeHorizontalRecursive } from '@/pages/items/ItemTree';
 import { parseItemDescription, type SrItem } from '@/pages/items/utils';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Coins } from 'lucide-react';
 
 type ItemDialogProps = {

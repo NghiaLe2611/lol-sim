@@ -30,8 +30,8 @@ const SkillDetail = () => {
 };
 
 const SkillContent = ({ champion, item, skill, skillLv }: SkillContentProps) => {
-    const coolDown = skillLv ? item.cooldown?.modifiers?.[0]?.values?.[skillLv - 1] : null;
-    const cost = skillLv ? item.cost?.modifiers?.[0]?.values?.[skillLv - 1] : null;
+	const coolDown = skillLv ? item.cooldown?.modifiers?.[0]?.values?.[skillLv - 1] : null;
+	const cost = skillLv ? item.cost?.modifiers?.[0]?.values?.[skillLv - 1] : null;
 
 	if (!champion) return;
 	return (
@@ -52,13 +52,9 @@ const SkillContent = ({ champion, item, skill, skillLv }: SkillContentProps) => 
 						{skillLv ? <p>Level {skillLv}</p> : null}
 					</div>
 				</div>
-				<div>
-					{
-						coolDown && (
-							<p>Cooldown: {coolDown}s</p>
-						)
-					}
-					<p>{item.cost ? cost : 'No cost'}</p>
+				<div className='text-right'>
+					{coolDown && <p>Cooldown: {coolDown}s</p>}
+					<p className='text-foreground/60'>{item.cost ? cost : 'No cost'}</p>
 				</div>
 			</div>
 			<div className="h-[2px] bg-hex-gold/30 dark:bg-hex-gold/10"></div>
@@ -82,7 +78,7 @@ const SkillPopover = ({
 	popoverClassName,
 	triggerClassName,
 }: SkillPopoverProps) => {
-	console.log('skilll', item);
+	// console.log('skill', item);
 	return (
 		<HoverPopover
 			align="center"

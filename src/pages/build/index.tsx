@@ -54,6 +54,8 @@ import {
 } from '@/pages/build/skill-levels';
 import './build.scss';
 import SkillPopover from './SkillPopover';
+import { Button } from '@/components/ui/button';
+import SimulateDialog from './SimulateDialog';
 
 type HudResourceBarKind = 'mana' | 'energy' | 'shield';
 
@@ -126,7 +128,6 @@ export default function BuildPage() {
 	const [activeLane, setActiveLane] = useState<ChampLaneFilter>('ALL');
 	const [selectedChampionId, setSelectedChampionId] = useState<string | null>(null);
 
-	// Slider states
 	const [level, setLevel] = useState<number>(1);
 	const [skillLevels, setSkillLevels] = useState<SkillLevels>(EMPTY_SKILL_LEVELS);
 
@@ -138,6 +139,8 @@ export default function BuildPage() {
 	const [itemSearch, setItemSearch] = useState('');
 	const [activeCategory, setActiveCategory] = useState<ItemCategory>('all');
 	const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
+
+	const [simulateDialogOpen, setSimulateDialogOpen] = useState(false);
 
 	const { showToast } = useCustomToast();
 
@@ -598,7 +601,7 @@ export default function BuildPage() {
 
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12 relative">
-			<header className="flex items-center justify-between mb-16">
+			<header className="flex items-center justify-between mb-12">
 				<div>
 					<h1 className="display gold-text text-4xl">BUILD CALCULATOR</h1>
 					<p className="mt-2 text-xs text-muted-foreground lg:text-sm">
@@ -817,6 +820,25 @@ export default function BuildPage() {
 							})}
 						</div>
 					</div>
+
+					<Button
+						className="ml-auto text-white hover:opacity-85"
+						onClick={() => setSimulateDialogOpen(true)}
+					>
+						Simulate damage
+					</Button>
+					<SimulateDialog
+						data={{
+							build: build,
+							stats: {
+								...calculatedStats,
+								level,
+							},
+							skills: skillLevels,
+						}}
+						open={simulateDialogOpen}
+						onOpenChange={setSimulateDialogOpen}
+					/>
 				</div>
 
 				{/* Left column */}
@@ -981,12 +1003,20 @@ export default function BuildPage() {
 							)} */}
 							</h3>
 							{build.some((item) => item !== null) ? (
-								<span className="text-xs text-hex-gold font-semibold">
-									Total: {calculatedStats.totalCost.toLocaleString()}g
-								</span>
-							) : (
-								''
-							)}
+								<div className="flex items-center gap-2">
+									<span className="text-xs text-hex-gold font-semibold">
+										Total: {calculatedStats.totalCost.toLocaleString()}g
+									</span>
+									<button
+										type="button"
+										className="text-destructive hover:opacity-80"
+										title="Clear build"
+										onClick={() => setBuild(Array(6).fill(null))}
+									>
+										<X size={16} />
+									</button>
+								</div>
+							) : null}
 						</div>
 
 						{/* Slots Row Grid */}
