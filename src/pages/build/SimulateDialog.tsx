@@ -14,10 +14,13 @@ interface SimulateDialogProps {
 	onOpenChange: (open: boolean) => void;
 }
 const SimulateDialog = ({ data, open, onOpenChange }: SimulateDialogProps) => {
-    console.log(data);
+	console.log(data);
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="outline:none max-w-3xl gap-3 !ring-0 sm:max-w-3xl">
+			<DialogContent
+				className="outline:none max-w-3xl gap-3 !ring-0 sm:max-w-3xl"
+				onOpenAutoFocus={(e) => e.preventDefault()}
+			>
 				<VisuallyHidden.Root>
 					<DialogTitle>Simulate Damage</DialogTitle>
 					<DialogDescription>Simulate Damage</DialogDescription>

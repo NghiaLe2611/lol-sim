@@ -86,6 +86,39 @@ async function getBonusChampionDetail(championKey: string) {
 	}
 }
 
+async function getChampionSkills(
+	championKey: string,
+	params?: {
+		skill?: string;
+		ad?: number;
+		ap?: number;
+		championLevel?: number;
+		skillLevel?: number;
+	}
+) {
+	const idEncoded = encodeURIComponent(championKey);
+	const search = new URLSearchParams();
+	if (params?.skill) search.set('skill', params.skill);
+	if (params?.ad != null) search.set('ad', String(Math.round(params.ad)));
+	if (params?.ap != null) search.set('ap', String(Math.round(params.ap)));
+	if (params?.championLevel != null) {
+		search.set('championLevel', String(params.championLevel));
+	}
+	if (params?.skillLevel != null) search.set('skillLevel', String(params.skillLevel));
+	const query = search.toString();
+	const url = `${getBonusApiBase()}/skills/${idEncoded}${query ? `?${query}` : ''}`;
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		return data as Record<string, unknown>;
+	} catch (error) {
+		throw error;
+	}
+}
+
 // Get item list
 async function getItems(version: string) {
 	const url = `${apiUrl}/cdn/${version}/data/en_US/item.json`;
@@ -256,6 +289,7 @@ export {
 	getBonusChampions,
 	getChampionDetail,
 	getChampions,
+	getChampionSkills,
 	getItems,
 	getBonusItems,
 	getRunes,

@@ -3,6 +3,7 @@ import {
 	getBonusChampionDetail,
 	getBonusChampions,
 	getBonusItems,
+	getChampionSkills,
 	getChampions,
 	getItems,
 } from '@/services/api';
@@ -32,7 +33,11 @@ import ItemPopover from '@/pages/items/components/ItemPopover';
 import './level-slider.scss';
 import { type ChampionListRow } from '@/types/champions';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { bonusStatAbbreviation, type BonusChampionDetail } from '@/pages/champion-detail/utils';
+import {
+	BonusAbility,
+	bonusStatAbbreviation,
+	type BonusChampionDetail,
+} from '@/pages/champion-detail/utils';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { capitalizeText } from '@/utils/common';
 import {
@@ -163,6 +168,14 @@ export default function BuildPage() {
 	const championBonusDetailQuery = useQuery({
 		queryKey: ['championBonusDetail', selectedChampionId],
 		queryFn: () => getBonusChampionDetail(selectedChampionId!) as Promise<BonusChampionDetail>,
+		enabled: Boolean(selectedChampionId),
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
+	const championSkillsQuery = useQuery({
+		queryKey: ['champion-skills', selectedChampionId],
+		queryFn: () => getChampionSkills(selectedChampionId!),
 		enabled: Boolean(selectedChampionId),
 		staleTime: STALE_MS,
 		gcTime: STALE_MS,
@@ -526,7 +539,7 @@ export default function BuildPage() {
 				value: calculatedStats.totalAs,
 				icon: 'scaleas',
 				colorClass: 'text-yellow-500 dark:text-yellow-400',
-				format: (v: number) => v.toFixed(3),
+				format: (v: number) => v.toFixed(2),
 			},
 			{
 				key: 'armor',
@@ -540,7 +553,7 @@ export default function BuildPage() {
 				value: calculatedStats.totalMr,
 				icon: 'scalemr',
 				colorClass: 'text-purple-500 dark:text-purple-400',
-				format: (v: number) => v.toFixed(1),
+				format: (v: number) => v.toFixed(0),
 			},
 			{
 				key: 'movespeed',
@@ -682,16 +695,24 @@ export default function BuildPage() {
 							})}
 						>
 							<div className="w-10 h-10 border-2 dark:border-yellow-100">
-								<SkillPopover
-									champion={selectedChampionId ?? null}
-									item={abilityData('P')}
-									skill={'P'}
-								>
-									<img
-										alt={`${selectedChampionId}-Q`}
-										src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
-									/>
-								</SkillPopover>
+								{selectedChampionId ? (
+									<SkillPopover
+										champion={selectedChampionId ?? null}
+										item={abilityData('P') as BonusAbility}
+										skill={'P'}
+										skillsPayload={championSkillsQuery.data}
+										totalAd={calculatedStats.totalAd}
+										totalAp={calculatedStats.totalAp}
+										championLevel={level}
+									>
+										<img
+											alt={`${selectedChampionId}-P`}
+											src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
+										/>
+									</SkillPopover>
+								) : (
+									<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+								)}
 							</div>
 							<div className="flex-1 grid grid-cols-4 gap-2">
 								{SKILL_KEYS.map((skill) => {
@@ -702,27 +723,35 @@ export default function BuildPage() {
 									return (
 										<div key={skill} className="flex flex-col relative">
 											<div className="aspect-square border-2 dark:border-yellow-100 mb-1">
-												<SkillPopover
-													champion={selectedChampionId ?? null}
-													item={abilityData(skill)}
-													skill={skill}
-													skillLv={rank}
-													triggerClassName="h-full w-full"
-												>
-													<img
-														alt={`${selectedChampionId}-${skill}`}
-														src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
-														className={cn(
-															'w-full h-full object-cover',
-															rank === 0 && 'grayscale opacity-70'
-														)}
-													/>
-												</SkillPopover>
+												{selectedChampionId ? (
+													<SkillPopover
+														champion={selectedChampionId || ''}
+														item={abilityData(skill) as BonusAbility}
+														skill={skill}
+														skillLv={rank}
+														skillsPayload={championSkillsQuery.data}
+														totalAd={calculatedStats.totalAd}
+														totalAp={calculatedStats.totalAp}
+														championLevel={level}
+														triggerClassName="h-full w-full"
+													>
+														<img
+															alt={`${selectedChampionId}-${skill}`}
+															src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
+															className={cn(
+																'w-full h-full object-cover',
+																rank === 0 && 'grayscale-[95%]'
+															)}
+														/>
+													</SkillPopover>
+												) : (
+													<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+												)}
 												{/* '!grayscale pointer-events-none': !canUp, */}
 												{canUp ? (
 													<button
 														type="button"
-														className="transition-all active:translate-y-0.5 absolute -top-[90%] left-0 w-full aspect-square bg-transparent cursor-pointer outline-none grayscale-[50%] hover:grayscale-0"
+														className="group transition-all active:translate-y-0.5 absolute -top-[90%] left-0 w-full aspect-square bg-transparent cursor-pointer outline-none"
 														onClick={() => handleSkillLevelUp(skill)}
 														title={`Level up ${skill}`}
 														aria-label={`Level up ${skill}`}
@@ -732,6 +761,7 @@ export default function BuildPage() {
 															alt=""
 															className="w-full h-full pointer-events-none"
 														/>
+														<div className="hidden group-hover:block w-full h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(at_center,#ffffff75,#dfe5635c)]"></div>
 													</button>
 												) : null}
 											</div>
