@@ -1,7 +1,7 @@
 import type { BonusAbility } from '../champion-detail/utils';
 
 export type SkillFormulaPart = {
-	kind: 'base' | 'ratio' | 'coefficient' | 'interpolation';
+	kind: 'base_damage' | 'ratio_damage' | 'coefficient' | 'interpolation';
 	dataValue?: string;
 	stat?: string;
 	coefficient?: number;
@@ -48,7 +48,7 @@ export type SkillValueBreakdown = {
 
 export type SkillSegmentRole =
 	| 'damage'
-	| 'ratio'
+	| 'ratio_damage'
 	| 'status'
 	| 'recast'
 	| 'attention'
@@ -71,13 +71,14 @@ export type SkillDescriptionSegment =
 			key?: string;
 	  }
 	| {
-			kind: 'ratio';
+			kind: 'ratio_damage';
 			text: string;
 			stat: string;
 			ratio: number;
 			role?: SkillSegmentRole;
 			key?: string;
-	  };
+	  }
+	| { kind: 'lineBreak' };
 
 export type ParsedSkillDescription = {
 	segments: SkillDescriptionSegment[];
@@ -98,6 +99,70 @@ export function compressSkillDetailValues(values: string[]): string[] {
 	return values;
 }
 
+export function getSkillMaxRank(skillKey: string, skillDef?: ChampionSkill | null): number {
+	if (skillDef?.maxRank) return skillDef.maxRank;
+	return skillKey.toUpperCase() === 'R' ? 3 : 5;
+}
+
+export function formatCooldownNumber(value: number | string): string {
+	const n = typeof value === 'number' ? value : Number(value);
+	if (Number.isNaN(n)) return String(value);
+	const rounded = Math.round(n * 10) / 10;
+	return Number.isInteger(rounded) ? String(Math.round(rounded)) : String(rounded);
+}
+
+export type CooldownDisplay =
+	| { kind: 'levelRange'; first: string; last: string }
+	| { kind: 'single'; value: string };
+
+export function getCooldownDisplay(
+	values: Array<number | string> | undefined,
+	skillKey: string,
+	options?: { skillLevel?: number; skillDef?: ChampionSkill | null }
+): CooldownDisplay | null {
+	if (!values?.length) return null;
+
+	const maxRank = getSkillMaxRank(skillKey, options?.skillDef);
+	const formatted = values.map(formatCooldownNumber);
+
+	if (values.length > maxRank) {
+		return {
+			kind: 'levelRange',
+			first: formatted[0]!,
+			last: formatted[formatted.length - 1]!,
+		};
+	}
+
+	const skillLevel = options?.skillLevel ?? 0;
+	const index = Math.min(Math.max(skillLevel, 1) - 1, formatted.length - 1);
+	return { kind: 'single', value: formatted[index]! };
+}
+
+function buildCooldownDetailRow(
+	values: Array<number | string>,
+	skillKey: string,
+	skillLevel: number,
+	skillDef?: ChampionSkill | null
+): SkillDetailRow {
+	const maxRank = getSkillMaxRank(skillKey, skillDef);
+	const formatted = values.map(formatCooldownNumber);
+	const currentIndex = Math.min(Math.max(skillLevel, 1) - 1, formatted.length - 1);
+
+	if (values.length > maxRank) {
+		return {
+			label: 'Cooldown',
+			values: [`${formatted[0]} - ${formatted[formatted.length - 1]} (Based on Level)`],
+			currentIndex: 0,
+		};
+	}
+
+	return {
+		label: 'Cooldown',
+		values: formatted,
+		currentIndex,
+	};
+}
+
 type ComputedField = {
 	total: number;
 	formula: string;
@@ -113,6 +178,8 @@ export const SKILL_STYLE_COLORS: Record<string, string> = {
 	status: 'text-pink-500 dark:text-pink-400',
 	recast: 'text-emerald-500 dark:text-emerald-400',
 	attention: 'text-hex-gold',
+	spellPassive: 'text-hex-gold/90',
+	lifeSteal: 'text-red-500 dark:text-red-400',
 	ratio: 'text-hex-gold',
 	literal: 'text-muted-foreground/80',
 };
@@ -164,6 +231,8 @@ function roleForStyle(style?: string): SkillSegmentRole {
 	if (style === 'status') return 'status';
 	if (style === 'recast') return 'recast';
 	if (style === 'attention') return 'attention';
+	if (style === 'spellPassive') return 'attention';
+	if (style === 'lifeSteal') return 'default';
 	if (style === 'physicalDamage' || style === 'magicDamage' || style === 'trueDamage') {
 		return 'damage';
 	}
@@ -171,15 +240,20 @@ function roleForStyle(style?: string): SkillSegmentRole {
 }
 
 export function getSegmentColorClass(segment: SkillDescriptionSegment): string {
-	if (segment.kind === 'ratio' || segment.role === 'ratio') {
+	if (segment.kind === 'lineBreak') {
+		return SKILL_STYLE_COLORS.default;
+	}
+
+	if (segment.kind === 'ratio_damage' || segment.role === 'ratio_damage') {
 		return SKILL_STYLE_COLORS.ratio;
 	}
 
-	const style = segment.kind === 'styled' ? segment.style : segment.style;
-	const role = segment.kind === 'styled' ? (segment.role ?? roleForStyle(style)) : segment.role;
+	const style = segment.style;
+	const role =
+		segment.kind === 'styled' ? (segment.role ?? roleForStyle(segment.style)) : segment.role;
 
 	if (role === 'literal') return SKILL_STYLE_COLORS.literal;
-	if (role === 'ratio') return SKILL_STYLE_COLORS.ratio;
+	if (role === 'ratio_damage') return SKILL_STYLE_COLORS.ratio;
 	if (style && SKILL_STYLE_COLORS[style]) return SKILL_STYLE_COLORS[style];
 	if (role && role !== 'default' && SKILL_STYLE_COLORS[role]) {
 		return SKILL_STYLE_COLORS[role];
@@ -203,14 +277,14 @@ function computeFormulaParts(
 	const championLevel = ctx.championLevel ?? 18;
 
 	for (const part of field.parts ?? []) {
-		if (part.kind === 'base') {
+		if (part.kind === 'base_damage') {
 			const base = part.values?.[idx] ?? 0;
 			breakdown.base = (breakdown.base ?? 0) + base;
 			total += base;
 			continue;
 		}
 
-		if (part.kind === 'ratio') {
+		if (part.kind === 'ratio_damage') {
 			const ratio = part.values?.[idx] ?? 0;
 			const stat = part.stat ?? 'AD';
 			const amount = statValue(stat, ctx) * ratio;
@@ -400,11 +474,11 @@ function expandComputedSegments(
 				segments.push({ kind: 'text', text: ' + ', role: 'literal' });
 			}
 			segments.push({
-				kind: 'ratio',
+				kind: 'ratio_damage',
 				text: `${formatPercent(ratioPart.ratio)} ${ratioPart.stat}`,
 				stat: ratioPart.stat,
 				ratio: ratioPart.ratio,
-				role: 'ratio',
+				role: 'ratio_damage',
 				key,
 			});
 		}
@@ -488,18 +562,19 @@ function parseInline(
 	return segments;
 }
 
-function parseTaggedOrText(
+const BR_TAG = /<br\s*\/?>/gi;
+
+function parseTaggedChunk(
 	raw: string,
 	skill: ChampionSkill,
 	ctx: SkillDescriptionContext,
 	cache: Map<string, ComputedField>
 ): SkillDescriptionSegment[] {
-	const cleaned = raw.replace(/\{\{\s*spellmodifierdescriptionappend\s*\}\}/gi, '');
 	const segments: SkillDescriptionSegment[] = [];
 	const pattern = /<(\w+)>([\s\S]*?)<\/\1>|([^<]+)/g;
 	let match: RegExpExecArray | null;
 
-	while ((match = pattern.exec(cleaned)) !== null) {
+	while ((match = pattern.exec(raw)) !== null) {
 		if (match[1] && match[2] !== undefined) {
 			const style = match[1];
 			const children = parseInline(match[2], skill, ctx, cache, style);
@@ -522,10 +597,34 @@ function parseTaggedOrText(
 	return segments;
 }
 
+function parseTaggedOrText(
+	raw: string,
+	skill: ChampionSkill,
+	ctx: SkillDescriptionContext,
+	cache: Map<string, ComputedField>
+): SkillDescriptionSegment[] {
+	const cleaned = raw.replace(/\{\{\s*spellmodifierdescriptionappend\s*\}\}/gi, '');
+	const chunks = cleaned.split(BR_TAG);
+	const segments: SkillDescriptionSegment[] = [];
+
+	for (let i = 0; i < chunks.length; i++) {
+		const chunk = chunks[i];
+		if (chunk) {
+			segments.push(...parseTaggedChunk(chunk, skill, ctx, cache));
+		}
+		if (i < chunks.length - 1) {
+			segments.push({ kind: 'lineBreak' });
+		}
+	}
+
+	return segments;
+}
+
 function segmentToText(seg: SkillDescriptionSegment): string {
+	if (seg.kind === 'lineBreak') return '\n';
 	if (seg.kind === 'text') return seg.text;
 	if (seg.kind === 'number') return String(seg.value);
-	if (seg.kind === 'ratio') return seg.text;
+	if (seg.kind === 'ratio_damage') return seg.text;
 	if (seg.kind === 'styled') return seg.children.map(segmentToText).join('');
 	return '';
 }
@@ -567,7 +666,7 @@ function recomputeStyledChildren(
 				base = child.value;
 				continue;
 			}
-			if (child.kind === 'ratio') {
+			if (child.kind === 'ratio_damage') {
 				ratioTotal += statValue(child.stat, ctx as SkillDescriptionContext) * child.ratio;
 			}
 			if (child.kind === 'text' && child.text === ')') break;
@@ -584,7 +683,7 @@ function findPrimaryDamageField(skill: ChampionSkill): [string, SkillDataField] 
 		if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
 		const field = raw as SkillDataField;
 		if (field.calculation !== 'mFormulaParts' || !field.parts?.length) continue;
-		if (field.parts.some((part) => part.kind === 'base' || part.kind === 'ratio')) {
+		if (field.parts.some((part) => part.kind === 'base_damage' || part.kind === 'ratio_damage')) {
 			candidates.push([key, field]);
 		}
 	}
@@ -615,18 +714,14 @@ export function getSkillDetailRows(
 
 	const cd = cooldownValues(skill);
 	if (cd?.length) {
-		rows.push({
-			label: 'Cooldown',
-			values: cd.map((value) => String(value)),
-			currentIndex,
-		});
+		rows.push(buildCooldownDetailRow(cd, skill.id, ctx.level, skill));
 	}
 
 	const primary = findPrimaryDamageField(skill);
 	if (primary) {
 		const [, field] = primary;
-		const basePart = field.parts?.find((part) => part.kind === 'base');
-		const ratioPart = field.parts?.find((part) => part.kind === 'ratio');
+		const basePart = field.parts?.find((part) => part.kind === 'base_damage');
+		const ratioPart = field.parts?.find((part) => part.kind === 'ratio_damage');
 
 		if (basePart?.values?.length) {
 			rows.push({
@@ -693,7 +788,9 @@ function findPrimaryDamageLeveling(ability: BonusAbility) {
 /** Detail rows (cooldown / damage / ratio) from Meraki bonus ability data. */
 export function getSkillDetailRowsFromAbility(
 	ability: BonusAbility | null | undefined,
-	skillLevel: number
+	skillLevel: number,
+	skillKey: string,
+	skillDef?: ChampionSkill | null
 ): SkillDetailRow[] {
 	if (!ability) return [];
 
@@ -703,11 +800,7 @@ export function getSkillDetailRowsFromAbility(
 
 	const cooldownMod = ability.cooldown?.modifiers?.[0];
 	if (cooldownMod?.values?.length) {
-		rows.push({
-			label: 'Cooldown',
-			values: cooldownMod.values.map((value) => String(value)),
-			currentIndex: Math.min(currentIndex, cooldownMod.values.length - 1),
-		});
+		rows.push(buildCooldownDetailRow(cooldownMod.values, skillKey, rank, skillDef));
 	}
 
 	const damageBlock = findPrimaryDamageLeveling(ability);

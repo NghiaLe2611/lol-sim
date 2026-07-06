@@ -4,12 +4,14 @@ import React, { useMemo } from 'react';
 import type { BonusAbility } from '../champion-detail/utils';
 import {
 	compressSkillDetailValues,
+	getCooldownDisplay,
 	getSegmentColorClass,
 	getSkillDetailRows,
 	getSkillDetailRowsFromAbility,
 	mergeSkillDetailRows,
 	parseSkillDescription,
 	resolveChampionSkill,
+	type CooldownDisplay,
 	type SkillDescriptionSegment,
 } from './skills';
 
@@ -41,15 +43,36 @@ interface SkillContentProps {
 	championLevel: number;
 }
 
+const INLINE_BREAK_PATTERN = /(?:<br\s*\/?>|br\s*\/?>)/gi;
+
+function renderTextWithLineBreaks(text: string, className: string, key: React.Key): React.ReactNode {
+	const parts = text.replace(INLINE_BREAK_PATTERN, '\n').split('\n');
+
+	if (parts.length <= 1) {
+		return (
+			<span key={key} className={className}>
+				{parts[0] ?? ''}
+			</span>
+		);
+	}
+
+	return parts.map((part, index) => (
+		<React.Fragment key={`${String(key)}-${index}`}>
+			{index > 0 ? <br /> : null}
+			{part ? <span className={className}>{part}</span> : null}
+		</React.Fragment>
+	));
+}
+
 function renderSegment(segment: SkillDescriptionSegment, key: React.Key): React.ReactNode {
+	if (segment.kind === 'lineBreak') {
+		return <br key={key} />;
+	}
+
 	const className = getSegmentColorClass(segment);
 
 	if (segment.kind === 'text') {
-		return (
-			<span key={key} className={className}>
-				{segment.text}
-			</span>
-		);
+		return renderTextWithLineBreaks(segment.text, className, key);
 	}
 
 	if (segment.kind === 'number') {
@@ -60,7 +83,7 @@ function renderSegment(segment: SkillDescriptionSegment, key: React.Key): React.
 		);
 	}
 
-	if (segment.kind === 'ratio') {
+	if (segment.kind === 'ratio_damage') {
 		return (
 			<span key={key} className={`${className} font-semibold`}>
 				{segment.text}
@@ -91,6 +114,23 @@ function renderLevelValues(row: { label: string; values: string[]; currentIndex?
 	));
 }
 
+function renderCooldownHeader(display: CooldownDisplay): React.ReactNode {
+	if (display.kind === 'levelRange') {
+		return (
+			<>
+				{display.first} - {display.last}{' '}
+				<span className="text-muted-foreground/70">(Based on Level)</span>
+			</>
+		);
+	}
+
+	if (display.kind === 'single') {
+		return `${display.value}s`;
+	}
+
+	return null;
+}
+
 function abilityDescriptionFallback(ability: BonusAbility | null | undefined): string {
 	if (!ability) return '';
 	const fromEffects = (ability.effects ?? [])
@@ -117,10 +157,6 @@ const SkillContent = ({
 		[skillsPayload, skill]
 	);
 
-	console.log({
-		skillsPayload, skillDef
-	})
-
 	const descriptionCtx = useMemo(
 		() => ({
 			level: effectiveSkillLevel,
@@ -132,7 +168,12 @@ const SkillContent = ({
 	);
 
 	const { segments, detailRows, descriptionFallback } = useMemo(() => {
-		const abilityRows = getSkillDetailRowsFromAbility(item, effectiveSkillLevel);
+		const abilityRows = getSkillDetailRowsFromAbility(
+			item,
+			effectiveSkillLevel,
+			skill,
+			skillDef
+		);
 
 		if (skillDef) {
 			const parsed = parseSkillDescription(skillDef, descriptionCtx);
@@ -149,9 +190,17 @@ const SkillContent = ({
 			detailRows: abilityRows,
 			descriptionFallback: abilityDescriptionFallback(item),
 		};
-	}, [skillDef, item, descriptionCtx, effectiveSkillLevel]);
+	}, [skillDef, item, descriptionCtx, effectiveSkillLevel, skill]);
 
-	const coolDown = skillLv ? item?.cooldown?.modifiers?.[0]?.values?.[skillLv - 1] : null;
+	const cooldownDisplay = useMemo(
+		() =>
+			getCooldownDisplay(item?.cooldown?.modifiers?.[0]?.values, skill, {
+				skillLevel: skillLv,
+				skillDef,
+			}),
+		[item, skill, skillLv, skillDef]
+	);
+
 	const cost = skillLv ? item?.cost?.modifiers?.[0]?.values?.[skillLv - 1] : null;
 
 	if (!champion) return null;
@@ -175,7 +224,9 @@ const SkillContent = ({
 					</div>
 				</div>
 				<div className="text-right">
-					{coolDown != null && <p>Cooldown: {coolDown}s</p>}
+					{cooldownDisplay ? (
+						<p>Cooldown: {renderCooldownHeader(cooldownDisplay)}</p>
+					) : null}
 					<p className="text-muted-foreground/80">{item?.cost ? cost : 'No cost'}</p>
 				</div>
 			</div>
