@@ -1,16 +1,24 @@
 import type { BonusAbility } from '../champion-detail/utils';
 
 export type SkillFormulaPart = {
-	kind: 'base_damage' | 'ratio_damage' | 'coefficient' | 'interpolation';
+	kind:
+		| 'base_damage'
+		| 'ratio_damage'
+		| 'coefficient'
+		| 'interpolation'
+		| 'flat_percent'
+		| 'per_bonus_health';
 	dataValue?: string;
 	stat?: string;
 	coefficient?: number;
 	values?: number[];
+	displayUnit?: number;
 };
 
 export type SkillDataField = {
 	values?: number[];
 	type?: string;
+	formulaProfile?: string;
 	calculation?: 'mFormulaParts' | 'mMultiplier';
 	parts?: SkillFormulaPart[];
 	baseCalculation?: string;
@@ -39,6 +47,8 @@ export type SkillDescriptionContext = {
 	ap: number;
 	/** Champion level for interpolation formulas (default 18) */
 	championLevel?: number;
+	/** Bonus HP from items (total HP − base HP at level) */
+	bonusHealth?: number;
 };
 
 export type SkillValueBreakdown = {
@@ -53,6 +63,7 @@ export type SkillSegmentRole =
 	| 'recast'
 	| 'attention'
 	| 'literal'
+	| 'bonus_health'
 	| 'default';
 
 export type SkillDescriptionSegment =
@@ -76,6 +87,7 @@ export type SkillDescriptionSegment =
 			stat: string;
 			ratio: number;
 			role?: SkillSegmentRole;
+			style?: string;
 			key?: string;
 	  }
 	| { kind: 'lineBreak' };
@@ -167,6 +179,11 @@ type ComputedField = {
 	total: number;
 	formula: string;
 	breakdown?: SkillValueBreakdown;
+	percentBreakdown?: {
+		flatPercent: number;
+		bonusPercent: number;
+		bonusHealth: number;
+	};
 };
 
 /** Tailwind classes for LoL skill description tags and roles. */
@@ -176,10 +193,14 @@ export const SKILL_STYLE_COLORS: Record<string, string> = {
 	magicDamage: 'text-blue-500 dark:text-blue-400',
 	trueDamage: 'text-neutral-100 dark:text-neutral-200',
 	status: 'text-pink-500 dark:text-pink-400',
+	speed: 'text-cyan-500 dark:text-cyan-400',
+	scaleAD: 'text-orange-500 dark:text-orange-400',
+	healing: 'text-green-500 dark:text-green-400',
 	recast: 'text-emerald-500 dark:text-emerald-400',
 	attention: 'text-hex-gold',
 	spellPassive: 'text-hex-gold/90',
 	lifeSteal: 'text-red-500 dark:text-red-400',
+	bonus_health: 'text-green-500 dark:text-green-400',
 	ratio: 'text-hex-gold',
 	literal: 'text-muted-foreground/80',
 };
@@ -214,6 +235,11 @@ export function formatPercent(ratio: number): string {
 	return Number.isInteger(pct) ? `${pct}%` : `${pct}%`;
 }
 
+function formatPercentPoints(points: number): string {
+	const pct = Math.round(points * 10) / 10;
+	return Number.isInteger(pct) ? `${pct}%` : `${pct}%`;
+}
+
 function formatFormula(breakdown: SkillValueBreakdown): string {
 	const chunks: string[] = [];
 	if (breakdown.base !== undefined && breakdown.base !== 0) {
@@ -244,7 +270,14 @@ export function getSegmentColorClass(segment: SkillDescriptionSegment): string {
 		return SKILL_STYLE_COLORS.default;
 	}
 
+	if (segment.role === 'bonus_health') {
+		return SKILL_STYLE_COLORS.bonus_health;
+	}
+
 	if (segment.kind === 'ratio_damage' || segment.role === 'ratio_damage') {
+		if (segment.style && SKILL_STYLE_COLORS[segment.style]) {
+			return SKILL_STYLE_COLORS[segment.style];
+		}
 		return SKILL_STYLE_COLORS.ratio;
 	}
 
@@ -267,11 +300,86 @@ function interpolateValue(part: { values?: number[] }, championLevel: number): n
 	return start + (end - start) * t;
 }
 
+function hasPercentFormulaParts(field: SkillDataField): boolean {
+	return (
+		field.parts?.some(
+			(part) => part.kind === 'flat_percent' || part.kind === 'per_bonus_health'
+		) ?? false
+	);
+}
+
+function computePercentFormulaParts(
+	field: SkillDataField,
+	ctx: SkillDescriptionContext,
+	idx: number
+): ComputedField {
+	const flatPart = field.parts?.find((part) => part.kind === 'flat_percent');
+	const bonusPart = field.parts?.find((part) => part.kind === 'per_bonus_health');
+
+	const flatPercent = flatPart?.values?.[idx] ?? 0;
+	const ratioPerBonusHealth = bonusPart?.values?.[idx] ?? 0;
+	const bonusHealth = Math.max(0, ctx.bonusHealth ?? 0);
+	const bonusPercent = ratioPerBonusHealth * bonusHealth;
+	const total = flatPercent + bonusPercent;
+
+	return {
+		total: Math.round(total * 10) / 10,
+		formula: bonusHealth > 0 && bonusPercent > 0
+			? `${formatPercentPoints(flatPercent)} (+${formatPercentPoints(bonusPercent)} per ${roundDisplay(bonusHealth)} bonus health)`
+			: formatPercentPoints(flatPercent),
+		percentBreakdown: {
+			flatPercent,
+			bonusPercent: Math.round(bonusPercent * 10) / 10,
+			bonusHealth: roundDisplay(bonusHealth),
+		},
+	};
+}
+
+function defaultStatForDamageType(type?: string): string {
+	switch (type) {
+		case 'magicDamage':
+			return 'AP';
+		case 'physicalDamage':
+			return 'AD';
+		default:
+			return 'AD';
+	}
+}
+
+function resolveDamageStat(part: Pick<SkillFormulaPart, 'stat'>, fieldType?: string): string {
+	if (fieldType === 'physicalDamage' || fieldType === 'magicDamage') {
+		return defaultStatForDamageType(fieldType);
+	}
+	return part.stat ?? defaultStatForDamageType(fieldType);
+}
+
+function resolveRatioDamagePart(
+	part: SkillFormulaPart,
+	idx: number,
+	fieldType?: string
+): { stat: string; ratio: number } {
+	const ratio = part.values?.[idx] ?? part.coefficient ?? 0;
+	const stat = resolveDamageStat(part, fieldType);
+	return { stat, ratio };
+}
+
+function ratioValuesForDetailRow(part: SkillFormulaPart, maxRank: number): number[] | null {
+	if (part.values?.length) return part.values;
+	if (part.coefficient !== undefined) {
+		return Array.from({ length: maxRank }, () => part.coefficient!);
+	}
+	return null;
+}
+
 function computeFormulaParts(
 	field: SkillDataField,
 	ctx: SkillDescriptionContext,
 	idx: number
 ): ComputedField {
+	if (hasPercentFormulaParts(field)) {
+		return computePercentFormulaParts(field, ctx, idx);
+	}
+
 	const breakdown: SkillValueBreakdown = { ratios: [] };
 	let total = 0;
 	const championLevel = ctx.championLevel ?? 18;
@@ -285,8 +393,7 @@ function computeFormulaParts(
 		}
 
 		if (part.kind === 'ratio_damage') {
-			const ratio = part.values?.[idx] ?? 0;
-			const stat = part.stat ?? 'AD';
+			const { stat, ratio } = resolveRatioDamagePart(part, idx, field.type);
 			const amount = statValue(stat, ctx) * ratio;
 			breakdown.ratios!.push({ stat, ratio, amount });
 			total += amount;
@@ -295,7 +402,7 @@ function computeFormulaParts(
 
 		if (part.kind === 'coefficient') {
 			const ratio = part.coefficient ?? 0;
-			const stat = part.stat ?? 'AP';
+			const stat = resolveDamageStat(part, field.type);
 			const amount = statValue(stat, ctx) * ratio;
 			breakdown.ratios!.push({ stat, ratio, amount });
 			total += amount;
@@ -442,6 +549,55 @@ function expandComputedSegments(
 	const damageStyle = style ?? field?.type;
 	const role = roleForStyle(damageStyle);
 	const breakdown = computed.breakdown;
+	const percentBreakdown = computed.percentBreakdown;
+
+	if (percentBreakdown) {
+		const { flatPercent, bonusPercent, bonusHealth } = percentBreakdown;
+		const segments: SkillDescriptionSegment[] = [
+			{
+				kind: 'ratio_damage',
+				text: formatPercentPoints(flatPercent),
+				stat: '',
+				ratio: flatPercent / 100,
+				role: 'ratio_damage',
+				style: damageStyle,
+				key,
+			},
+		];
+
+		if (bonusHealth > 0 && bonusPercent > 0) {
+			segments.push({
+				kind: 'text',
+				text: ` (+${formatPercentPoints(bonusPercent)} per ${bonusHealth} bonus health)`,
+				role: 'bonus_health',
+			});
+		}
+
+		return segments;
+	}
+
+	const hasBase = breakdown?.base !== undefined && breakdown.base !== 0;
+	const ratios = breakdown?.ratios ?? [];
+
+	if (ratios.length > 0 && !hasBase) {
+		const segments: SkillDescriptionSegment[] = [];
+		for (const [index, ratioPart] of ratios.entries()) {
+			if (index > 0) {
+				segments.push({ kind: 'text', text: ' + ', role: 'literal' });
+			}
+			segments.push({
+				kind: 'ratio_damage',
+				text: `${formatPercent(ratioPart.ratio)} ${ratioPart.stat}`,
+				stat: ratioPart.stat,
+				ratio: ratioPart.ratio,
+				role: 'ratio_damage',
+				style: damageStyle,
+				key,
+			});
+		}
+		return segments;
+	}
+
 	const hasBreakdown =
 		breakdown &&
 		((breakdown.ratios?.length ?? 0) > 0 ||
@@ -731,12 +887,15 @@ export function getSkillDetailRows(
 			});
 		}
 
-		if (ratioPart?.values?.length) {
-			rows.push({
-				label: 'Total Damage Ratio',
-				values: ratioPart.values.map((value) => formatPercent(value)),
-				currentIndex,
-			});
+		if (ratioPart) {
+			const ratioValues = ratioValuesForDetailRow(ratioPart, skill.maxRank);
+			if (ratioValues?.length) {
+				rows.push({
+					label: 'Total Damage Ratio',
+					values: ratioValues.map((value) => formatPercent(value)),
+					currentIndex,
+				});
+			}
 		}
 	}
 

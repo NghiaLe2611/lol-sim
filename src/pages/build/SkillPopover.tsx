@@ -30,6 +30,7 @@ interface SkillPopoverProps {
 	totalAd: number;
 	totalAp: number;
 	championLevel: number;
+	bonusHealth: number;
 }
 
 interface SkillContentProps {
@@ -41,6 +42,7 @@ interface SkillContentProps {
 	totalAd: number;
 	totalAp: number;
 	championLevel: number;
+	bonusHealth: number;
 }
 
 const INLINE_BREAK_PATTERN = /(?:<br\s*\/?>|br\s*\/?>)/gi;
@@ -149,6 +151,7 @@ const SkillContent = ({
 	totalAd,
 	totalAp,
 	championLevel,
+	bonusHealth,
 }: SkillContentProps) => {
 	const effectiveSkillLevel = skillLv && skillLv > 0 ? skillLv : 1;
 
@@ -163,8 +166,9 @@ const SkillContent = ({
 			ad: totalAd,
 			ap: totalAp,
 			championLevel,
+			bonusHealth,
 		}),
-		[effectiveSkillLevel, totalAd, totalAp, championLevel]
+		[effectiveSkillLevel, totalAd, totalAp, championLevel, bonusHealth]
 	);
 
 	const { segments, detailRows, descriptionFallback } = useMemo(() => {
@@ -178,6 +182,10 @@ const SkillContent = ({
 		if (skillDef) {
 			const parsed = parseSkillDescription(skillDef, descriptionCtx);
 			const formulaRows = getSkillDetailRows(skillDef, descriptionCtx);
+			console.log({
+				parsed,
+				formulaRows
+			})
 			return {
 				segments: parsed.segments,
 				detailRows: mergeSkillDetailRows(formulaRows, abilityRows),
@@ -263,6 +271,7 @@ const SkillPopover = ({
 	totalAd,
 	totalAp,
 	championLevel,
+	bonusHealth,
 	popoverClassName,
 	triggerClassName,
 }: SkillPopoverProps) => {
@@ -281,6 +290,7 @@ const SkillPopover = ({
 					totalAd={totalAd}
 					totalAp={totalAp}
 					championLevel={championLevel}
+					bonusHealth={bonusHealth}
 				/>
 			}
 			contentClassName={clsx(POPOVER_CONTENT_CLASS, popoverClassName)}

@@ -8,7 +8,7 @@ import {
 	getItems,
 } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -146,6 +146,8 @@ export default function BuildPage() {
 	const [activeSubFilter, setActiveSubFilter] = useState<string | null>(null);
 
 	const [simulateDialogOpen, setSimulateDialogOpen] = useState(false);
+
+	const searchInputRef = useRef<HTMLInputElement>(null);
 
 	const { showToast } = useCustomToast();
 
@@ -612,6 +614,12 @@ export default function BuildPage() {
 		[currentChampBonus]
 	);
 
+	const clearInputValue = () => {
+		if (searchInputRef.current) {
+			searchInputRef.current.value = '';
+		}
+	};
+
 	return (
 		<div className="mx-auto w-full max-w-container px-6 py-12 relative">
 			<header className="flex items-center justify-between mb-12">
@@ -652,207 +660,222 @@ export default function BuildPage() {
 			{/* Main Layout Grid */}
 			<div className="grid gap-3 xl:gap-6 grid-cols-1 lg:grid-cols-[320px_1fr]">
 				{/* Overview */}
-				<div className="col-span-full flex items-center">
+				<div className="col-span-full flex flex-col lg:flex-row lg:items-center">
 					{/* corner-top-shape: scoop; */}
-					{/* Stats */}
-					<div className="stats-box">
-						{OVERVIEW_STAT_KEYS.map((key) => {
-							const stat = statsByKey[key];
-							if (!stat?.icon) return null;
+					<div className="flex items-center justify-center lg:justify-start">
+						{/* Stats */}
+						<div className="stats-box">
+							{OVERVIEW_STAT_KEYS.map((key) => {
+								const stat = statsByKey[key];
+								if (!stat?.icon) return null;
 
-							return (
-								<div key={key} className="flex items-center gap-2">
-									<img
-										src={`${STAT_ICON_BASE}/${stat.icon}.png`}
-										alt={key}
-										className="w-4 h-4"
-									/>
-									<span className="text-xs font-medium 4xl:text-sm text-hext-gold">
-										{stat.format(stat.value)}
-									</span>
-								</div>
-							);
-						})}
-					</div>
-					{/* Skills */}
-					<div className="hud-frame skill-frame">
-						<div className="outer-frame absolute -left-20 top-1/2 -translate-y-1/2">
-							<div className="trapezoid"></div>
-							<div className="inner-frame relative">
-								{selectedChampionId && (
-									<img
-										src={getChampImgUrl(selectedChampionId || '')}
-										alt={(selectedChampionId as string) || 'champion'}
-										className="rounded-full border-2 border-hex-gold/50 mx-auto absolute top-0 left-0 aspect-square object-contain hover:opacity-80 hover:scale-105"
-									/>
-								)}
-							</div>
-							<div className="lv-frame">{level}</div>
-						</div>
-						<div
-							className={clsx('flex flex-wrap gap-2 z-10 relative', {
-								'opacity-80': championBonusDetailQuery.isFetching,
-							})}
-						>
-							<div className="w-10 h-10 border-2 dark:border-yellow-100">
-								{selectedChampionId ? (
-									<SkillPopover
-										champion={selectedChampionId ?? null}
-										item={abilityData('P') as BonusAbility}
-										skill={'P'}
-										skillsPayload={championSkillsQuery.data}
-										totalAd={calculatedStats.totalAd}
-										totalAp={calculatedStats.totalAp}
-										championLevel={level}
-									>
-										<img
-											alt={`${selectedChampionId}-P`}
-											src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
-										/>
-									</SkillPopover>
-								) : (
-									<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-								)}
-							</div>
-							<div className="flex-1 grid grid-cols-4 gap-2">
-								{SKILL_KEYS.map((skill) => {
-									const rank = skillLevels[skill];
-									const canUp = canLevelSkill(skill, skillLevels, level);
-									const dotCount = dotCountForSkill(skill);
-
-									return (
-										<div key={skill} className="flex flex-col relative">
-											<div className="aspect-square border-2 dark:border-yellow-100 mb-1">
-												{selectedChampionId ? (
-													<SkillPopover
-														champion={selectedChampionId || ''}
-														item={abilityData(skill) as BonusAbility}
-														skill={skill}
-														skillLv={rank}
-														skillsPayload={championSkillsQuery.data}
-														totalAd={calculatedStats.totalAd}
-														totalAp={calculatedStats.totalAp}
-														championLevel={level}
-														triggerClassName="h-full w-full"
-													>
-														<img
-															alt={`${selectedChampionId}-${skill}`}
-															src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
-															className={cn(
-																'w-full h-full object-cover',
-																rank === 0 && 'grayscale-[95%]'
-															)}
-														/>
-													</SkillPopover>
-												) : (
-													<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-												)}
-												{/* '!grayscale pointer-events-none': !canUp, */}
-												{canUp ? (
-													<button
-														type="button"
-														className="group transition-all active:translate-y-0.5 absolute -top-[90%] left-0 w-full aspect-square bg-transparent cursor-pointer outline-none"
-														onClick={() => handleSkillLevelUp(skill)}
-														title={`Level up ${skill}`}
-														aria-label={`Level up ${skill}`}
-													>
-														<img
-															src="/images/icons/skillup.svg"
-															alt=""
-															className="w-full h-full pointer-events-none"
-														/>
-														<div className="hidden group-hover:block w-full h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(at_center,#ffffff75,#dfe5635c)]"></div>
-													</button>
-												) : null}
-											</div>
-											{skill === 'R' ? (
-												<div className="flex justify-center gap-0.5">
-													{Array.from({ length: dotCount }).map(
-														(_, index) => (
-															<div
-																key={index}
-																className={cn(
-																	'w-2 h-2 rounded-full',
-																	index < rank
-																		? 'bg-hex-gold/80'
-																		: 'bg-gray-300 dark:bg-gray-700'
-																)}
-															/>
-														)
-													)}
-												</div>
-											) : (
-												<div className="grid grid-cols-5 gap-0.5">
-													{Array.from({ length: dotCount }).map(
-														(_, index) => (
-															<div
-																key={index}
-																className={cn(
-																	'w-2 h-2 rounded-full',
-																	index < rank
-																		? 'bg-hex-gold/80'
-																		: 'bg-gray-300 dark:bg-gray-700'
-																)}
-															/>
-														)
-													)}
-												</div>
-											)}
-										</div>
-									);
-								})}
-							</div>
-							<div className="w-full flex flex-col gap-1">
-								<div className="hud-bar health-bar">
-									{Math.round(calculatedStats.totalHp)}/
-									{Math.round(calculatedStats.totalHp)}
-								</div>
-								<div className={cn('hud-bar', resourceBarClass)}>
-									{calculatedStats.totalMana > 0 ? (
-										<>
-											{Math.round(calculatedStats.totalMana)}/
-											{Math.round(calculatedStats.totalMana)}
-										</>
-									) : null}
-								</div>
-							</div>
-						</div>
-					</div>
-					{/* Items */}
-					<div className="hud-frame items-frame">
-						<div className="grid grid-cols-3 gap-1 w-full">
-							{build.map((itemId, index) => {
-								const item = itemId ? itemsById[itemId] : null;
 								return (
-									<div
-										key={index}
-										className="aspect-square border-2 border-hex-gold/40 z-[3] p-1"
-										onContextMenu={(e) => handleContextMenu(e, index)}
-									>
-										{item ? (
-											<ItemPopover
-												item={item}
-												itemsById={itemsById}
-												showTree={false}
-												triggerClassName="w-full h-full"
-											>
-												<div className="w-full h-full relative flex flex-col items-center justify-center">
-													<img
-														src={itemImgUrl(patchVersion!, item.id)}
-														alt={item.name}
-														className="w-full h-full object-cover"
-													/>
-												</div>
-											</ItemPopover>
-										) : null}
+									<div key={key} className="flex items-center gap-2">
+										<img
+											src={`${STAT_ICON_BASE}/${stat.icon}.png`}
+											alt={key}
+											className="w-4 h-4"
+										/>
+										<span className="text-xs font-medium 4xl:text-sm text-hext-gold">
+											{stat.format(stat.value)}
+										</span>
 									</div>
 								);
 							})}
 						</div>
+						{/* Skills */}
+						<div className="hud-frame skill-frame">
+							<div className="outer-frame absolute -left-20 top-1/2 -translate-y-1/2">
+								<div className="trapezoid"></div>
+								<div className="inner-frame relative">
+									{selectedChampionId && (
+										<img
+											src={getChampImgUrl(selectedChampionId || '')}
+											alt={(selectedChampionId as string) || 'champion'}
+											className="rounded-full border-2 border-hex-gold/50 mx-auto absolute top-0 left-0 aspect-square object-contain hover:opacity-80 hover:scale-105"
+										/>
+									)}
+								</div>
+								<div className="lv-frame">{level}</div>
+							</div>
+							<div
+								className={clsx('flex flex-wrap gap-2 z-10 relative', {
+									'opacity-80': championBonusDetailQuery.isFetching,
+								})}
+							>
+								<div className="w-10 h-10 border-2 dark:border-yellow-100">
+									{selectedChampionId ? (
+										<SkillPopover
+											champion={selectedChampionId ?? null}
+											item={abilityData('P') as BonusAbility}
+											skill={'P'}
+											skillsPayload={championSkillsQuery.data}
+											totalAd={calculatedStats.totalAd}
+											totalAp={calculatedStats.totalAp}
+											championLevel={level}
+											bonusHealth={Math.max(
+												0,
+												calculatedStats.totalHp - calculatedStats.baseHp
+											)}
+										>
+											<img
+												alt={`${selectedChampionId}-P`}
+												src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
+											/>
+										</SkillPopover>
+									) : (
+										<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+									)}
+								</div>
+								<div className="flex-1 grid grid-cols-4 gap-2">
+									{SKILL_KEYS.map((skill) => {
+										const rank = skillLevels[skill];
+										const canUp = canLevelSkill(skill, skillLevels, level);
+										const dotCount = dotCountForSkill(skill);
+
+										return (
+											<div key={skill} className="flex flex-col relative">
+												<div className="aspect-square border-2 dark:border-yellow-100 mb-1">
+													{selectedChampionId ? (
+														<SkillPopover
+															champion={selectedChampionId || ''}
+															item={
+																abilityData(skill) as BonusAbility
+															}
+															skill={skill}
+															skillLv={rank}
+															skillsPayload={championSkillsQuery.data}
+															totalAd={calculatedStats.totalAd}
+															totalAp={calculatedStats.totalAp}
+															championLevel={level}
+															bonusHealth={Math.max(
+																0,
+																calculatedStats.totalHp -
+																	calculatedStats.baseHp
+															)}
+															triggerClassName="h-full w-full"
+														>
+															<img
+																alt={`${selectedChampionId}-${skill}`}
+																src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
+																className={cn(
+																	'w-full h-full object-cover',
+																	rank === 0 && 'grayscale-[95%]'
+																)}
+															/>
+														</SkillPopover>
+													) : (
+														<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+													)}
+													{/* '!grayscale pointer-events-none': !canUp, */}
+													{canUp ? (
+														<button
+															type="button"
+															className="group transition-all active:translate-y-0.5 absolute -top-[90%] left-0 w-full aspect-square bg-transparent cursor-pointer outline-none"
+															onClick={() =>
+																handleSkillLevelUp(skill)
+															}
+															title={`Level up ${skill}`}
+															aria-label={`Level up ${skill}`}
+														>
+															<img
+																src="/images/icons/skillup.svg"
+																alt=""
+																className="w-full h-full pointer-events-none"
+															/>
+															<div className="hidden group-hover:block w-full h-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(at_center,#ffffff75,#dfe5635c)]"></div>
+														</button>
+													) : null}
+												</div>
+												{skill === 'R' ? (
+													<div className="flex justify-center gap-0.5">
+														{Array.from({ length: dotCount }).map(
+															(_, index) => (
+																<div
+																	key={index}
+																	className={cn(
+																		'w-2 h-2 rounded-full',
+																		index < rank
+																			? 'bg-hex-gold/80'
+																			: 'bg-gray-300 dark:bg-gray-700'
+																	)}
+																/>
+															)
+														)}
+													</div>
+												) : (
+													<div className="grid grid-cols-5 gap-0.5">
+														{Array.from({ length: dotCount }).map(
+															(_, index) => (
+																<div
+																	key={index}
+																	className={cn(
+																		'w-2 h-2 rounded-full',
+																		index < rank
+																			? 'bg-hex-gold/80'
+																			: 'bg-gray-300 dark:bg-gray-700'
+																	)}
+																/>
+															)
+														)}
+													</div>
+												)}
+											</div>
+										);
+									})}
+								</div>
+								<div className="w-full flex flex-col gap-1">
+									<div className="hud-bar health-bar">
+										{Math.round(calculatedStats.totalHp)}/
+										{Math.round(calculatedStats.totalHp)}
+									</div>
+									<div className={cn('hud-bar', resourceBarClass)}>
+										{calculatedStats.totalMana > 0 ? (
+											<>
+												{Math.round(calculatedStats.totalMana)}/
+												{Math.round(calculatedStats.totalMana)}
+											</>
+										) : null}
+									</div>
+								</div>
+							</div>
+						</div>
+						{/* Items */}
+						<div className="hud-frame items-frame">
+							<div className="grid grid-cols-3 gap-1 w-full">
+								{build.map((itemId, index) => {
+									const item = itemId ? itemsById[itemId] : null;
+									return (
+										<div
+											key={index}
+											className="aspect-square border-2 border-hex-gold/40 z-[3] p-1"
+											onContextMenu={(e) => handleContextMenu(e, index)}
+										>
+											{item ? (
+												<ItemPopover
+													item={item}
+													itemsById={itemsById}
+													showTree={false}
+													triggerClassName="w-full h-full"
+												>
+													<div className="w-full h-full relative flex flex-col items-center justify-center">
+														<img
+															src={itemImgUrl(patchVersion!, item.id)}
+															alt={item.name}
+															className="w-full h-full object-cover"
+														/>
+													</div>
+												</ItemPopover>
+											) : null}
+										</div>
+									);
+								})}
+							</div>
+						</div>
 					</div>
 
 					<Button
-						className="ml-auto text-white hover:opacity-85"
+						className="w-full mt-4 lg:mt-0 lg:ml-auto lg:w-auto text-white hover:opacity-85"
 						onClick={() => setSimulateDialogOpen(true)}
 					>
 						Simulate damage
@@ -879,12 +902,25 @@ export default function BuildPage() {
 							Champion Selection
 						</h3>
 						<div className="p-3 space-y-3">
-							<Input
-								className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 transition-none"
-								placeholder="Search by name..."
-								value={championSearch}
-								onChange={(e) => setChampionSearch(e.target.value)}
-							/>
+							<div className="relative group">
+								<Input
+									ref={searchInputRef}
+									className="w-full border border-hex-gold/30 dark:bg-[#070f19] text-xs h-9 transition-none"
+									placeholder="Search by name..."
+									value={championSearch}
+									onChange={(e) => setChampionSearch(e.target.value)}
+								/>
+								<X
+									size={14}
+									className={clsx(
+										'absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hidden',
+										{
+											'group-hover:block': championSearch.length > 0,
+										}
+									)}
+									onClick={clearInputValue}
+								/>
+							</div>
 
 							{/* Lane Filters */}
 							<div className="grid grid-cols-6 gap-1">
