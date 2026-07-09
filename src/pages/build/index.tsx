@@ -533,7 +533,8 @@ export default function BuildPage() {
 				key: 'abilityPower',
 				value: calculatedStats.totalAp,
 				icon: 'scaleap',
-				colorClass: 'text-fuchsia-500 dark:text-fuchsia-400',
+				// colorClass: 'text-fuchsia-500 dark:text-fuchsia-400',
+				colorClass: 'text-blue-500 dark:text-blue-400',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{
@@ -547,7 +548,7 @@ export default function BuildPage() {
 				key: 'armor',
 				value: calculatedStats.totalArmor,
 				icon: 'scalearmor',
-				colorClass: 'text-blue-500 dark:text-blue-400',
+				colorClass: 'text-orange-400 dark:text-orange-300',
 				format: (v: number) => Math.round(v).toString(),
 			},
 			{

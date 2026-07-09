@@ -59,7 +59,7 @@ function ItemHoverContent({
 				{statLines.map((line, i) => (
 					<p
 						key={`${line}-${i}`}
-						className="text-xs leading-snug text-foreground lg:text-sm"
+						className="text-xs leading-snug font-medium text-muted-foreground lg:text-sm"
 					>
 						{line}
 					</p>
@@ -67,7 +67,7 @@ function ItemHoverContent({
 				{passives.map((block, index) => (
 					<p
 						key={`${block.title}-${index}`}
-						className="!mt-2 text-xs leading-snug text-foreground lg:text-sm"
+						className="!mt-2 text-xs leading-snug text-muted-foreground lg:text-sm"
 					>
 						<span className="font-semibold">{block.title}:</span>{' '}
 						<ItemDescriptionParts parts={block.parts} />

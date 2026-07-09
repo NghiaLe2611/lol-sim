@@ -311,8 +311,8 @@ export type ItemPassiveBlock = {
 export const ITEM_TAG_TEXT_CLASS: Record<ItemColoredTag, string> = {
 	physicalDamage: 'text-orange-600 dark:text-orange-400',
 	scaleHealth: 'text-green-600 dark:text-green-400',
-	magicDamage: 'text-purple-600 dark:text-purple-400',
-	speed: 'text-blue-600 dark:text-blue-400',
+	magicDamage: 'text-blue-600 dark:text-blue-400',
+	speed: 'text-teal-500 dark:text-teal-400',
 };
 
 // Summoner's Rift items
