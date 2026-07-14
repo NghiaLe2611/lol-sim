@@ -512,7 +512,7 @@ function BonusAbilityEffectsBody({
 					) : null}
 				</div>
 				<div className="min-w-0 text-xs leading-relaxed 2xl:text-sm">
-					<p className="text-foreground">
+					<p className="text-muted-foreground">
 						<HighlightedAbilityText>{eff.description}</HighlightedAbilityText>
 					</p>
 				</div>

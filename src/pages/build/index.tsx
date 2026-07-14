@@ -722,6 +722,11 @@ export default function BuildPage() {
 											<img
 												alt={`${selectedChampionId}-P`}
 												src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
+												onError={(e) => {
+													const target = e.target as HTMLImageElement;
+													target.src = `https://ddragon.leagueoflegends.com/cdn/16.13.1/img/passive/${selectedChampionId}_P.png`;
+													// target.src = `https://raw.communitydragon.org/latest/game/assets/characters/${selectedChampionId.toLowerCase()}/hud/icons2d/${selectedChampionId.toLowerCase()}_p.png`;
+												}}
 											/>
 										</SkillPopover>
 									) : (
@@ -756,6 +761,14 @@ export default function BuildPage() {
 															)}
 															triggerClassName="h-full w-full"
 														>
+															{/* <img
+																alt={`${selectedChampionId}-${skill}`}
+																src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
+																className={cn(
+																	'w-full h-full object-cover',
+																	rank === 0 && 'grayscale-[95%]'
+																)}
+															/> */}
 															<img
 																alt={`${selectedChampionId}-${skill}`}
 																src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/${skill.toLowerCase()}.png`}
@@ -763,6 +776,11 @@ export default function BuildPage() {
 																	'w-full h-full object-cover',
 																	rank === 0 && 'grayscale-[95%]'
 																)}
+																onError={(e) => {
+																	const target =
+																		e.target as HTMLImageElement;
+																	target.src = `https://ddragon.leagueoflegends.com/cdn/16.13.1/img/spell/${selectedChampionId}${skill}.png`;
+																}}
 															/>
 														</SkillPopover>
 													) : (
