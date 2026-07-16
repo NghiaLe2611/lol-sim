@@ -724,8 +724,23 @@ export default function BuildPage() {
 												src={`https://cdn.communitydragon.org/latest/champion/${selectedChampionId}/ability-icon/p.png`}
 												onError={(e) => {
 													const target = e.target as HTMLImageElement;
-													target.src = `https://ddragon.leagueoflegends.com/cdn/16.13.1/img/passive/${selectedChampionId}_P.png`;
-													// target.src = `https://raw.communitydragon.org/latest/game/assets/characters/${selectedChampionId.toLowerCase()}/hud/icons2d/${selectedChampionId.toLowerCase()}_p.png`;
+													const step = target.dataset.fallbackStep || '0';
+													// target.src = `https://ggmeo.com/skills/${selectedChampionId}_P.png`;
+													target.src = `https://cdn.metasrc.com/static/champions/${selectedChampionId.toLowerCase()}/skills/icons/${selectedChampionId.toLowerCase()}_passive.png`;
+													// https://cdn5.lolalytics.com/skill68/ahri_p.webp
+
+													// const skillName = abilityData('P')?.name;
+
+													// if (step === '0') {
+													// 	target.dataset.fallbackStep = '1';
+													// 	target.src = `https://raw.communitydragon.org/latest/game/assets/characters/${selectedChampionId.toLowerCase()}/hud/icons2d/${selectedChampionId.toLowerCase()}_p.png`;
+													// } else if (step === '1') {
+													// 	target.dataset.fallbackStep = '2';
+													// 	target.src = `https://raw.communitydragon.org/latest/game/assets/characters/${selectedChampionId.toLowerCase()}/hud/icons2d/${selectedChampionId.toLowerCase()}_passive.png`;
+													// } else {
+													// 	target.onerror = null;
+													// 	target.src = `https://cdn.mobalytics.gg/assets/lol/images/dd/champions/abilities/${selectedChampionId}_Passive.png`;
+													// }
 												}}
 											/>
 										</SkillPopover>
@@ -779,7 +794,9 @@ export default function BuildPage() {
 																onError={(e) => {
 																	const target =
 																		e.target as HTMLImageElement;
-																	target.src = `https://ddragon.leagueoflegends.com/cdn/16.13.1/img/spell/${selectedChampionId}${skill}.png`;
+																	target.src = `https://cdn.metasrc.com/static/champions/${selectedChampionId.toLowerCase()}/skills/icons/${selectedChampionId.toLowerCase()}_${skill}.png`;
+																	// target.src = `https://ddragon.leagueoflegends.com/cdn/16.13.1/img/spell/${selectedChampionId}${skill}.png`;
+																	// target.src = `https://opgg-static.akamaized.net/meta/images/lol/${patchVersion}/spell/${selectedChampionId}${skill}.png?image=q_auto:good,f_webp,w_64,h_64`;
 																}}
 															/>
 														</SkillPopover>
