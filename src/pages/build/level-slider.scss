@@ -43,7 +43,7 @@
 .dark {
     .build-level-slider[data-orientation="horizontal"] {
          > span[data-orientation="horizontal"]:first-of-type {
-            @apply bg-gray-700;
+            @apply bg-neutral-700;
          }
     }
     span[role="slider"][data-orientation="horizontal"] {

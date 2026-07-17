@@ -1,66 +1,69 @@
-import { useAppContext } from '@/contexts/AppContext';
-import {
-	getBonusChampionDetail,
-	getBonusChampions,
-	getBonusItems,
-	getChampionSkills,
-	getChampions,
-	getItems,
-} from '@/services/api';
-import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { Coins, Plus, X, Search } from 'lucide-react';
-import clsx from 'clsx';
-import { matchesChampionRoleFilter, selectBonusPositionsOnly } from '@/pages/champions/role-filter';
-import {
-	applyBonusToSrItemMap,
-	applyBonusToSrItems,
-	parseDdragonItemMap,
-	parseDdragonItems,
-	selectBonusItemsById,
-	isBuildableItem,
-	matchesBuildCategory,
-	ITEM_TAG_FILTERS,
-	matchesItemTagFilterForItem,
-	type DdragonItemsPayload,
-	type SrItem,
-} from '@/pages/items/utils';
-import { itemImgUrl, STALE_MS } from '@/constants/common';
-import ItemPopover from '@/pages/items/components/ItemPopover';
-import './level-slider.scss';
-import { type ChampionListRow } from '@/types/champions';
+import { Slider } from '@/components/ui/slider';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { itemImgUrl, STALE_MS } from '@/constants/common';
+import { useAppContext } from '@/contexts/AppContext';
+import { useCustomToast } from '@/hooks/useCustomToast';
+import { cn } from '@/lib/utils';
+import {
+	accumulateItemStatsFromBuild,
+	applyItemStatsToChampion,
+	type ChampionBaseStats,
+	type ItemBonusStatBlock
+} from '@/pages/build/item-stats';
+import {
+	canLevelSkill,
+	clampSkillLevels,
+	dotCountForSkill,
+	EMPTY_SKILL_LEVELS,
+	levelUpSkill,
+	SKILL_KEYS,
+	type SkillKey,
+	type SkillLevels,
+} from '@/pages/build/skill-levels';
 import {
 	BonusAbility,
 	bonusStatAbbreviation,
 	type BonusChampionDetail,
 } from '@/pages/champion-detail/utils';
-import { useCustomToast } from '@/hooks/useCustomToast';
+import { selectBonusPositionsOnly, type ChampionRoleFilter } from '@/pages/champions/role-filter';
+import ItemPopover from '@/pages/items/components/ItemPopover';
+import {
+	applyBonusToSrItemMap,
+	applyBonusToSrItems,
+	isBuildableItem,
+	ITEM_TAG_FILTERS,
+	matchesBuildCategory,
+	matchesItemTagFilterForItem,
+	parseDdragonItemMap,
+	parseDdragonItems,
+	selectBonusItemsById,
+	type DdragonItemsPayload,
+	type SrItem,
+} from '@/pages/items/utils';
+import {
+	getBonusChampionDetail,
+	getBonusChampions,
+	getBonusItems,
+	getChampions,
+	getChampionSkills,
+	getItems,
+} from '@/services/api';
 import { capitalizeText } from '@/utils/common';
-import {
-	accumulateItemStatsFromBuild,
-	applyItemStatsToChampion,
-	BuildComputedStats,
-	type ChampionBaseStats,
-	type ItemBonusStatBlock,
-} from '@/pages/build/item-stats';
-import {
-	EMPTY_SKILL_LEVELS,
-	SKILL_KEYS,
-	canLevelSkill,
-	clampSkillLevels,
-	dotCountForSkill,
-	levelUpSkill,
-	type SkillKey,
-	type SkillLevels,
-} from '@/pages/build/skill-levels';
+import { useQuery } from '@tanstack/react-query';
+import clsx from 'clsx';
+import { Plus, Search, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './build.scss';
-import SkillPopover from './SkillPopover';
-import { Button } from '@/components/ui/button';
+import ChampionList from './ChampionList';
+import {
+	championsFromQueryData,
+	filterChampionListRows,
+} from './champion-list-filter';
+import './level-slider.scss';
 import SimulateDialog from './SimulateDialog';
+import SkillPopover from './SkillPopover';
 
 type HudResourceBarKind = 'mana' | 'energy' | 'shield';
 
@@ -229,28 +232,17 @@ export default function BuildPage() {
 
 	// Filter champions list based on lane and search term
 	const filteredChampions = useMemo(() => {
-		const list = Object.values(championsQuery.data?.data || {}) as ChampionListRow[];
-		let filtered = list;
+		const list = championsFromQueryData(championsQuery.data);
+		const mappedLane =
+			(LANE_FILTERS.find((lf) => lf.id === activeLane)?.mappedKey as ChampionRoleFilter) ||
+			'All';
 
-		if (championSearch.trim()) {
-			const q = championSearch.toLowerCase().trim();
-			filtered = filtered.filter((c) => c.name.toLowerCase().includes(q));
-		}
-
-		if (activeLane !== 'ALL') {
-			const mappedLane = LANE_FILTERS.find((lf) => lf.id === activeLane)?.mappedKey || 'All';
-			filtered = filtered.filter((c) => {
-				const positions = bonusPositionsMap[c.id] || [];
-				return matchesChampionRoleFilter(
-					mappedLane as any,
-					c.tags || [],
-					positions,
-					Boolean(bonusQuery.data)
-				);
-			});
-		}
-
-		return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+		return filterChampionListRows(list, {
+			search: championSearch,
+			role: mappedLane,
+			bonusPositionsMap,
+			hasBonusData: Boolean(bonusQuery.data),
+		});
 	}, [championsQuery.data, championSearch, activeLane, bonusPositionsMap, bonusQuery.data]);
 
 	const championsGridLoading =
@@ -504,9 +496,11 @@ export default function BuildPage() {
 		handleRemoveItem(index);
 	};
 
-	const getChampImgUrl = (champId: string) => {
-		return `https://ddragon.leagueoflegends.com/cdn/${patchVersion || '14.23.1'}/img/champion/${champId}.png`;
-	};
+	const getChampImgUrl = useCallback(
+		(champId: string) =>
+			`https://ddragon.leagueoflegends.com/cdn/${patchVersion || '14.23.1'}/img/champion/${champId}.png`,
+		[patchVersion]
+	);
 
 	const statsToShow = useMemo(() => {
 		return [
@@ -925,6 +919,7 @@ export default function BuildPage() {
 							},
 							skills: skillLevels,
 						}}
+						attackerId={selectedChampionId}
 						open={simulateDialogOpen}
 						onOpenChange={setSimulateDialogOpen}
 					/>
@@ -978,58 +973,13 @@ export default function BuildPage() {
 									</button>
 								))}
 							</div>
-
-							{/* Champions grid list */}
-							<div className="h-[300px] custom-scrollbar">
-								<div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-2 p-2 border border-hex-gold/20 rounded dark:bg-[#0b1319]">
-									{championsGridLoading ? (
-										Array.from({ length: 16 }).map((_, i) => (
-											<div
-												key={i}
-												className="aspect-square bg-gray-200 dark:bg-gray-900 rounded animate-pulse border border-hex-gold/10"
-											/>
-										))
-									) : filteredChampions.length === 0 ? (
-										<div className="col-span-full text-center py-8 text-xs text-muted-foreground">
-											No champions found
-										</div>
-									) : (
-										filteredChampions.map((champ) => {
-											const isSelected = selectedChampionId === champ.id;
-											return (
-												<button
-													key={champ.id}
-													type="button"
-													onClick={() => setSelectedChampionId(champ.id)}
-													className={clsx(
-														'flex flex-col items-center justify-center p-0.5 rounded border-2 bg-gray-200 dark:bg-[#08111a] overflow-hidden',
-														isSelected
-															? 'border-hex-gold ring-1 ring-hex-gold/40'
-															: 'border-transparent hover:border-hex-gold/30'
-													)}
-													title={champ.name}
-												>
-													<img
-														src={getChampImgUrl(champ.id)}
-														alt={champ.name}
-														className="w-full aspect-square object-cover hover:scale-105"
-													/>
-													<span
-														className={clsx(
-															'text-[9px] mt-1 truncate w-full text-center px-0.5',
-															isSelected
-																? 'text-hex-gold'
-																: 'text-muted-foreground'
-														)}
-													>
-														{champ.name}
-													</span>
-												</button>
-											);
-										})
-									)}
-								</div>
-							</div>
+							<ChampionList
+								champions={filteredChampions}
+								loading={championsGridLoading}
+								selectedId={selectedChampionId}
+								onSelect={setSelectedChampionId}
+								getImageUrl={getChampImgUrl}
+							/>
 						</div>
 					</div>
 

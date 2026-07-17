@@ -65,21 +65,21 @@ export default {
 				'hex-blue-glow': 'var(--hex-blue-glow)',
 				'hex-bg-deep': 'var(--hex-bg-deep)',
 				success: {
-                    DEFAULT: '#16a34a',
-                    hover: '#15803d',
-                    active: '#166534',
-                    disabled: '#86efac',
-                },
-                warning: {
-                    DEFAULT: '#d6a304',
-                    hover: '#ca8a04',
-                    active: '#d97706',
-                    disabled: '#fcd34d',
-                },
-                destructive: {
-                    DEFAULT: 'hsl(var(--destructive))',
-                    foreground: 'hsl(var(--destructive-foreground))',
-                },
+					DEFAULT: '#16a34a',
+					hover: '#15803d',
+					active: '#166534',
+					disabled: '#86efac',
+				},
+				warning: {
+					DEFAULT: '#d6a304',
+					hover: '#ca8a04',
+					active: '#d97706',
+					disabled: '#fcd34d',
+				},
+				destructive: {
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))',
+				},
 			},
 			boxShadow: {
 				hex: 'var(--shadow-hex)',
@@ -109,6 +109,11 @@ export default {
 				'loading-bars': {
 					'0%, 40%, 100%': { transform: 'scaleY(0.4)' },
 					'20%': { transform: 'scaleY(1)' },
+				},
+				fadeUp: {
+					'0%': { opacity: '0', transform: 'translateY(20px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' },
+					'fade-up': 'fadeUp 0.3s ease-out forwards',
 				},
 			},
 			animation: {
