@@ -1,11 +1,24 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { itemImgUrl, STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
-import { STALE_MS } from '@/constants/common';
-import { getBonusChampions, getChampions } from '@/services/api';
+import { useCustomToast } from '@/hooks/useCustomToast';
+import { cn } from '@/lib/utils';
+import { bonusStatAbbreviation, type BonusChampionDetail } from '@/pages/champion-detail/utils';
+import ItemPopover from '@/pages/items/components/ItemPopover';
+import type { SrItem } from '@/pages/items/utils';
+import {
+	getBonusChampionDetail,
+	getBonusChampions,
+	getChampions,
+} from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import clsx from 'clsx';
+import { ArrowLeftRight, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
 	ROLE_BAR_ITEMS,
@@ -14,13 +27,27 @@ import {
 } from '../champions/role-filter';
 import ChampionList from './ChampionList';
 import { championsFromQueryData, filterChampionListRows } from './champion-list-filter';
-import { Button } from '@/components/ui/button';
-import { ArrowLeftRight } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
+import { buildStatsToShow, type BuildStatRow } from './build-stats-show';
+import { computeBuildStats } from './compute-build-stats';
+import SimulateItemPickerDialog from './SimulateItemPickerDialog';
+import './level-slider.scss';
+
+const EMPTY_BUILD: (string | null)[] = Array(6).fill(null);
+
+type SimulateSide = 'attacker' | 'target';
+
+type SideState = {
+	level: number;
+	build: (string | null)[];
+};
 
 interface SimulateDialogProps {
-	data: Record<string, unknown>;
 	attackerId: string | null;
+	initialAttackerLevel: number;
+	initialAttackerBuild: (string | null)[];
+	itemsById: Record<string, SrItem>;
+	srItems: SrItem[];
+	hasBonusItems: boolean;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
@@ -36,7 +63,143 @@ type SimulateChampionPanelProps = {
 	onSearchChange: (value: string) => void;
 	activeRole: ChampionRoleFilter;
 	onRoleChange: (role: ChampionRoleFilter) => void;
+	buildSection: {
+		level: number;
+		onLevelChange: (level: number) => void;
+		statsToShow: BuildStatRow[];
+		items: (SrItem | null)[];
+		itemsById: Record<string, SrItem>;
+		patchVersion: string | null;
+		onAddItem: () => void;
+		onRemoveItem: (index: number) => void;
+	};
 };
+
+function buildEquippedItems(
+	build: (string | null)[],
+	itemsById: Record<string, SrItem>
+): (SrItem | null)[] {
+	return build.map((itemId) => (itemId ? itemsById[itemId] ?? null : null));
+}
+
+function SimulateBuildSection({
+	level,
+	onLevelChange,
+	statsToShow,
+	items,
+	itemsById,
+	patchVersion,
+	onAddItem,
+	onRemoveItem,
+}: SimulateChampionPanelProps['buildSection']) {
+	return (
+		<>
+			<div className="flex items-center gap-2 bg-card-foreground p-4 rounded-sm border border-input">
+				<span className="text-xs text-hex-gold uppercase font-semibold tracking-wider shrink-0">
+					Level
+				</span>
+				<Slider
+					value={[level]}
+					onValueChange={(val) => onLevelChange(val[0])}
+					min={1}
+					max={18}
+					step={1}
+					className="build-level-slider py-2"
+				/>
+				<span className="ml-4 text-sm 2xl:text-base font-semibold shrink-0">{level}</span>
+			</div>
+
+			<div className="bg-card-foreground p-4 rounded-sm border border-input space-y-3">
+				<h5 className="text-xs text-hex-gold font-semibold uppercase tracking-wider">
+					Stats (Lv {level})
+				</h5>
+				<div className="grid grid-cols-2 gap-x-4 3xl:gap-x-8 gap-y-2 text-xs">
+					{statsToShow.map((item) => {
+						const { short, label } = bonusStatAbbreviation(item.key);
+						return (
+							<div
+								key={item.key}
+								className="flex justify-between items-center gap-2 py-0.5 border-b border-hex-gold/5 last:border-0"
+							>
+								<Tooltip delayDuration={0}>
+									<TooltipTrigger asChild>
+										<span className="text-muted-foreground hover:cursor-help truncate">
+											{short}
+										</span>
+									</TooltipTrigger>
+									<TooltipContent className="pointer-events-none select-none bg-yellow-700 text-xs text-white dark:bg-[#624e1e] border border-hex-gold/30">
+										{label}
+									</TooltipContent>
+								</Tooltip>
+								<span className={cn('font-semibold shrink-0', item.colorClass)}>
+									{item.format(item.value)}
+								</span>
+							</div>
+						);
+					})}
+				</div>
+			</div>
+
+			<div className="bg-card-foreground p-4 rounded-sm border border-input space-y-3">
+				<h5 className="text-xs text-hex-gold font-semibold uppercase tracking-wider">
+					Items
+				</h5>
+				<div className="flex justify-between gap-2">
+					<div className="grid grid-cols-6 gap-2 max-w-max">
+						{items.map((item, index) => (
+							<div
+								key={index}
+								className="group relative aspect-square w-10 border border-hex-gold/30 rounded-sm bg-zinc-900/40 p-0.5"
+								onContextMenu={(e) => {
+									e.preventDefault();
+									if (item) onRemoveItem(index);
+								}}
+							>
+								{item && patchVersion ? (
+									<>
+										<ItemPopover
+											item={item}
+											itemsById={itemsById}
+											showTree={false}
+											triggerClassName="w-full h-full"
+										>
+											<div className="w-full h-full relative flex flex-col items-center justify-center">
+												<img
+													src={itemImgUrl(patchVersion, item.id)}
+													alt={item.name}
+													className="w-full h-full object-cover"
+												/>
+											</div>
+										</ItemPopover>
+										{/* <button
+											type="button"
+											onClick={(e) => {
+												e.stopPropagation();
+												onRemoveItem(index);
+											}}
+											className="hidden group-hover:flex absolute -top-1 -right-1 size-4 rounded-full hover:opacity-95 items-center justify-center bg-red-500/80 text-white z-10"
+											title="Remove item"
+										>
+											<X className="size-2" />
+										</button> */}
+									</>
+								) : null}
+							</div>
+						))}
+					</div>
+					<Button
+						type="button"
+						variant="ghost"
+						onClick={onAddItem}
+						className="text-xs text-muted-foreground !bg-transparent hover:opacity-80 shrink-0"
+					>
+						+ Add Item
+					</Button>
+				</div>
+			</div>
+		</>
+	);
+}
 
 function SimulateChampionPanel({
 	titleBorderCls,
@@ -49,6 +212,7 @@ function SimulateChampionPanel({
 	onSearchChange,
 	activeRole,
 	onRoleChange,
+	buildSection,
 }: SimulateChampionPanelProps) {
 	const selectedChampion = champions.find((champ) => champ.id === selectedId);
 
@@ -144,26 +308,33 @@ function SimulateChampionPanel({
 				skeletonCount={8}
 			/>
 
-			<div className="flex items-center gap-2 bg-card-foreground p-4 rounded-sm border border-input">
-				<span className="text-xs uppercase text-hex-gold font-bold tracking-wider">
-					Level
-				</span>
-				<Slider
-					// value={[level]}
-					// onValueChange={(val) => setLevel(val[0])}
-					min={1}
-					max={18}
-					step={1}
-					className="build-level-slider py-2"
-				/>
-				<span className="ml-8 text-sm 2xl:text-base font-semibold">1</span>
-			</div>
+			<SimulateBuildSection {...buildSection} />
 		</div>
 	);
 }
 
-const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: SimulateDialogProps) => {
+function findNextEmptySlot(build: (string | null)[], start = 0): number {
+	for (let i = start; i < build.length; i++) {
+		if (!build[i]) return i;
+	}
+	for (let i = 0; i < start; i++) {
+		if (!build[i]) return i;
+	}
+	return Math.min(start, build.length - 1);
+}
+
+const SimulateDialog = ({
+	attackerId,
+	initialAttackerLevel,
+	initialAttackerBuild,
+	itemsById,
+	srItems,
+	hasBonusItems,
+	open,
+	onOpenChange,
+}: SimulateDialogProps) => {
 	const { patchVersion, isPatchReady } = useAppContext();
+	const { showToast } = useCustomToast();
 
 	const [attackerSearch, setAttackerSearch] = useState('');
 	const [attackerRole, setAttackerRole] = useState<ChampionRoleFilter>('All');
@@ -171,6 +342,13 @@ const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: Simulat
 	const [targetRole, setTargetRole] = useState<ChampionRoleFilter>('All');
 	const [attackerChampionId, setAttackerChampionId] = useState<string | null>(attackerId);
 	const [targetChampionId, setTargetChampionId] = useState<string | null>(null);
+	const [attacker, setAttacker] = useState<SideState>({
+		level: initialAttackerLevel,
+		build: [...initialAttackerBuild],
+	});
+	const [target, setTarget] = useState<SideState>({ level: 1, build: [...EMPTY_BUILD] });
+	const [itemPickerSide, setItemPickerSide] = useState<SimulateSide | null>(null);
+	const [editingSlot, setEditingSlot] = useState(0);
 
 	const championsQuery = useQuery({
 		queryKey: ['champions', patchVersion],
@@ -185,6 +363,22 @@ const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: Simulat
 		gcTime: STALE_MS,
 	});
 
+	const attackerBonusQuery = useQuery({
+		queryKey: ['championBonusDetail', attackerChampionId],
+		queryFn: () => getBonusChampionDetail(attackerChampionId!) as Promise<BonusChampionDetail>,
+		enabled: Boolean(attackerChampionId) && open,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
+	const targetBonusQuery = useQuery({
+		queryKey: ['championBonusDetail', targetChampionId],
+		queryFn: () => getBonusChampionDetail(targetChampionId!) as Promise<BonusChampionDetail>,
+		enabled: Boolean(targetChampionId) && open,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
 	const bonusPositionsMap = useMemo(
 		() => selectBonusPositionsOnly(bonusQuery.data),
 		[bonusQuery.data]
@@ -192,6 +386,11 @@ const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: Simulat
 
 	const allChampions = useMemo(
 		() => championsFromQueryData(championsQuery.data),
+		[championsQuery.data]
+	);
+
+	const championsById = useMemo(
+		() => championsQuery.data?.data ?? {},
 		[championsQuery.data]
 	);
 
@@ -235,14 +434,141 @@ const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: Simulat
 		[patchVersion]
 	);
 
+	const attackerStats = useMemo(
+		() =>
+			computeBuildStats({
+				level: attacker.level,
+				build: attacker.build,
+				itemsById,
+				champBonus: attackerBonusQuery.data,
+				champDdr: attackerChampionId
+					? (championsById[attackerChampionId] as Parameters<
+							typeof computeBuildStats
+						>[0]['champDdr'])
+					: null,
+			}),
+		[
+			attacker.level,
+			attacker.build,
+			itemsById,
+			attackerBonusQuery.data,
+			attackerChampionId,
+			championsById,
+		]
+	);
+
+	const targetStats = useMemo(
+		() =>
+			computeBuildStats({
+				level: target.level,
+				build: target.build,
+				itemsById,
+				champBonus: targetBonusQuery.data,
+				champDdr: targetChampionId
+					? (championsById[targetChampionId] as Parameters<
+							typeof computeBuildStats
+						>[0]['champDdr'])
+					: null,
+			}),
+		[target.level, target.build, itemsById, targetBonusQuery.data, targetChampionId, championsById]
+	);
+
+	const attackerStatsToShow = useMemo(() => buildStatsToShow(attackerStats), [attackerStats]);
+	const targetStatsToShow = useMemo(() => buildStatsToShow(targetStats), [targetStats]);
+
+	const attackerItems = useMemo(
+		() => buildEquippedItems(attacker.build, itemsById),
+		[attacker.build, itemsById]
+	);
+	const targetItems = useMemo(
+		() => buildEquippedItems(target.build, itemsById),
+		[target.build, itemsById]
+	);
+
+	const activePickerBuild = itemPickerSide === 'target' ? target.build : attacker.build;
+
+	const updateSideBuild = useCallback(
+		(side: SimulateSide, updater: (build: (string | null)[]) => (string | null)[]) => {
+			const setter = side === 'attacker' ? setAttacker : setTarget;
+			setter((prev) => ({ ...prev, build: updater(prev.build) }));
+		},
+		[]
+	);
+
+	const handleOpenItemPicker = useCallback(
+		(side: SimulateSide) => {
+			const build = side === 'attacker' ? attacker.build : target.build;
+			setEditingSlot(findNextEmptySlot(build));
+			setItemPickerSide(side);
+		},
+		[attacker.build, target.build]
+	);
+
+	const handleItemSelect = useCallback(
+		(itemId: string) => {
+			if (!itemPickerSide) return;
+
+			const build = itemPickerSide === 'attacker' ? attacker.build : target.build;
+			const selectedItem = itemsById[itemId];
+
+			if (selectedItem?.group) {
+				const hasSameGroup = build.some((otherItemId, index) => {
+					if (index === editingSlot) return false;
+					if (!otherItemId) return false;
+					const otherItem = itemsById[otherItemId];
+					return otherItem?.group === selectedItem.group;
+				});
+
+				if (hasSameGroup) {
+					showToast({
+						message: `Limited to 1 ${selectedItem.group.toUpperCase()} item.`,
+						severity: 'error',
+						dedupeKey: `simulate-item-group-${selectedItem.group}`,
+					});
+					return;
+				}
+			}
+
+			updateSideBuild(itemPickerSide, (prev) => {
+				const next = [...prev];
+				next[editingSlot] = itemId;
+				setEditingSlot(findNextEmptySlot(next, editingSlot + 1));
+				return next;
+			});
+		},
+		[
+			itemPickerSide,
+			attacker.build,
+			target.build,
+			itemsById,
+			editingSlot,
+			showToast,
+			updateSideBuild,
+		]
+	);
+
+	const handleRemoveItem = useCallback(
+		(side: SimulateSide, index: number) => {
+			updateSideBuild(side, (prev) => {
+				const next = [...prev];
+				next[index] = null;
+				return next;
+			});
+		},
+		[updateSideBuild]
+	);
+
 	useEffect(() => {
 		if (!open) return;
 		setAttackerChampionId(attackerId);
+		setAttacker({ level: initialAttackerLevel, build: [...initialAttackerBuild] });
+		setTarget({ level: 1, build: [...EMPTY_BUILD] });
 		setAttackerSearch('');
 		setAttackerRole('All');
 		setTargetSearch('');
 		setTargetRole('All');
-	}, [open, attackerId]);
+		setItemPickerSide(null);
+	}, [open, attackerId, initialAttackerLevel, initialAttackerBuild]);
 
 	useEffect(() => {
 		if (!open || filteredAttackers.length === 0) return;
@@ -258,74 +584,111 @@ const SimulateDialog = ({ data: _data, attackerId, open, onOpenChange }: Simulat
 		}
 	}, [open, filteredTargets, targetChampionId]);
 
-	// Swap position
 	const handleSwapChampions = () => {
-		const temp = attackerChampionId;
 		setAttackerChampionId(targetChampionId);
-		setTargetChampionId(temp);
+		setTargetChampionId(attackerChampionId);
+		setAttacker({ level: target.level, build: [...target.build] });
+		setTarget({ level: attacker.level, build: [...attacker.build] });
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent
-				className="outline:none w-full h-full !max-w-container max-h-[95vh] gap-3 !ring-0 dark:bg-[#0c0c0c] !border-none shadow-[0_0_10px] shadow-hex-gold/50 overflow-hidden"
-				onOpenAutoFocus={(e) => e.preventDefault()}
-			>
-				<VisuallyHidden.Root>
-					<DialogTitle>Simulate Damage</DialogTitle>
-					<DialogDescription>Simulate Damage</DialogDescription>
-				</VisuallyHidden.Root>
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 pt-8">
-					<SimulateChampionPanel
-						titleBorderCls="border-blue-500 shadow-blue-500"
-						champions={filteredAttackers}
-						loading={championsLoading}
-						selectedId={attackerChampionId}
-						onSelect={setAttackerChampionId}
-						getImageUrl={getChampImgUrl}
-						search={attackerSearch}
-						onSearchChange={setAttackerSearch}
-						activeRole={attackerRole}
-						onRoleChange={setAttackerRole}
-					/>
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent
+					className="outline:none w-full h-full !max-w-container max-h-[95vh] gap-3 !ring-0 dark:bg-[#0c0c0c] !border-none shadow-[0_0_10px] shadow-hex-gold/50 overflow-y-auto custom-scrollbar"
+					onOpenAutoFocus={(e) => e.preventDefault()}
+				>
+					<VisuallyHidden.Root>
+						<DialogTitle>Simulate Damage</DialogTitle>
+						<DialogDescription>Simulate Damage</DialogDescription>
+					</VisuallyHidden.Root>
+					<div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 pt-8">
+						<SimulateChampionPanel
+							titleBorderCls="border-blue-500 shadow-blue-500"
+							champions={filteredAttackers}
+							loading={championsLoading}
+							selectedId={attackerChampionId}
+							onSelect={setAttackerChampionId}
+							getImageUrl={getChampImgUrl}
+							search={attackerSearch}
+							onSearchChange={setAttackerSearch}
+							activeRole={attackerRole}
+							onRoleChange={setAttackerRole}
+							buildSection={{
+								level: attacker.level,
+								onLevelChange: (nextLevel) =>
+									setAttacker((prev) => ({ ...prev, level: nextLevel })),
+								statsToShow: attackerStatsToShow,
+								items: attackerItems,
+								itemsById,
+								patchVersion,
+								onAddItem: () => handleOpenItemPicker('attacker'),
+								onRemoveItem: (index) => handleRemoveItem('attacker', index),
+							}}
+						/>
 
-					<div className="flex-col items-center gap-3 lg:min-w-[340px] lg:max-w-[400px] w-full animate-fade-up hidden lg:flex duration-100">
-						<div className="h-24 w-full flex flex-col">
-							<div className="flex flex-1 items-center gap-3">
-								<div className="flex-1 h-px bg-hex-gold/20"></div>
-								<div className="text-lg font-bold text-muted-foreground">VS</div>
-								<div className="flex-1 h-px bg-hex-gold/20"></div>
-							</div>
-							<div className="text-center">
-								<Button
-									onClick={handleSwapChampions}
-									variant="outline"
-									className="border-input hover:border-hex-gold/50 text-xs 4xl:text-sm text-muted-foreground bg-transparent hover:bg-transparent"
-								>
-									<ArrowLeftRight className="!size-3.5" />
-									Swap
-								</Button>
+						<div className="flex-col items-center gap-3 lg:min-w-[340px] lg:max-w-[400px] w-full animate-fade-up hidden lg:flex duration-100">
+							<div className="h-24 w-full flex flex-col">
+								<div className="flex flex-1 items-center gap-3">
+									<div className="flex-1 h-px bg-hex-gold/20"></div>
+									<div className="text-lg font-bold text-muted-foreground">VS</div>
+									<div className="flex-1 h-px bg-hex-gold/20"></div>
+								</div>
+								<div className="text-center">
+									<Button
+										onClick={handleSwapChampions}
+										variant="outline"
+										className="border-input hover:border-hex-gold/50 text-xs 4xl:text-sm text-muted-foreground bg-transparent hover:bg-transparent"
+									>
+										<ArrowLeftRight className="!size-3.5" />
+										Swap
+									</Button>
+								</div>
 							</div>
 						</div>
-					</div>
 
-					<div className="hidden lg:block">
-						<SimulateChampionPanel
-							titleBorderCls="border-red-500 shadow-red-500"
-							champions={filteredTargets}
-							loading={championsLoading}
-							selectedId={targetChampionId}
-							onSelect={setTargetChampionId}
-							getImageUrl={getChampImgUrl}
-							search={targetSearch}
-							onSearchChange={setTargetSearch}
-							activeRole={targetRole}
-							onRoleChange={setTargetRole}
-						/>
+						<div className="hidden lg:block">
+							<SimulateChampionPanel
+								titleBorderCls="border-red-500 shadow-red-500"
+								champions={filteredTargets}
+								loading={championsLoading}
+								selectedId={targetChampionId}
+								onSelect={setTargetChampionId}
+								getImageUrl={getChampImgUrl}
+								search={targetSearch}
+								onSearchChange={setTargetSearch}
+								activeRole={targetRole}
+								onRoleChange={setTargetRole}
+								buildSection={{
+									level: target.level,
+									onLevelChange: (nextLevel) =>
+										setTarget((prev) => ({ ...prev, level: nextLevel })),
+									statsToShow: targetStatsToShow,
+									items: targetItems,
+									itemsById,
+									patchVersion,
+									onAddItem: () => handleOpenItemPicker('target'),
+									onRemoveItem: (index) => handleRemoveItem('target', index),
+								}}
+							/>
+						</div>
 					</div>
-				</div>
-			</DialogContent>
-		</Dialog>
+				</DialogContent>
+			</Dialog>
+
+			<SimulateItemPickerDialog
+				open={itemPickerSide !== null}
+				onOpenChange={(nextOpen) => {
+					if (!nextOpen) setItemPickerSide(null);
+				}}
+				srItems={srItems}
+				itemsById={itemsById}
+				build={activePickerBuild}
+				hasBonusItems={hasBonusItems}
+				patchVersion={patchVersion}
+				onItemSelect={handleItemSelect}
+			/>
+		</>
 	);
 };
 

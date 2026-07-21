@@ -7,12 +7,6 @@ import { useAppContext } from '@/contexts/AppContext';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { cn } from '@/lib/utils';
 import {
-	accumulateItemStatsFromBuild,
-	applyItemStatsToChampion,
-	type ChampionBaseStats,
-	type ItemBonusStatBlock
-} from '@/pages/build/item-stats';
-import {
 	canLevelSkill,
 	clampSkillLevels,
 	dotCountForSkill,
@@ -61,6 +55,8 @@ import {
 	championsFromQueryData,
 	filterChampionListRows,
 } from './champion-list-filter';
+import { buildStatsToShow } from './build-stats-show';
+import { computeBuildStats } from './compute-build-stats';
 import './level-slider.scss';
 import SimulateDialog from './SimulateDialog';
 import SkillPopover from './SkillPopover';
@@ -341,104 +337,17 @@ export default function BuildPage() {
 			(itemsQuery.isFetching && itemsQuery.data === undefined));
 
 	// Stats calculations
-	const calculatedStats = useMemo(() => {
-		const lv = level - 1;
-		const factor = lv * (0.7025 + 0.0175 * lv); // Riot's official per-level factor
-
-		// 1. Champion base stats at selected level
-		let baseHp = 0;
-		let baseMana = 0;
-		let baseAd = 0;
-		let baseArmor = 0;
-		let baseMr = 0;
-		let baseAsRatio = 0.625;
-		let baseAsGrowth = 0;
-		let baseMs = 330;
-		let baseCritPct = 0;
-		let baseCritDamagePct = 175;
-
-		if (currentChampBonus && currentChampBonus.stats) {
-			const s = currentChampBonus.stats as Record<string, ItemBonusStatBlock | undefined>;
-			baseHp = s.health?.flat ?? 0;
-			baseHp += (s.health?.perLevel ?? 0) * factor;
-
-			baseMana = s.mana?.flat ?? 0;
-			baseMana += (s.mana?.perLevel ?? 0) * factor;
-
-			baseAd = s.attackDamage?.flat ?? 0;
-			baseAd += (s.attackDamage?.perLevel ?? 0) * factor;
-
-			baseArmor = s.armor?.flat ?? 0;
-			baseArmor += (s.armor?.perLevel ?? 0) * factor;
-
-			baseMr = s.magicResistance?.flat ?? 0;
-			baseMr += (s.magicResistance?.perLevel ?? 0) * factor;
-
-			baseAsRatio = s.attackSpeed?.flat ?? 0.625;
-			baseAsGrowth = s.attackSpeed?.perLevel ?? s.attackSpeed?.percentPerLevel ?? 0;
-
-			baseMs = s.movespeed?.flat ?? 330;
-
-			baseCritPct = s.criticalStrikeChance?.percent ?? s.criticalStrikeChance?.flat ?? 0;
-
-			const critDmgBlock = s.criticalStrikeDamage;
-			if (critDmgBlock && typeof critDmgBlock === 'object' && 'flat' in critDmgBlock) {
-				const flatVal = critDmgBlock.flat ?? 175;
-				baseCritDamagePct = flatVal > 10 ? flatVal : flatVal * 100;
-			}
-		} else if (currentChampDdr && currentChampDdr.stats) {
-			const s = currentChampDdr.stats;
-			baseHp = (s.hp ?? 0) + (s.hpperlevel ?? 0) * factor;
-			baseMana = (s.mp ?? 0) + (s.mpperlevel ?? 0) * factor;
-			baseAd = (s.attackdamage ?? 0) + (s.attackdamageperlevel ?? 0) * factor;
-			baseArmor = (s.armor ?? 0) + (s.armorperlevel ?? 0) * factor;
-			baseMr = (s.spellblock ?? 0) + (s.spellblockperlevel ?? 0) * factor;
-			baseAsRatio = s.attackspeed ?? 0.625;
-			baseAsGrowth = s.attackspeedperlevel ?? 0;
-			baseMs = s.movespeed ?? 330;
-		}
-
-		const levelBonusAsPct = baseAsGrowth * factor;
-		const asAtLevel = baseAsRatio * (1 + levelBonusAsPct / 100);
-
-		const championBase: ChampionBaseStats = {
-			hp: baseHp,
-			mana: baseMana,
-			ad: baseAd,
-			armor: baseArmor,
-			mr: baseMr,
-			as: asAtLevel,
-			ms: baseMs,
-			critPct: baseCritPct,
-			critDamagePct: baseCritDamagePct,
-		};
-
-		// 2. Collect equipped items + cost
-		const equippedItems: SrItem[] = [];
-		let totalCost = 0;
-		let itemCount = 0;
-
-		build.forEach((itemId) => {
-			if (!itemId) return;
-			const item = itemsById[itemId];
-			if (!item) return;
-			equippedItems.push(item);
-			totalCost += item.goldTotal;
-			itemCount++;
-		});
-
-		// 3. Parse item stats (bonus API) and apply onto champion base
-		const itemStats = accumulateItemStatsFromBuild(equippedItems);
-		const computed = applyItemStatsToChampion(championBase, itemStats);
-
-		const critChance = computed.totalCritPct / 100;
-		computed.dps =
-			computed.totalAd * computed.totalAs * (1 + critChance * (computed.totalCritDamage - 1));
-		computed.totalCost = totalCost;
-		computed.itemCount = itemCount;
-
-		return computed;
-	}, [currentChampBonus, currentChampDdr, level, build, itemsById]);
+	const calculatedStats = useMemo(
+		() =>
+			computeBuildStats({
+				level,
+				build,
+				itemsById,
+				champBonus: currentChampBonus,
+				champDdr: currentChampDdr as Parameters<typeof computeBuildStats>[0]['champDdr'],
+			}),
+		[currentChampBonus, currentChampDdr, level, build, itemsById]
+	);
 
 	// Add item to build slot
 	const handleItemSelect = (itemId: string) => {
@@ -502,97 +411,7 @@ export default function BuildPage() {
 		[patchVersion]
 	);
 
-	const statsToShow = useMemo(() => {
-		return [
-			{
-				key: 'health',
-				value: calculatedStats.totalHp,
-				colorClass: 'text-green-500 dark:text-green-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'mana',
-				value: calculatedStats.totalMana,
-				colorClass: 'text-sky-500 dark:text-sky-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'attackDamage',
-				value: calculatedStats.totalAd,
-				icon: 'scalead',
-				colorClass: 'text-orange-500 dark:text-orange-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'abilityPower',
-				value: calculatedStats.totalAp,
-				icon: 'scaleap',
-				// colorClass: 'text-fuchsia-500 dark:text-fuchsia-400',
-				colorClass: 'text-blue-500 dark:text-blue-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'attackSpeed',
-				value: calculatedStats.totalAs,
-				icon: 'scaleas',
-				colorClass: 'text-yellow-500 dark:text-yellow-400',
-				format: (v: number) => v.toFixed(2),
-			},
-			{
-				key: 'armor',
-				value: calculatedStats.totalArmor,
-				icon: 'scalearmor',
-				colorClass: 'text-orange-400 dark:text-orange-300',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'magicResistance',
-				value: calculatedStats.totalMr,
-				icon: 'scalemr',
-				colorClass: 'text-purple-500 dark:text-purple-400',
-				format: (v: number) => v.toFixed(0),
-			},
-			{
-				key: 'movespeed',
-				value: calculatedStats.totalMs,
-				icon: 'scalems',
-				colorClass: 'text-teal-500 dark:text-teal-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'criticalStrikeChance',
-				value: calculatedStats.totalCritPct,
-				icon: 'scalecrit',
-				colorClass: 'text-red-500 dark:text-red-400',
-				format: (v: number) => Math.round(v) + '%',
-			},
-			{
-				key: 'criticalStrikeDamage',
-				value: calculatedStats.totalCritDamagePct,
-				colorClass: 'text-pink-500 dark:text-pink-600',
-				format: (v: number) => Math.round(v) + '%',
-			},
-			{
-				key: 'abilityHaste',
-				value: calculatedStats.totalAbilityHaste,
-				icon: 'scalecooldown',
-				colorClass: 'text-indigo-500 dark:text-indigo-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'lethality',
-				value: calculatedStats.totalLethality,
-				colorClass: 'text-rose-500 dark:text-rose-400',
-				format: (v: number) => Math.round(v).toString(),
-			},
-			{
-				key: 'omnivamp',
-				value: calculatedStats.totalOmnivampPct,
-				colorClass: 'text-pink-500 dark:text-pink-400',
-				format: (v: number) => Math.round(v) + '%',
-			},
-		];
-	}, [calculatedStats]);
+	const statsToShow = useMemo(() => buildStatsToShow(calculatedStats), [calculatedStats]);
 
 	const statsByKey = useMemo(
 		() => Object.fromEntries(statsToShow.map((stat) => [stat.key, stat])),
@@ -911,15 +730,12 @@ export default function BuildPage() {
 						Simulate damage
 					</Button>
 					<SimulateDialog
-						data={{
-							build: build,
-							stats: {
-								...calculatedStats,
-								level,
-							},
-							skills: skillLevels,
-						}}
 						attackerId={selectedChampionId}
+						initialAttackerLevel={level}
+						initialAttackerBuild={build}
+						itemsById={itemsById}
+						srItems={srItems}
+						hasBonusItems={hasBonusItems}
 						open={simulateDialogOpen}
 						onOpenChange={setSimulateDialogOpen}
 					/>
