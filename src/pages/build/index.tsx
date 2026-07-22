@@ -733,6 +733,7 @@ export default function BuildPage() {
 						attackerId={selectedChampionId}
 						initialAttackerLevel={level}
 						initialAttackerBuild={build}
+						initialAttackerSkillLevels={skillLevels}
 						itemsById={itemsById}
 						srItems={srItems}
 						hasBonusItems={hasBonusItems}

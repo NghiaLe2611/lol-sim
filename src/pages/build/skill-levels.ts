@@ -94,3 +94,29 @@ export function levelUpSkill(
 export function dotCountForSkill(skill: SkillKey): number {
 	return skill === 'R' ? 3 : 5;
 }
+
+/** Whether rank `rank` can be selected at `championLevel` within the skill-point budget. */
+export function canSelectSkillRank(
+	skill: SkillKey,
+	rank: number,
+	championLevel: number,
+	skills: SkillLevels
+): boolean {
+	if (rank < 1 || rank > SKILL_MAX[skill]) return false;
+
+	const next: SkillLevels = { ...skills, [skill]: rank };
+
+	if (next.R > 0 && championLevel < R_UNLOCK_LEVELS[next.R - 1]!) {
+		return false;
+	}
+
+	for (const key of SKILL_KEYS) {
+		if (next[key] > SKILL_MAX[key]) return false;
+	}
+
+	return totalSkillPointsSpent(next) <= skillPointsAtLevel(championLevel);
+}
+
+export function skillRankButtons(skill: SkillKey): number[] {
+	return Array.from({ length: SKILL_MAX[skill] }, (_, i) => i + 1);
+}

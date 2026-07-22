@@ -2,18 +2,8 @@ import HoverPopover from '@/components/HoverPopover';
 import clsx from 'clsx';
 import React, { useMemo } from 'react';
 import type { BonusAbility } from '../champion-detail/utils';
-import {
-	compressSkillDetailValues,
-	getCooldownDisplay,
-	getSegmentColorClass,
-	getSkillDetailRows,
-	getSkillDetailRowsFromAbility,
-	mergeSkillDetailRows,
-	parseSkillDescription,
-	resolveChampionSkill,
-	type CooldownDisplay,
-	type SkillDescriptionSegment,
-} from './skills';
+import { getCooldownDisplay, resolveChampionSkill, type CooldownDisplay } from './skills';
+import { SkillDescriptionContent } from './skill-description';
 
 const POPOVER_CONTENT_CLASS =
 	'rounded-none border-hex-gold bg-background p-0 shadow-lg data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100';
@@ -45,77 +35,6 @@ interface SkillContentProps {
 	bonusHealth: number;
 }
 
-const INLINE_BREAK_PATTERN = /(?:<br\s*\/?>|br\s*\/?>)/gi;
-
-function renderTextWithLineBreaks(text: string, className: string, key: React.Key): React.ReactNode {
-	const parts = text.replace(INLINE_BREAK_PATTERN, '\n').split('\n');
-
-	if (parts.length <= 1) {
-		return (
-			<span key={key} className={className}>
-				{parts[0] ?? ''}
-			</span>
-		);
-	}
-
-	return parts.map((part, index) => (
-		<React.Fragment key={`${String(key)}-${index}`}>
-			{index > 0 ? <br /> : null}
-			{part ? <span className={className}>{part}</span> : null}
-		</React.Fragment>
-	));
-}
-
-function renderSegment(segment: SkillDescriptionSegment, key: React.Key): React.ReactNode {
-	if (segment.kind === 'lineBreak') {
-		return <br key={key} />;
-	}
-
-	const className = getSegmentColorClass(segment);
-
-	if (segment.kind === 'text') {
-		return renderTextWithLineBreaks(segment.text, className, key);
-	}
-
-	if (segment.kind === 'number') {
-		return (
-			<span key={key} className={`${className} font-semibold`}>
-				{segment.value}
-			</span>
-		);
-	}
-
-	if (segment.kind === 'ratio_damage') {
-		return (
-			<span key={key} className={`${className} font-semibold`}>
-				{segment.text}
-			</span>
-		);
-	}
-
-	return (
-		<span key={key} className={`${className} font-semibold`}>
-			{segment.children.map((child, index) => renderSegment(child, index))}
-		</span>
-	);
-}
-
-function renderLevelValues(row: { label: string; values: string[]; currentIndex?: number }) {
-	const values = compressSkillDetailValues(row.values);
-	const highlightIndex = values.length === 1 ? 0 : row.currentIndex;
-
-	return values.map((value, index) => (
-		<React.Fragment key={`${row.label}-${index}`}>
-			{index > 0 ? '/' : null}
-			{index === highlightIndex ? (
-				<var className="not-italic font-semibold text-muted-foreground">{value}</var>
-			) : (
-				value
-			)}
-		</React.Fragment>
-	));
-}
-
 function renderCooldownHeader(display: CooldownDisplay): React.ReactNode {
 	if (display.kind === 'levelRange') {
 		return (
@@ -131,15 +50,6 @@ function renderCooldownHeader(display: CooldownDisplay): React.ReactNode {
 	}
 
 	return null;
-}
-
-function abilityDescriptionFallback(ability: BonusAbility | null | undefined): string {
-	if (!ability) return '';
-	const fromEffects = (ability.effects ?? [])
-		.map((effect) => effect.description?.trim())
-		.filter(Boolean)
-		.join(' ');
-	return fromEffects || ability.blurb?.trim() || '';
 }
 
 const SkillContent = ({
@@ -159,46 +69,6 @@ const SkillContent = ({
 		() => (skillsPayload ? resolveChampionSkill(skillsPayload, skill) : null),
 		[skillsPayload, skill]
 	);
-
-	const descriptionCtx = useMemo(
-		() => ({
-			level: effectiveSkillLevel,
-			ad: totalAd,
-			ap: totalAp,
-			championLevel,
-			bonusHealth,
-		}),
-		[effectiveSkillLevel, totalAd, totalAp, championLevel, bonusHealth]
-	);
-
-	const { segments, detailRows, descriptionFallback } = useMemo(() => {
-		const abilityRows = getSkillDetailRowsFromAbility(
-			item,
-			effectiveSkillLevel,
-			skill,
-			skillDef
-		);
-
-		if (skillDef) {
-			const parsed = parseSkillDescription(skillDef, descriptionCtx);
-			const formulaRows = getSkillDetailRows(skillDef, descriptionCtx);
-			console.log({
-				parsed,
-				formulaRows
-			})
-			return {
-				segments: parsed.segments,
-				detailRows: mergeSkillDetailRows(formulaRows, abilityRows),
-				descriptionFallback: '',
-			};
-		}
-
-		return {
-			segments: [] as SkillDescriptionSegment[],
-			detailRows: abilityRows,
-			descriptionFallback: abilityDescriptionFallback(item),
-		};
-	}, [skillDef, item, descriptionCtx, effectiveSkillLevel, skill]);
 
 	const cooldownDisplay = useMemo(
 		() =>
@@ -239,24 +109,19 @@ const SkillContent = ({
 				</div>
 			</div>
 			<div className="h-[2px] my-1 2xl:my-2 bg-hex-gold/30 dark:bg-hex-gold/10"></div>
-			<div className="leading-relaxed text-muted-foreground/90">
-				{segments.length > 0
-					? segments.map((segment, index) => renderSegment(segment, index))
-					: descriptionFallback}
-			</div>
-			{detailRows.length > 0 ? (
-				<>
-					<div className="h-[2px] my-1 2xl:my-2 bg-hex-gold/30 dark:bg-hex-gold/10"></div>
-					<div className="flex flex-col gap-1 text-muted-foreground/90">
-						{detailRows.map((row) => (
-							<p key={row.label} className="flex justify-between gap-4">
-								<span>{row.label}</span>
-								<span className="text-right">{renderLevelValues(row)}</span>
-							</p>
-						))}
-					</div>
-				</>
-			) : null}
+			<SkillDescriptionContent
+				champion={champion}
+				item={item}
+				skill={skill}
+				skillLv={effectiveSkillLevel}
+				skillsPayload={skillsPayload}
+				totalAd={totalAd}
+				totalAp={totalAp}
+				championLevel={championLevel}
+				bonusHealth={bonusHealth}
+				detailRowMode="all"
+				variant="inline"
+			/>
 		</div>
 	);
 };

@@ -13,6 +13,7 @@ import type { SrItem } from '@/pages/items/utils';
 import {
 	getBonusChampionDetail,
 	getBonusChampions,
+	getChampionSkills,
 	getChampions,
 } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -30,6 +31,14 @@ import { championsFromQueryData, filterChampionListRows } from './champion-list-
 import { buildStatsToShow, type BuildStatRow } from './build-stats-show';
 import { computeBuildStats } from './compute-build-stats';
 import SimulateItemPickerDialog from './SimulateItemPickerDialog';
+import SimulateSkillsSection from './SimulateSkillsSection';
+import {
+	canSelectSkillRank,
+	clampSkillLevels,
+	EMPTY_SKILL_LEVELS,
+	type SkillKey,
+	type SkillLevels,
+} from './skill-levels';
 import './level-slider.scss';
 
 const EMPTY_BUILD: (string | null)[] = Array(6).fill(null);
@@ -39,12 +48,14 @@ type SimulateSide = 'attacker' | 'target';
 type SideState = {
 	level: number;
 	build: (string | null)[];
+	skillLevels: SkillLevels;
 };
 
 interface SimulateDialogProps {
 	attackerId: string | null;
 	initialAttackerLevel: number;
 	initialAttackerBuild: (string | null)[];
+	initialAttackerSkillLevels: SkillLevels;
 	itemsById: Record<string, SrItem>;
 	srItems: SrItem[];
 	hasBonusItems: boolean;
@@ -73,13 +84,26 @@ type SimulateChampionPanelProps = {
 		onAddItem: () => void;
 		onRemoveItem: (index: number) => void;
 	};
+	skillsSection: {
+		championLevel: number;
+		skillLevels: SkillLevels;
+		onSkillLevelChange: (skill: SkillKey, rank: number) => void;
+		bonusDetail?: BonusChampionDetail | null;
+		skillsPayload?: Record<string, unknown>;
+		totalAd: number;
+		totalAp: number;
+		bonusHealth: number;
+		accentBorderCls: string;
+		accentActiveCls: string;
+		bgClass: string;
+	};
 };
 
 function buildEquippedItems(
 	build: (string | null)[],
 	itemsById: Record<string, SrItem>
 ): (SrItem | null)[] {
-	return build.map((itemId) => (itemId ? itemsById[itemId] ?? null : null));
+	return build.map((itemId) => (itemId ? (itemsById[itemId] ?? null) : null));
 }
 
 function SimulateBuildSection({
@@ -140,6 +164,7 @@ function SimulateBuildSection({
 				</div>
 			</div>
 
+			{/* Items */}
 			<div className="bg-card-foreground p-4 rounded-sm border border-input space-y-3">
 				<h5 className="text-xs text-hex-gold font-semibold uppercase tracking-wider">
 					Items
@@ -149,7 +174,7 @@ function SimulateBuildSection({
 						{items.map((item, index) => (
 							<div
 								key={index}
-								className="group relative aspect-square w-10 border border-hex-gold/30 rounded-sm bg-zinc-900/40 p-0.5"
+								className="group relative aspect-square w-10 border border-hex-gold/30 rounded-sm bg-zinc-200 dark:bg-zinc-900/40 p-0.5"
 								onContextMenu={(e) => {
 									e.preventDefault();
 									if (item) onRemoveItem(index);
@@ -213,11 +238,12 @@ function SimulateChampionPanel({
 	activeRole,
 	onRoleChange,
 	buildSection,
+	skillsSection,
 }: SimulateChampionPanelProps) {
 	const selectedChampion = champions.find((champ) => champ.id === selectedId);
 
 	return (
-		<div className="space-y-3 animate-fade-up min-w-0 duration-75">
+		<div className="flex flex-col h-full space-y-3 animate-fade-up min-w-0 duration-75">
 			<div className="relative overflow-hidden h-24 bg-zinc-900 rounded-sm">
 				<div className="z-[1] absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-black/10"></div>
 				{selectedId ? (
@@ -229,20 +255,28 @@ function SimulateChampionPanel({
 					/>
 				) : null}
 				<div className="z-[2] absolute h-full w-full p-2 flex items-center gap-2">
-					{selectedId ? (
-						<img
-							alt={`${selectedId}-square`}
-							src={getImageUrl(selectedId)}
-							className={clsx('size-9 rounded-sm border shadow-sm', titleBorderCls)}
-						/>
-					) : (
-						<div
-							className={clsx('size-9 rounded-sm border bg-zinc-800', titleBorderCls)}
-						/>
-					)}
-					<span className="text-xs 2xl:text-sm font-medium">
-						{selectedChampion?.name ?? 'Select champion'}
-					</span>
+					<div className="flex items-center gap-2">
+						{selectedId ? (
+							<img
+								alt={`${selectedId}-square`}
+								src={getImageUrl(selectedId)}
+								className={clsx(
+									'size-9 rounded-sm border shadow-sm',
+									titleBorderCls
+								)}
+							/>
+						) : (
+							<div
+								className={clsx(
+									'size-9 rounded-sm border bg-zinc-800',
+									titleBorderCls
+								)}
+							/>
+						)}
+						<span className="text-xs 2xl:text-sm font-medium">
+							{selectedChampion?.name ?? 'Select champion'}
+						</span>
+					</div>
 				</div>
 			</div>
 
@@ -267,25 +301,18 @@ function SimulateChampionPanel({
 										? 'min-h-full w-9 border border-input rounded-sm p-1 text-xs bg-gray-200/70 hover:bg-gray-300 dark:bg-stone-900 hover:dark:bg-zinc-700'
 										: 'h-full w-9 border border-input rounded-sm p-1 bg-gray-200/70 hover:bg-gray-300 dark:bg-stone-900 hover:dark:bg-zinc-700 group',
 									isActive &&
-										'border-hex-gold/50 bg-zinc-300 dark:bg-stone-700 text-hex-gold'
+										'border-hex-gold/50 !bg-zinc-300 dark:!bg-stone-700 text-hex-gold'
 								)}
 							>
 								{item.id === 'All' ? (
-									<span
-										className={clsx(
-											'text-gray-500 dark:text-gray-400',
-											isActive && 'text-hex-gold'
-										)}
-									>
-										All
-									</span>
+									<span className="text-gray-500 dark:text-gray-400">All</span>
 								) : (
 									<img
 										alt={item.tooltip}
 										src={item.iconSrc}
 										className={clsx(
 											'mx-auto brightness-75 dark:brightness-50 group-hover:dark:brightness-100 group-hover:brightness-50',
-											isActive && 'brightness-50 dark:brightness-100'
+											isActive && '!brightness-50 dark:!brightness-100'
 										)}
 										height={20}
 										width={20}
@@ -303,12 +330,27 @@ function SimulateChampionPanel({
 				selectedId={selectedId}
 				onSelect={onSelect}
 				getImageUrl={getImageUrl}
-				wrapperCls="h-[320px] border border-hex-gold/20 rounded !bg-card-foreground"
+				wrapperCls="h-[320px] border border-input rounded !bg-card-foreground"
 				containerCls="lg:!grid-cols-6 2xl:!grid-cols-8 border-none items-start"
 				skeletonCount={8}
 			/>
 
 			<SimulateBuildSection {...buildSection} />
+
+			<SimulateSkillsSection
+				championId={selectedId}
+				championLevel={skillsSection.championLevel}
+				skillLevels={skillsSection.skillLevels}
+				onSkillLevelChange={skillsSection.onSkillLevelChange}
+				bonusDetail={skillsSection.bonusDetail}
+				skillsPayload={skillsSection.skillsPayload}
+				totalAd={skillsSection.totalAd}
+				totalAp={skillsSection.totalAp}
+				bonusHealth={skillsSection.bonusHealth}
+				accentBorderCls={skillsSection.accentBorderCls}
+				accentActiveCls={skillsSection.accentActiveCls}
+				bgClass={skillsSection.bgClass}
+			/>
 		</div>
 	);
 }
@@ -327,6 +369,7 @@ const SimulateDialog = ({
 	attackerId,
 	initialAttackerLevel,
 	initialAttackerBuild,
+	initialAttackerSkillLevels,
 	itemsById,
 	srItems,
 	hasBonusItems,
@@ -345,8 +388,13 @@ const SimulateDialog = ({
 	const [attacker, setAttacker] = useState<SideState>({
 		level: initialAttackerLevel,
 		build: [...initialAttackerBuild],
+		skillLevels: clampSkillLevels(initialAttackerSkillLevels, initialAttackerLevel),
 	});
-	const [target, setTarget] = useState<SideState>({ level: 1, build: [...EMPTY_BUILD] });
+	const [target, setTarget] = useState<SideState>({
+		level: 1,
+		build: [...EMPTY_BUILD],
+		skillLevels: { ...EMPTY_SKILL_LEVELS },
+	});
 	const [itemPickerSide, setItemPickerSide] = useState<SimulateSide | null>(null);
 	const [editingSlot, setEditingSlot] = useState(0);
 
@@ -379,6 +427,22 @@ const SimulateDialog = ({
 		gcTime: STALE_MS,
 	});
 
+	const attackerSkillsQuery = useQuery({
+		queryKey: ['champion-skills', attackerChampionId],
+		queryFn: () => getChampionSkills(attackerChampionId!),
+		enabled: Boolean(attackerChampionId) && open,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
+	const targetSkillsQuery = useQuery({
+		queryKey: ['champion-skills', targetChampionId],
+		queryFn: () => getChampionSkills(targetChampionId!),
+		enabled: Boolean(targetChampionId) && open,
+		staleTime: STALE_MS,
+		gcTime: STALE_MS,
+	});
+
 	const bonusPositionsMap = useMemo(
 		() => selectBonusPositionsOnly(bonusQuery.data),
 		[bonusQuery.data]
@@ -389,10 +453,7 @@ const SimulateDialog = ({
 		[championsQuery.data]
 	);
 
-	const championsById = useMemo(
-		() => championsQuery.data?.data ?? {},
-		[championsQuery.data]
-	);
+	const championsById = useMemo(() => championsQuery.data?.data ?? {}, [championsQuery.data]);
 
 	const championsLoading =
 		!championsQuery.isError &&
@@ -470,7 +531,14 @@ const SimulateDialog = ({
 						>[0]['champDdr'])
 					: null,
 			}),
-		[target.level, target.build, itemsById, targetBonusQuery.data, targetChampionId, championsById]
+		[
+			target.level,
+			target.build,
+			itemsById,
+			targetBonusQuery.data,
+			targetChampionId,
+			championsById,
+		]
 	);
 
 	const attackerStatsToShow = useMemo(() => buildStatsToShow(attackerStats), [attackerStats]);
@@ -558,17 +626,75 @@ const SimulateDialog = ({
 		[updateSideBuild]
 	);
 
+	const handleSkillLevelChange = useCallback(
+		(side: SimulateSide, skill: SkillKey, rank: number) => {
+			const setter = side === 'attacker' ? setAttacker : setTarget;
+			const championLevel = side === 'attacker' ? attacker.level : target.level;
+			const skillLevels = side === 'attacker' ? attacker.skillLevels : target.skillLevels;
+
+			if (skillLevels[skill] === rank) {
+				setter((prev) => ({
+					...prev,
+					skillLevels: { ...prev.skillLevels, [skill]: 0 },
+				}));
+				return;
+			}
+
+			if (!canSelectSkillRank(skill, rank, championLevel, skillLevels)) return;
+
+			setter((prev) => ({
+				...prev,
+				skillLevels: { ...prev.skillLevels, [skill]: rank },
+			}));
+		},
+		[attacker.level, attacker.skillLevels, target.level, target.skillLevels]
+	);
+
+	const handleAttackerChampionSelect = useCallback(
+		(id: string) => {
+			if (id !== attackerChampionId) {
+				setAttacker((prev) => ({
+					...prev,
+					skillLevels: clampSkillLevels(EMPTY_SKILL_LEVELS, prev.level),
+				}));
+			}
+			setAttackerChampionId(id);
+		},
+		[attackerChampionId]
+	);
+
+	const handleTargetChampionSelect = useCallback(
+		(id: string) => {
+			if (id !== targetChampionId) {
+				setTarget((prev) => ({
+					...prev,
+					skillLevels: clampSkillLevels(EMPTY_SKILL_LEVELS, prev.level),
+				}));
+			}
+			setTargetChampionId(id);
+		},
+		[targetChampionId]
+	);
+
 	useEffect(() => {
 		if (!open) return;
 		setAttackerChampionId(attackerId);
-		setAttacker({ level: initialAttackerLevel, build: [...initialAttackerBuild] });
-		setTarget({ level: 1, build: [...EMPTY_BUILD] });
+		setAttacker({
+			level: initialAttackerLevel,
+			build: [...initialAttackerBuild],
+			skillLevels: clampSkillLevels(initialAttackerSkillLevels, initialAttackerLevel),
+		});
+		setTarget({
+			level: 1,
+			build: [...EMPTY_BUILD],
+			skillLevels: { ...EMPTY_SKILL_LEVELS },
+		});
 		setAttackerSearch('');
 		setAttackerRole('All');
 		setTargetSearch('');
 		setTargetRole('All');
 		setItemPickerSide(null);
-	}, [open, attackerId, initialAttackerLevel, initialAttackerBuild]);
+	}, [open, attackerId, initialAttackerLevel, initialAttackerBuild, initialAttackerSkillLevels]);
 
 	useEffect(() => {
 		if (!open || filteredAttackers.length === 0) return;
@@ -587,15 +713,26 @@ const SimulateDialog = ({
 	const handleSwapChampions = () => {
 		setAttackerChampionId(targetChampionId);
 		setTargetChampionId(attackerChampionId);
-		setAttacker({ level: target.level, build: [...target.build] });
-		setTarget({ level: attacker.level, build: [...attacker.build] });
+		setAttacker({
+			level: target.level,
+			build: [...target.build],
+			skillLevels: { ...target.skillLevels },
+		});
+		setTarget({
+			level: attacker.level,
+			build: [...attacker.build],
+			skillLevels: { ...attacker.skillLevels },
+		});
 	};
+
+	const attackerBonusHealth = Math.max(0, attackerStats.totalHp - attackerStats.baseHp);
+	const targetBonusHealth = Math.max(0, targetStats.totalHp - targetStats.baseHp);
 
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
 				<DialogContent
-					className="outline:none w-full h-full !max-w-container max-h-[95vh] gap-3 !ring-0 dark:bg-[#0c0c0c] !border-none shadow-[0_0_10px] shadow-hex-gold/50 overflow-y-auto custom-scrollbar"
+					className="outline:none w-full h-full max-w-[95vw] 2xl:max-w-container max-h-[95vh] gap-3 !ring-0 dark:bg-[#0c0c0c] !border-none shadow-[0_0_10px] shadow-hex-gold/50 overflow-y-auto custom-scrollbar"
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
 					<VisuallyHidden.Root>
@@ -608,7 +745,7 @@ const SimulateDialog = ({
 							champions={filteredAttackers}
 							loading={championsLoading}
 							selectedId={attackerChampionId}
-							onSelect={setAttackerChampionId}
+							onSelect={handleAttackerChampionSelect}
 							getImageUrl={getChampImgUrl}
 							search={attackerSearch}
 							onSearchChange={setAttackerSearch}
@@ -617,7 +754,11 @@ const SimulateDialog = ({
 							buildSection={{
 								level: attacker.level,
 								onLevelChange: (nextLevel) =>
-									setAttacker((prev) => ({ ...prev, level: nextLevel })),
+									setAttacker((prev) => ({
+										...prev,
+										level: nextLevel,
+										skillLevels: clampSkillLevels(prev.skillLevels, nextLevel),
+									})),
 								statsToShow: attackerStatsToShow,
 								items: attackerItems,
 								itemsById,
@@ -625,13 +766,29 @@ const SimulateDialog = ({
 								onAddItem: () => handleOpenItemPicker('attacker'),
 								onRemoveItem: (index) => handleRemoveItem('attacker', index),
 							}}
+							skillsSection={{
+								championLevel: attacker.level,
+								skillLevels: attacker.skillLevels,
+								onSkillLevelChange: (skill, rank) =>
+									handleSkillLevelChange('attacker', skill, rank),
+								bonusDetail: attackerBonusQuery.data,
+								skillsPayload: attackerSkillsQuery.data,
+								totalAd: attackerStats.totalAd,
+								totalAp: attackerStats.totalAp,
+								bonusHealth: attackerBonusHealth,
+								accentBorderCls: 'border-blue-500/50',
+								accentActiveCls: 'bg-blue-500',
+								bgClass: 'bg-blue-500/10',
+							}}
 						/>
 
 						<div className="flex-col items-center gap-3 lg:min-w-[340px] lg:max-w-[400px] w-full animate-fade-up hidden lg:flex duration-100">
 							<div className="h-24 w-full flex flex-col">
 								<div className="flex flex-1 items-center gap-3">
 									<div className="flex-1 h-px bg-hex-gold/20"></div>
-									<div className="text-lg font-bold text-muted-foreground">VS</div>
+									<div className="text-lg font-bold text-muted-foreground">
+										VS
+									</div>
 									<div className="flex-1 h-px bg-hex-gold/20"></div>
 								</div>
 								<div className="text-center">
@@ -653,7 +810,7 @@ const SimulateDialog = ({
 								champions={filteredTargets}
 								loading={championsLoading}
 								selectedId={targetChampionId}
-								onSelect={setTargetChampionId}
+								onSelect={handleTargetChampionSelect}
 								getImageUrl={getChampImgUrl}
 								search={targetSearch}
 								onSearchChange={setTargetSearch}
@@ -662,13 +819,34 @@ const SimulateDialog = ({
 								buildSection={{
 									level: target.level,
 									onLevelChange: (nextLevel) =>
-										setTarget((prev) => ({ ...prev, level: nextLevel })),
+										setTarget((prev) => ({
+											...prev,
+											level: nextLevel,
+											skillLevels: clampSkillLevels(
+												prev.skillLevels,
+												nextLevel
+											),
+										})),
 									statsToShow: targetStatsToShow,
 									items: targetItems,
 									itemsById,
 									patchVersion,
 									onAddItem: () => handleOpenItemPicker('target'),
 									onRemoveItem: (index) => handleRemoveItem('target', index),
+								}}
+								skillsSection={{
+									championLevel: target.level,
+									skillLevels: target.skillLevels,
+									onSkillLevelChange: (skill, rank) =>
+										handleSkillLevelChange('target', skill, rank),
+									bonusDetail: targetBonusQuery.data,
+									skillsPayload: targetSkillsQuery.data,
+									totalAd: targetStats.totalAd,
+									totalAp: targetStats.totalAp,
+									bonusHealth: targetBonusHealth,
+									accentBorderCls: 'border-red-500/50',
+									accentActiveCls: 'bg-red-500',
+									bgClass: 'bg-red-500/10',
 								}}
 							/>
 						</div>

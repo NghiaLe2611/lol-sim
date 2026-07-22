@@ -111,6 +111,15 @@ export function compressSkillDetailValues(values: string[]): string[] {
 	return values;
 }
 
+/** Single value for the active skill rank (simulate panel). */
+export function formatSkillDetailRowAtLevel(row: SkillDetailRow): string {
+	const compressed = compressSkillDetailValues(row.values);
+	if (compressed.length === 1) return compressed[0]!;
+
+	const index = row.currentIndex ?? 0;
+	return row.values[index] ?? compressed[0] ?? '';
+}
+
 export function getSkillMaxRank(skillKey: string, skillDef?: ChampionSkill | null): number {
 	if (skillDef?.maxRank) return skillDef.maxRank;
 	return skillKey.toUpperCase() === 'R' ? 3 : 5;
