@@ -8,6 +8,7 @@ import {
 	type SkillLevels,
 } from './skill-levels';
 import { SkillDescriptionContent } from './skill-description';
+import { useAppContext } from '@/contexts/AppContext';
 
 type SimulateSkillsSectionProps = {
 	championId: string | null;
@@ -47,7 +48,7 @@ const SimulateSkillsSection = ({
 	bgClass,
 }: SimulateSkillsSectionProps) => {
 	if (!championId) return null;
-
+	const { patchVersion } = useAppContext();
 	const passiveAbility = abilityForSkill(bonusDetail, 'P');
 	const passiveName = passiveAbility?.name ?? 'Passive';
 
@@ -113,6 +114,10 @@ const SimulateSkillsSection = ({
 											alt={`${championId}-${skill}`}
 											src={`https://cdn.communitydragon.org/latest/champion/${championId}/ability-icon/${skill.toLowerCase()}.png`}
 											className="size-10 object-cover rounded-sm"
+											onError={(e) => {
+												const target = e.target as HTMLImageElement;
+												target.src = `https://ddragon.leagueoflegends.com/cdn/${patchVersion}/img/spell/${championId}${skill}.png`;
+											}}
 										/>
 										<span className="absolute top-0 left-0 min-w-[14px] px-0.5 text-[10px] font-bold leading-none text-white bg-black/85 rounded-br rounded-tl-sm text-center">
 											{skill}
