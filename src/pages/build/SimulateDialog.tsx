@@ -7,7 +7,10 @@ import { itemImgUrl, STALE_MS } from '@/constants/common';
 import { useAppContext } from '@/contexts/AppContext';
 import { useCustomToast } from '@/hooks/useCustomToast';
 import { cn } from '@/lib/utils';
-import { bonusStatAbbreviation, type BonusChampionDetail } from '@/pages/champion-detail/utils';
+import {
+	bonusStatAbbreviation,
+	type BonusChampionDetail,
+} from '@/pages/champion-detail/utils';
 import ItemPopover from '@/pages/items/components/ItemPopover';
 import type { SrItem } from '@/pages/items/utils';
 import {
@@ -30,8 +33,10 @@ import ChampionList from './ChampionList';
 import { championsFromQueryData, filterChampionListRows } from './champion-list-filter';
 import { buildStatsToShow, type BuildStatRow } from './build-stats-show';
 import { computeBuildStats } from './compute-build-stats';
+import SimulateComboSection from './SimulateComboSection';
 import SimulateItemPickerDialog from './SimulateItemPickerDialog';
 import SimulateSkillsSection from './SimulateSkillsSection';
+import type { ComboStepKey } from './simulate-combo';
 import {
 	canSelectSkillRank,
 	clampSkillLevels,
@@ -169,7 +174,7 @@ function SimulateBuildSection({
 				<h5 className="text-xs text-hex-gold font-semibold uppercase tracking-wider">
 					Items
 				</h5>
-				<div className="flex justify-between gap-2">
+				<div className="flex flex-wrap justify-between gap-2">
 					<div className="grid grid-cols-6 gap-2 max-w-max">
 						{items.map((item, index) => (
 							<div
@@ -243,7 +248,7 @@ function SimulateChampionPanel({
 	const selectedChampion = champions.find((champ) => champ.id === selectedId);
 
 	return (
-		<div className="flex flex-col h-full space-y-3 animate-fade-up min-w-0 duration-75">
+		<div className="flex flex-col h-full space-y-3 animate-fade-up min-w-0 duration-75 self-start">
 			<div className="relative overflow-hidden h-24 bg-zinc-900 rounded-sm">
 				<div className="z-[1] absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-black/10"></div>
 				{selectedId ? (
@@ -397,6 +402,7 @@ const SimulateDialog = ({
 	});
 	const [itemPickerSide, setItemPickerSide] = useState<SimulateSide | null>(null);
 	const [editingSlot, setEditingSlot] = useState(0);
+	const [comboSteps, setComboSteps] = useState<ComboStepKey[]>([]);
 
 	const championsQuery = useQuery({
 		queryKey: ['champions', patchVersion],
@@ -694,6 +700,7 @@ const SimulateDialog = ({
 		setTargetSearch('');
 		setTargetRole('All');
 		setItemPickerSide(null);
+		setComboSteps([]);
 	}, [open, attackerId, initialAttackerLevel, initialAttackerBuild, initialAttackerSkillLevels]);
 
 	useEffect(() => {
@@ -723,10 +730,16 @@ const SimulateDialog = ({
 			build: [...attacker.build],
 			skillLevels: { ...attacker.skillLevels },
 		});
+		setComboSteps([]);
 	};
 
 	const attackerBonusHealth = Math.max(0, attackerStats.totalHp - attackerStats.baseHp);
 	const targetBonusHealth = Math.max(0, targetStats.totalHp - targetStats.baseHp);
+
+	const targetChampionName =
+		filteredTargets.find((champ) => champ.id === targetChampionId)?.name ??
+		targetChampionId ??
+		'Target';
 
 	return (
 		<>
@@ -782,7 +795,7 @@ const SimulateDialog = ({
 							}}
 						/>
 
-						<div className="flex-col items-center gap-3 lg:min-w-[340px] lg:max-w-[400px] w-full animate-fade-up hidden lg:flex duration-100">
+						<div className="flex-col items-center gap-3 lg:w-[360px] w-full animate-fade-up hidden lg:flex duration-100">
 							<div className="h-24 w-full flex flex-col">
 								<div className="flex flex-1 items-center gap-3">
 									<div className="flex-1 h-px bg-hex-gold/20"></div>
@@ -802,9 +815,30 @@ const SimulateDialog = ({
 									</Button>
 								</div>
 							</div>
+							<div className="w-full bg-card-foreground p-4 rounded-sm border border-input">
+								<div className="text-xs 2xl:text-sm font-semibold space-x-1 mb-3">
+									<span className="text-blue-400">{attackerChampionId}</span>
+									<var>→</var>
+									<span className="text-red-400">{targetChampionId}</span>
+								</div>
+								<SimulateComboSection
+									attackerChampionId={attackerChampionId}
+									targetChampionName={targetChampionName}
+									targetMaxHp={targetStats.totalHp}
+									attackerLevel={attacker.level}
+									attackerSkillLevels={attacker.skillLevels}
+									attackerBonusHealth={attackerBonusHealth}
+									totalAd={attackerStats.totalAd}
+									totalAp={attackerStats.totalAp}
+									skillsPayload={attackerSkillsQuery.data}
+									bonusDetail={attackerBonusQuery.data}
+									comboSteps={comboSteps}
+									onComboStepsChange={setComboSteps}
+								/>
+							</div>
 						</div>
 
-						<div className="hidden lg:block">
+						<div className="hidden lg:block self-start">
 							<SimulateChampionPanel
 								titleBorderCls="border-red-500 shadow-red-500"
 								champions={filteredTargets}

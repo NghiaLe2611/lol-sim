@@ -1057,3 +1057,16 @@ export function parseSkillDescription(
 		text: segmentsToText(segments),
 	};
 }
+
+/** Total damage for the primary damage field at the given skill rank. */
+export function computeSkillDamage(
+	skill: ChampionSkill,
+	ctx: SkillDescriptionContext
+): number {
+	const primary = findPrimaryDamageField(skill);
+	if (!primary) return 0;
+
+	const [key] = primary;
+	const cache = new Map<string, ComputedField>();
+	return computeField(key, skill, ctx, cache).total;
+}

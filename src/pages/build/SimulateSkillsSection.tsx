@@ -1,5 +1,9 @@
-import clsx from 'clsx';
+import { useAppContext } from '@/contexts/AppContext';
 import type { BonusAbility, BonusChampionDetail } from '@/pages/champion-detail/utils';
+import clsx from 'clsx';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { SkillDescriptionContent } from './skill-description';
 import {
 	canSelectSkillRank,
 	SKILL_KEYS,
@@ -7,8 +11,6 @@ import {
 	type SkillKey,
 	type SkillLevels,
 } from './skill-levels';
-import { SkillDescriptionContent } from './skill-description';
-import { useAppContext } from '@/contexts/AppContext';
 
 type SimulateSkillsSectionProps = {
 	championId: string | null;
@@ -51,12 +53,25 @@ const SimulateSkillsSection = ({
 	const { patchVersion } = useAppContext();
 	const passiveAbility = abilityForSkill(bonusDetail, 'P');
 	const passiveName = passiveAbility?.name ?? 'Passive';
+	const [isHidden, setIsHidden] = useState(false);
 
 	return (
-		<div className="flex-1 bg-card-foreground p-4 rounded-sm border border-input space-y-3">
-			<h5 className="text-xs text-hex-gold font-semibold uppercase tracking-wider">Skills</h5>
-			<div className="space-y-2">
-				<div className={clsx('rounded-sm border bg-zinc-950/40 p-2', accentBorderCls, bgClass)}>
+		<div className="flex-1 bg-card-foreground p-4 rounded-sm border border-input space-y-3 max-h-max">
+			<div
+				className="flex justify-between items-center text-hex-gold"
+				onClick={() => setIsHidden(!isHidden)}
+			>
+				<h5 className="text-xs font-semibold uppercase tracking-wider">Skills</h5>
+				{isHidden ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+			</div>
+			<div className={clsx('space-y-2', isHidden ? 'hidden' : 'block')}>
+				<div
+					className={clsx(
+						'rounded-sm border bg-zinc-950/40 p-2',
+						accentBorderCls,
+						bgClass
+					)}
+				>
 					<div className="flex items-center gap-2 min-w-0">
 						<div className="relative size-10 shrink-0">
 							<img

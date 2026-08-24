@@ -8,7 +8,7 @@ import AbilityPopover from '@/pages/champion-detail/AbilityPopover';
 import ChampionSkinList from '@/pages/champion-detail/ChampionSkinList';
 import DdragonStatGrid from '@/pages/champion-detail/DdragonStatGrid';
 import { mapDdragonSkinsToChampionSkins } from '@/pages/champion-detail/ddragon-skins';
-import type { ChampionDetailApi } from '@/pages/champion-detail/types';
+import type { ChampionDetailApi } from '@/types/champions';
 import { getOptionalReleaseDate, stripLolMarkupToText } from '@/pages/champion-detail/utils';
 import HoverPopover from '@/components/HoverPopover';
 import { AudioLines } from 'lucide-react';
