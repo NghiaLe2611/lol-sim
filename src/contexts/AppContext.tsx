@@ -25,7 +25,7 @@ function AppProvider({ children }: { children: ReactNode }) {
 		staleTime: 1000 * 60 * 60 * 12,
 		gcTime: 1000 * 60 * 60 * 24,
 		retry: 2,
-		refetchOnWindowFocus: false,
+		// refetchOnWindowFocus: false,
 	});
 
 	const state = useMemo((): AppContextState => {

@@ -57,6 +57,7 @@ import {
 } from './champion-list-filter';
 import { buildStatsToShow } from './build-stats-show';
 import { computeBuildStats } from './compute-build-stats';
+import type { BuildComputedStats } from './item-stats';
 import './level-slider.scss';
 import SimulateDialog from './SimulateDialog';
 import SkillPopover from './SkillPopover';
@@ -123,6 +124,29 @@ const OVERVIEW_STAT_KEYS = [
 
 const STAT_ICON_BASE =
 	'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/ux/fonts/texticons/lol/statsicon';
+
+function statHasItemBonus(key: (typeof OVERVIEW_STAT_KEYS)[number], stats: BuildComputedStats) {
+	switch (key) {
+		case 'attackDamage':
+			return stats.totalAd > stats.baseAd + 0.01;
+		case 'abilityPower':
+			return stats.totalAp > 0;
+		case 'armor':
+			return stats.totalArmor > stats.baseArmor + 0.01;
+		case 'magicResistance':
+			return stats.totalMr > stats.baseMr + 0.01;
+		case 'attackSpeed':
+			return stats.totalAs > stats.baseAs + 0.001;
+		case 'abilityHaste':
+			return stats.totalAbilityHaste > 0;
+		case 'criticalStrikeChance':
+			return stats.totalCritPct > stats.baseCritPct + 0.01;
+		case 'movespeed':
+			return stats.totalMs > stats.baseMs + 0.01;
+		default:
+			return false;
+	}
+}
 
 export default function BuildPage() {
 	const { patchVersion, isPatchReady } = useAppContext();
@@ -328,7 +352,8 @@ export default function BuildPage() {
 
 		return list;
 	}, [srItems, itemSearch, activeCategory, activeSubFilter, hasBonusItems]);
-	console.log({ filteredItems });
+
+	// console.log({ filteredItems });
 
 	const itemsGridLoading =
 		!itemsQuery.isError &&
@@ -490,7 +515,14 @@ export default function BuildPage() {
 											alt={key}
 											className="w-4 h-4"
 										/>
-										<span className="text-xs font-medium 4xl:text-sm text-hext-gold">
+										<span
+											className={cn(
+												'text-xs font-medium 4xl:text-sm',
+												statHasItemBonus(key, calculatedStats)
+													? 'text-hex-gold'
+													: 'text-muted-foreground'
+											)}
+										>
 											{stat.format(stat.value)}
 										</span>
 									</div>
@@ -587,7 +619,7 @@ export default function BuildPage() {
 																calculatedStats.totalHp -
 																	calculatedStats.baseHp
 															)}
-															triggerClassName="h-full w-full"
+															triggerClassName="h-full w-full relative"
 														>
 															{/* <img
 																alt={`${selectedChampionId}-${skill}`}
@@ -612,6 +644,7 @@ export default function BuildPage() {
 																	// target.src = `https://opgg-static.akamaized.net/meta/images/lol/${patchVersion}/spell/${selectedChampionId}${skill}.png?image=q_auto:good,f_webp,w_64,h_64`;
 																}}
 															/>
+															<span className="font-bold text-hex-gold text-xs absolute -bottom-[2px] left-[2px] z-10">{skill}</span>
 														</SkillPopover>
 													) : (
 														<div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>

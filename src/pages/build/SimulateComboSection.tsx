@@ -213,7 +213,7 @@ const SimulateComboSection = ({
 					</button>
 				</div>
 
-				<div className="relative h-7 rounded-sm overflow-hidden border border-zinc-700/80 bg-zinc-900">
+				<div className="relative h-7 rounded-sm overflow-hidden border border-zinc-700/80 bg-zinc-900 flex flex-wrap justify-between">
 					<div
 						className="absolute inset-0 flex"
 						style={{
@@ -241,9 +241,14 @@ const SimulateComboSection = ({
 								/>
 							))}
 					</div>
-					<div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)]">
+					<div className="z-[3] absolute inset-0 flex items-center justify-center text-xs font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)]">
 						{currentHp} / {maxHp}
 					</div>
+					{
+						Array.from({ length: 20 }).map((_, index) => (
+							<div key={index} className="h-full w-0.5 bg-neutral-700/20 shrink-0 z-[2]"  />
+						))
+					}
 				</div>
 
 				<div className="flex flex-col gap-2 text-xs 2xl:text-sm">

@@ -13,8 +13,13 @@ import '@/styles/main.scss';
 import { TooltipProvider } from './components/ui/tooltip';
 import { Toaster } from './components/ui/toaster';
 
-const queryClient = new QueryClient();
-
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			refetchOnWindowFocus: false,
+		},
+	},
+});
 let rootMounted = false;
 
 function renderApp() {

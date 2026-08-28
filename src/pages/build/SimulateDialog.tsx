@@ -752,7 +752,7 @@ const SimulateDialog = ({
 						<DialogTitle>Simulate Damage</DialogTitle>
 						<DialogDescription>Simulate Damage</DialogDescription>
 					</VisuallyHidden.Root>
-					<div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 pt-8">
+					<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px_minmax(0,1fr)] gap-4 pt-8">
 						<SimulateChampionPanel
 							titleBorderCls="border-blue-500 shadow-blue-500"
 							champions={filteredAttackers}
@@ -795,7 +795,7 @@ const SimulateDialog = ({
 							}}
 						/>
 
-						<div className="flex-col items-center gap-3 lg:w-[360px] w-full animate-fade-up hidden lg:flex duration-100">
+						<div className="flex-col items-center gap-3 w-full animate-fade-up hidden lg:flex duration-100">
 							<div className="h-24 w-full flex flex-col">
 								<div className="flex flex-1 items-center gap-3">
 									<div className="flex-1 h-px bg-hex-gold/20"></div>
