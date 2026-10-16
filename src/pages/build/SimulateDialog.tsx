@@ -98,6 +98,7 @@ type SimulateChampionPanelProps = {
 		totalAd: number;
 		totalAp: number;
 		bonusHealth: number;
+		abilityHaste: number;
 		accentBorderCls: string;
 		accentActiveCls: string;
 		bgClass: string;
@@ -352,6 +353,7 @@ function SimulateChampionPanel({
 				totalAd={skillsSection.totalAd}
 				totalAp={skillsSection.totalAp}
 				bonusHealth={skillsSection.bonusHealth}
+				abilityHaste={skillsSection.abilityHaste}
 				accentBorderCls={skillsSection.accentBorderCls}
 				accentActiveCls={skillsSection.accentActiveCls}
 				bgClass={skillsSection.bgClass}
@@ -789,6 +791,7 @@ const SimulateDialog = ({
 								totalAd: attackerStats.totalAd,
 								totalAp: attackerStats.totalAp,
 								bonusHealth: attackerBonusHealth,
+								abilityHaste: attackerStats.totalAbilityHaste,
 								accentBorderCls: 'border-blue-500/50',
 								accentActiveCls: 'bg-blue-500',
 								bgClass: 'bg-blue-500/10',
@@ -878,6 +881,7 @@ const SimulateDialog = ({
 									totalAd: targetStats.totalAd,
 									totalAp: targetStats.totalAp,
 									bonusHealth: targetBonusHealth,
+									abilityHaste: targetStats.totalAbilityHaste,
 									accentBorderCls: 'border-red-500/50',
 									accentActiveCls: 'bg-red-500',
 									bgClass: 'bg-red-500/10',

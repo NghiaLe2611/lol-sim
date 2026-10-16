@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { BonusAbility } from '@/pages/champion-detail/utils';
 import {
+	formatCooldownNumber,
 	formatSkillDetailRowAtLevel,
 	getSegmentColorClass,
 	getSkillDetailRows,
@@ -81,6 +82,8 @@ export type SkillDescriptionContentProps = {
 	totalAp: number;
 	championLevel: number;
 	bonusHealth: number;
+	/** Item ability haste; reduces cooldown in detail rows when > 0. */
+	abilityHaste?: number;
 	/** `single` shows only the value for the selected skill rank. */
 	detailRowMode?: 'all' | 'single';
 	variant?: 'panel' | 'inline';
@@ -96,15 +99,54 @@ function abilityDescriptionFallback(ability: BonusAbility | null | undefined): s
 	return fromEffects || ability.blurb?.trim() || '';
 }
 
+function parseCooldownSeconds(value: string): number | null {
+	const n = Number(value);
+	return Number.isNaN(n) ? null : n;
+}
+
+function cooldownAfterAbilityHaste(baseSeconds: number, abilityHaste: number): number {
+	return baseSeconds / (1 + abilityHaste / 100);
+}
+
+function renderHastedCooldownValue(
+	baseDisplay: string,
+	baseSeconds: number,
+	abilityHaste: number
+): React.ReactNode {
+	const effective = formatCooldownNumber(cooldownAfterAbilityHaste(baseSeconds, abilityHaste));
+	return (
+		<>
+			{baseDisplay} (
+			<span className="font-bold text-red-500 dark:text-red-400">{effective}</span>)
+		</>
+	);
+}
+
 function renderDetailRowValue(
 	row: SkillDetailRow,
 	mode: 'all' | 'single',
+	abilityHaste: number,
 	key: React.Key
 ): React.ReactNode {
+	const isCooldownRow = row.label === 'Cooldown';
+	const applyHaste = isCooldownRow && abilityHaste > 0;
+
 	if (mode === 'single') {
+		const baseDisplay = formatSkillDetailRowAtLevel(row);
+		if (applyHaste) {
+			const baseSeconds = parseCooldownSeconds(baseDisplay);
+			if (baseSeconds !== null) {
+				return (
+					<span key={key} className="font-semibold text-muted-foreground">
+						{renderHastedCooldownValue(baseDisplay, baseSeconds, abilityHaste)}
+					</span>
+				);
+			}
+		}
+
 		return (
 			<span key={key} className="font-semibold text-muted-foreground">
-				{formatSkillDetailRowAtLevel(row)}
+				{baseDisplay}
 			</span>
 		);
 	}
@@ -112,16 +154,28 @@ function renderDetailRowValue(
 	const values = row.values;
 	const highlightIndex = row.currentIndex ?? 0;
 
-	return values.map((value, index) => (
-		<React.Fragment key={`${String(key)}-${index}`}>
-			{index > 0 ? '/' : null}
-			{index === highlightIndex ? (
-				<var className="not-italic font-semibold text-muted-foreground">{value}</var>
-			) : (
-				value
-			)}
-		</React.Fragment>
-	));
+	return values.map((value, index) => {
+		const baseSeconds = applyHaste ? parseCooldownSeconds(value) : null;
+		const showHaste =
+			applyHaste && baseSeconds !== null && index === highlightIndex;
+
+		const valueNode = showHaste
+			? renderHastedCooldownValue(value, baseSeconds!, abilityHaste)
+			: value;
+
+		return (
+			<React.Fragment key={`${String(key)}-${index}`}>
+				{index > 0 ? '/' : null}
+				{index === highlightIndex ? (
+					<var className="not-italic font-semibold text-muted-foreground">
+						{valueNode}
+					</var>
+				) : (
+					valueNode
+				)}
+			</React.Fragment>
+		);
+	});
 }
 
 export function SkillDescriptionContent({
@@ -134,6 +188,7 @@ export function SkillDescriptionContent({
 	totalAp,
 	championLevel,
 	bonusHealth,
+	abilityHaste = 0,
 	detailRowMode = 'all',
 	variant = 'panel',
 	showDetailRows = true,
@@ -200,7 +255,7 @@ export function SkillDescriptionContent({
 						<p key={row.label} className="flex justify-between gap-4">
 							<span>{row.label}</span>
 							<span className="text-right">
-								{renderDetailRowValue(row, detailRowMode, row.label)}
+								{renderDetailRowValue(row, detailRowMode, abilityHaste, row.label)}
 							</span>
 						</p>
 					))}

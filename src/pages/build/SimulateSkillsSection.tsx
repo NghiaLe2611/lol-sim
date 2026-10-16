@@ -22,6 +22,7 @@ type SimulateSkillsSectionProps = {
 	totalAd: number;
 	totalAp: number;
 	bonusHealth: number;
+	abilityHaste?: number;
 	accentBorderCls: string;
 	accentActiveCls: string;
 	bgClass: string;
@@ -45,6 +46,7 @@ const SimulateSkillsSection = ({
 	totalAd,
 	totalAp,
 	bonusHealth,
+	abilityHaste = 0,
 	accentBorderCls,
 	accentActiveCls,
 	bgClass,
@@ -102,6 +104,7 @@ const SimulateSkillsSection = ({
 						totalAp={totalAp}
 						championLevel={championLevel}
 						bonusHealth={bonusHealth}
+						abilityHaste={abilityHaste}
 						showDetailRows={false}
 					/>
 				</div>
@@ -189,6 +192,7 @@ const SimulateSkillsSection = ({
 								totalAp={totalAp}
 								championLevel={championLevel}
 								bonusHealth={bonusHealth}
+								abilityHaste={abilityHaste}
 								detailRowMode="single"
 							/>
 						</div>

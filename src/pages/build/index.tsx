@@ -563,6 +563,7 @@ export default function BuildPage() {
 												0,
 												calculatedStats.totalHp - calculatedStats.baseHp
 											)}
+											abilityHaste={calculatedStats.totalAbilityHaste}
 										>
 											<img
 												alt={`${selectedChampionId}-P`}
@@ -619,6 +620,9 @@ export default function BuildPage() {
 																calculatedStats.totalHp -
 																	calculatedStats.baseHp
 															)}
+															abilityHaste={
+																calculatedStats.totalAbilityHaste
+															}
 															triggerClassName="h-full w-full relative"
 														>
 															{/* <img

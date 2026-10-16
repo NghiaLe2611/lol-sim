@@ -21,6 +21,7 @@ interface SkillPopoverProps {
 	totalAp: number;
 	championLevel: number;
 	bonusHealth: number;
+	abilityHaste?: number;
 }
 
 interface SkillContentProps {
@@ -33,6 +34,7 @@ interface SkillContentProps {
 	totalAp: number;
 	championLevel: number;
 	bonusHealth: number;
+	abilityHaste?: number;
 }
 
 function renderCooldownHeader(display: CooldownDisplay): React.ReactNode {
@@ -62,6 +64,7 @@ const SkillContent = ({
 	totalAp,
 	championLevel,
 	bonusHealth,
+	abilityHaste = 0,
 }: SkillContentProps) => {
 	const effectiveSkillLevel = skillLv && skillLv > 0 ? skillLv : 1;
 
@@ -119,6 +122,7 @@ const SkillContent = ({
 				totalAp={totalAp}
 				championLevel={championLevel}
 				bonusHealth={bonusHealth}
+				abilityHaste={abilityHaste}
 				detailRowMode="all"
 				variant="inline"
 			/>
@@ -137,6 +141,7 @@ const SkillPopover = ({
 	totalAp,
 	championLevel,
 	bonusHealth,
+	abilityHaste,
 	popoverClassName,
 	triggerClassName,
 }: SkillPopoverProps) => {
@@ -156,6 +161,7 @@ const SkillPopover = ({
 					totalAp={totalAp}
 					championLevel={championLevel}
 					bonusHealth={bonusHealth}
+					abilityHaste={abilityHaste}
 				/>
 			}
 			contentClassName={clsx(POPOVER_CONTENT_CLASS, popoverClassName)}
